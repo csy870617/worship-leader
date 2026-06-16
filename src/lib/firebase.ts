@@ -15,7 +15,8 @@ import {
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 // trim guards against trailing spaces / newlines accidentally pasted into secrets
-const env = (v: unknown) => (typeof v === "string" ? v.trim() : v);
+const env = (v: unknown): string | undefined =>
+  typeof v === "string" ? v.trim() : undefined;
 const config = {
   apiKey: env(import.meta.env.VITE_FIREBASE_API_KEY),
   authDomain: env(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
