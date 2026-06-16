@@ -14,13 +14,15 @@ import {
 } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
+// trim guards against trailing spaces / newlines accidentally pasted into secrets
+const env = (v: unknown) => (typeof v === "string" ? v.trim() : v);
 const config = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: env(import.meta.env.VITE_FIREBASE_API_KEY),
+  authDomain: env(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
+  projectId: env(import.meta.env.VITE_FIREBASE_PROJECT_ID),
+  storageBucket: env(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId: env(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
+  appId: env(import.meta.env.VITE_FIREBASE_APP_ID),
 };
 
 export const isFirebaseConfigured = Boolean(config.apiKey && config.projectId && config.appId);
