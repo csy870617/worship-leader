@@ -1,24 +1,30 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { songById } from "../data";
+import { compatibleSongs, songById, youtubeSearchUrl } from "../data";
 import { TEMPO_LABEL } from "../types";
-import { KeyBadge, TempoBadge } from "../components/Badges";
+import { KeyBadge, TempoBadge, LastUsedBadge } from "../components/Badges";
 import FavoriteButton from "../components/FavoriteButton";
+import AddToContiButton from "../components/AddToContiButton";
+import { useHistory } from "../lib/useHistory";
 
 export default function SongDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const song = songById.get(Number(id));
+  const { lastUsed } = useHistory();
 
   if (!song) {
     return (
       <div className="px-4 py-16 text-center">
         <p className="text-slate-500 dark:text-slate-400">곡을 찾을 수 없습니다.</p>
-        <Link to="/code" className="mt-3 inline-block text-indigo-600 dark:text-indigo-400">
+        <Link to="/browse" className="mt-3 inline-block text-indigo-600 dark:text-indigo-400">
           목록으로
         </Link>
       </div>
     );
   }
+
+  const used = lastUsed(song.id);
+  const related = compatibleSongs(song.keys, new Set([song.id]), 6);
 
   return (
     <div className="px-4 py-5">
@@ -40,9 +46,25 @@ export default function SongDetail() {
         <h1 className="text-2xl font-bold leading-snug text-slate-900 dark:text-slate-50">
           {song.title}
         </h1>
-        <div className="-mr-1 mt-0.5">
+        <div className="-mr-1 mt-0.5 flex items-center">
+          <AddToContiButton id={song.id} size="lg" />
           <FavoriteButton id={song.id} size="lg" />
         </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <a
+          href={youtubeSearchUrl(song.title)}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 active:bg-red-100 dark:bg-red-500/15 dark:text-red-400"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
+          </svg>
+          유튜브에서 찾기
+        </a>
+        {used && <LastUsedBadge iso={used} />}
       </div>
 
       <div className="mt-5 space-y-5">
@@ -94,6 +116,29 @@ export default function SongDetail() {
           </Field>
         )}
       </div>
+
+      {related.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            키가 어울리는 곡
+          </h2>
+          <ul className="space-y-1.5">
+            {related.map(({ song: s, relation }) => (
+              <li key={s.id} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
+                <div className="min-w-0 flex-1">
+                  <Link to={`/song/${s.id}`} className="block truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+                    {s.title}
+                  </Link>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                    {s.keys.join("/")} · {relation.label}
+                  </span>
+                </div>
+                <AddToContiButton id={s.id} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <p className="mt-8 text-xs leading-relaxed text-slate-400 dark:text-slate-500">
         템포 분류: {Object.values(TEMPO_LABEL).join(" · ")}. 데이터는 인도자 시트

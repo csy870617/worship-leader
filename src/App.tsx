@@ -1,71 +1,77 @@
 import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { songs } from "./data";
 import { useTheme } from "./lib/useTheme";
-import ByCode from "./views/ByCode";
-import ByTheme from "./views/ByTheme";
-import ByTempo from "./views/ByTempo";
+import { useConti } from "./lib/useConti";
+import Browse from "./views/Browse";
 import Search from "./views/Search";
+import Conti from "./views/Conti";
 import Favorites from "./views/Favorites";
+import Stage from "./views/Stage";
 import SongDetail from "./views/SongDetail";
 
 const TABS = [
-  { to: "/code", label: "코드별", icon: IconKey },
-  { to: "/theme", label: "주제별", icon: IconTag },
-  { to: "/tempo", label: "템포별", icon: IconBeat },
+  { to: "/browse", label: "둘러보기", icon: IconGrid },
+  { to: "/search", label: "찾기", icon: IconSearch },
+  { to: "/conti", label: "콘티", icon: IconList, badge: true },
   { to: "/favorites", label: "즐겨찾기", icon: IconStar },
-  { to: "/search", label: "검색", icon: IconSearch },
 ];
 
 export default function App() {
   const location = useLocation();
   const { theme, toggle } = useTheme();
-  const isDetail = location.pathname.startsWith("/song/");
+  const { conti } = useConti();
+  const fullscreen = location.pathname.startsWith("/song/") || location.pathname.startsWith("/stage");
 
   return (
     <div className="mx-auto flex min-h-full max-w-md flex-col bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-100 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
-        <h1 className="text-base font-bold tracking-tight">찬양 곡 모음</h1>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400 dark:text-slate-500">{songs.length}곡</span>
-          <button
-            onClick={toggle}
-            aria-label="테마 전환"
-            className="rounded-full p-1.5 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800"
-          >
-            {theme === "dark" ? <IconSun /> : <IconMoon />}
-          </button>
-        </div>
-      </header>
+      {!fullscreen && (
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-100 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
+          <h1 className="text-base font-bold tracking-tight">찬양 곡 모음</h1>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-400 dark:text-slate-500">{songs.length}곡</span>
+            <button onClick={toggle} aria-label="테마 전환" className="rounded-full p-1.5 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800">
+              {theme === "dark" ? <IconSun /> : <IconMoon />}
+            </button>
+          </div>
+        </header>
+      )}
 
-      <main className="flex-1 pb-20">
+      <main className={fullscreen ? "flex-1" : "flex-1 pb-20"}>
         <Routes>
-          <Route path="/" element={<Navigate to="/code" replace />} />
-          <Route path="/code" element={<ByCode />} />
-          <Route path="/theme" element={<ByTheme />} />
-          <Route path="/tempo" element={<ByTempo />} />
-          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/" element={<Navigate to="/browse" replace />} />
+          <Route path="/browse" element={<Browse />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/conti" element={<Conti />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/stage" element={<Stage />} />
           <Route path="/song/:id" element={<SongDetail />} />
-          <Route path="*" element={<Navigate to="/code" replace />} />
+          {/* legacy deep links */}
+          <Route path="/code" element={<Navigate to="/browse?axis=key" replace />} />
+          <Route path="/theme" element={<Navigate to="/browse?axis=theme" replace />} />
+          <Route path="/tempo" element={<Navigate to="/browse?axis=tempo" replace />} />
+          <Route path="*" element={<Navigate to="/browse" replace />} />
         </Routes>
       </main>
 
-      {!isDetail && (
+      {!fullscreen && (
         <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-          {TABS.map(({ to, label, icon: Icon }) => (
+          {TABS.map(({ to, label, icon: Icon, badge }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${
-                  isActive
-                    ? "text-indigo-600 dark:text-indigo-400"
-                    : "text-slate-400 dark:text-slate-500"
+                `relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${
+                  isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"
                 }`
               }
             >
               <Icon />
               {label}
+              {badge && conti.length > 0 && (
+                <span className="absolute right-1/2 top-1.5 translate-x-3 rounded-full bg-indigo-600 px-1.5 text-[10px] font-bold leading-4 text-white">
+                  {conti.length}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -74,25 +80,17 @@ export default function App() {
   );
 }
 
-function IconKey() {
+function IconGrid() {
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H9v1.5H7.5v1.5H6v1.5H3.75a.75.75 0 0 1-.75-.75v-2.69c0-.2.078-.39.22-.53l6.638-6.638c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6Zm0 9.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25Zm9.75-9.75A2.25 2.25 0 0 1 15.75 3.75H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6Zm0 9.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
     </svg>
   );
 }
-function IconTag() {
+function IconList() {
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
-    </svg>
-  );
-}
-function IconBeat() {
-  return (
-    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h3l2-7 4 14 2-7h3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
     </svg>
   );
 }

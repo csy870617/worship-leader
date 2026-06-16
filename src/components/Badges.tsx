@@ -1,5 +1,6 @@
 import type { Song, Tempo } from "../types";
 import { TEMPO_LABEL } from "../types";
+import { daysSince } from "../lib/useHistory";
 
 const TEMPO_STYLE: Record<Tempo, string> = {
   FAST: "bg-rose-100 text-rose-700",
@@ -32,8 +33,25 @@ export function ThemeBadge({ name }: { name: string }) {
   );
 }
 
+export function LastUsedBadge({ iso }: { iso: string }) {
+  const d = daysSince(iso);
+  const recent = d <= 28;
+  const text = d <= 0 ? "오늘 사용" : d < 7 ? `${d}일 전` : `${Math.floor(d / 7)}주 전`;
+  return (
+    <span
+      className={`rounded-md px-1.5 py-0.5 text-xs font-semibold ${
+        recent
+          ? "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300"
+          : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300"
+      }`}
+    >
+      {text}
+    </span>
+  );
+}
+
 /** Compact meta line used in list rows. */
-export function SongMeta({ song }: { song: Song }) {
+export function SongMeta({ song, lastUsed }: { song: Song; lastUsed?: string | null }) {
   return (
     <div className="mt-1 flex flex-wrap items-center gap-1">
       {song.keys.map((k) => (
@@ -47,6 +65,7 @@ export function SongMeta({ song }: { song: Song }) {
           새찬 {song.hymnNo}
         </span>
       )}
+      {lastUsed && <LastUsedBadge iso={lastUsed} />}
     </div>
   );
 }
