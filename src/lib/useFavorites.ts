@@ -21,6 +21,20 @@ function emit() {
   for (const l of listeners) l(new Set(ids));
 }
 
+// module-level accessors (used by the cloud sync engine)
+export function getFavoriteIds(): number[] {
+  return [...ids];
+}
+export function setFavoriteIds(arr: number[]) {
+  ids = new Set(arr);
+  emit();
+}
+export function subscribeFavorites(cb: () => void) {
+  const l = () => cb();
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
+
 export function useFavorites() {
   const [favorites, setFavorites] = useState<Set<number>>(() => new Set(ids));
 

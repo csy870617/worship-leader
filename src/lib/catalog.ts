@@ -35,6 +35,19 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
+// module-level accessors (used by the cloud sync engine)
+export function getUserSongs(): Song[] {
+  return userSongs;
+}
+export function setUserSongs(next: Song[]) {
+  userSongs = next;
+  emit();
+}
+export function subscribeCatalog(cb: () => void) {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
+
 export function getSongs(): Song[] {
   return songs;
 }

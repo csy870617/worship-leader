@@ -1,7 +1,10 @@
+import { useEffect } from "react";
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "./lib/useTheme";
 import { useConti } from "./lib/useConti";
 import { useSongs } from "./lib/catalog";
+import { initSync } from "./lib/sync";
+import AuthButton from "./components/AuthButton";
 import Browse from "./views/Browse";
 import Search from "./views/Search";
 import Conti from "./views/Conti";
@@ -23,6 +26,10 @@ export default function App() {
   const { theme, toggle } = useTheme();
   const { conti } = useConti();
   const { songs } = useSongs();
+
+  // start cloud sync once (no-op unless Firebase env is configured)
+  useEffect(() => initSync(), []);
+
   const fullscreen =
     location.pathname.startsWith("/song/") ||
     location.pathname.startsWith("/stage") ||
@@ -34,6 +41,7 @@ export default function App() {
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-100 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
           <h1 className="text-base font-bold tracking-tight">찬양 곡 모음</h1>
           <div className="flex items-center gap-2">
+            <AuthButton />
             <span className="text-xs text-slate-400 dark:text-slate-500">{songs.length}곡</span>
             <button onClick={() => navigate("/edit")} aria-label="곡 추가" className="rounded-full p-1.5 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800">
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>

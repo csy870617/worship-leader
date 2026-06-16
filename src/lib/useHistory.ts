@@ -22,6 +22,20 @@ function emit() {
   for (const l of listeners) l({ ...history });
 }
 
+// module-level accessors (used by the cloud sync engine)
+export function getHistoryMap(): Record<number, string> {
+  return { ...history };
+}
+export function setHistoryMap(next: Record<number, string>) {
+  history = { ...next };
+  emit();
+}
+export function subscribeHistory(cb: () => void) {
+  const l = () => cb();
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
+
 const today = () => new Date().toISOString().slice(0, 10);
 
 export function daysSince(iso: string): number {

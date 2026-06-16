@@ -44,6 +44,36 @@ npm run build    # 타입체크 + 프로덕션 빌드 (dist/)
 npm run preview  # 빌드 결과 미리보기
 ```
 
+## 구글 로그인 + 클라우드 저장 (선택, Firebase)
+
+설정하지 않아도 앱은 **localStorage**로 완전히 동작합니다. 아래를 설정하면 **구글 로그인**과
+**개인별 Firestore 동기화**(추가한 곡·콘티·즐겨찾기·이력)가 켜집니다.
+
+1. [Firebase 콘솔](https://console.firebase.google.com)에서 프로젝트 생성
+2. **Authentication → Sign-in method → Google** 사용 설정
+3. **Authentication → Settings → 승인된 도메인**에 `csy870617.github.io` 추가
+4. **Firestore Database** 생성(프로덕션 모드), 아래 보안 규칙 적용 — 본인 문서만 접근:
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{db}/documents {
+       match /users/{uid} {
+         allow read, write: if request.auth != null && request.auth.uid == uid;
+       }
+     }
+   }
+   ```
+5. **프로젝트 설정 → 내 앱(웹)** 에서 config 값 확인
+6. 로컬 개발: `.env.example` → `.env.local` 로 복사 후 값 입력
+7. 배포(GitHub Pages): 저장소 **Settings → Secrets and variables → Actions → Secrets** 에
+   `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`,
+   `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`,
+   `VITE_FIREBASE_APP_ID` 추가 → 다음 배포부터 로그인 버튼이 활성화됩니다.
+
+> config 값은 공개되어도 안전한 클라이언트 설정입니다. 실제 보안은 위 Firestore 규칙으로
+> 처리되며, 각 사용자는 **자기 데이터만** 읽고 씁니다. 로그인 시 로컬 데이터와 클라우드
+> 데이터가 병합된 뒤 동기화됩니다.
+
 ## 배포
 
 저장소의 **기본 브랜치**에 푸시하면 `.github/workflows/deploy.yml`이 빌드 후 Pages에

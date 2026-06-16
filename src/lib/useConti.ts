@@ -29,6 +29,20 @@ function emit() {
   for (const l of listeners) l(items.slice());
 }
 
+// module-level accessors (used by the cloud sync engine)
+export function getContiItems(): ContiItem[] {
+  return items.slice();
+}
+export function setContiItems(next: ContiItem[]) {
+  items = next.slice();
+  emit();
+}
+export function subscribeConti(cb: () => void) {
+  const l = () => cb();
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
+
 export function useConti() {
   const [conti, setConti] = useState<ContiItem[]>(() => items.slice());
 

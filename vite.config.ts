@@ -6,6 +6,17 @@ import { VitePWA } from "vite-plugin-pwa";
 // (https://<user>.github.io/worship-leader/) without hardcoding the repo name.
 export default defineConfig({
   base: "./",
+  build: {
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          firebase: ["firebase/app", "firebase/auth", "firebase/firestore"],
+          react: ["react", "react-dom", "react-router-dom"],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
