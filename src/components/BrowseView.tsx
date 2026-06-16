@@ -53,14 +53,14 @@ export default function BrowseView({
 
   return (
     <div>
-      <div className="sticky top-14 z-10 border-b border-slate-100 bg-white/95 px-4 backdrop-blur">
+      <div className="sticky top-14 z-10 border-b border-slate-100 bg-white/95 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
         <ChipRow
           options={options.map((o) => ({ ...o, count: counts[o.value] }))}
           active={active}
           onSelect={select}
         />
       </div>
-      <div className="px-4 py-2 text-xs text-slate-400">
+      <div className="px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
         {active && groupHeaderLabel ? groupHeaderLabel(active) : "전체"} · {list.length}곡
       </div>
       <SongList songs={list} />

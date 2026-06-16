@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # the repository's default branch (rename here if you later switch to main)
+    branches: [claude/determined-keller-w4f59l, main]
   workflow_dispatch:
 
 permissions:

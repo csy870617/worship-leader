@@ -136,6 +136,92 @@ for (let i = themeHdrIdx + 1; i < rows.length; i++) {
   }
 }
 
+// ---- merge near-duplicate titles (hand-typed typos across the two sections) ----
+// Decompose Hangul to jamo so single-vowel/consonant typos become small edits
+// (e.g. "향한" vs "항햔" -> jamo edit distance 2).
+const L = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+const V = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ";
+const T = "_ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ";
+function toJamo(str) {
+  let out = "";
+  for (const ch of str) {
+    const c = ch.codePointAt(0);
+    if (c >= 0xac00 && c <= 0xd7a3) {
+      const s = c - 0xac00;
+      out += L[Math.floor(s / 588)] + V[Math.floor((s % 588) / 28)];
+      const t = s % 28;
+      if (t) out += T[t];
+    } else out += ch;
+  }
+  return out;
+}
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) {
+      cur[j] = Math.min(
+        prev[j] + 1,
+        cur[j - 1] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+
+// pairs the fuzzy matcher would wrongly merge — distinct songs kept separate
+const pairKey = (a, b) => [a, b].sort().join("|");
+const KEEP_SEPARATE = new Set(
+  [["우리함께기뻐해", "우리함께기도해"]].map(([a, b]) => pairKey(a, b))
+);
+
+{
+  const items = [...catalog.entries()].map(([norm, s]) => ({
+    norm,
+    s,
+    jamo: toJamo(norm),
+  }));
+  const parent = items.map((_, i) => i);
+  const find = (x) => (parent[x] === x ? x : (parent[x] = find(parent[x])));
+  const merges = [];
+  for (let i = 0; i < items.length; i++) {
+    for (let j = i + 1; j < items.length; j++) {
+      const a = items[i], b = items[j];
+      if (a.norm[0] !== b.norm[0]) continue; // same first syllable
+      if (KEEP_SEPARATE.has(pairKey(a.norm, b.norm))) continue;
+      if (Math.abs(a.jamo.length - b.jamo.length) > 2) continue;
+      const minLen = Math.min(a.jamo.length, b.jamo.length);
+      if (minLen < 9) continue; // only longer titles, to avoid false merges
+      const d = levenshtein(a.jamo, b.jamo);
+      if (d > 0 && d <= 2) {
+        merges.push([a.s.title, b.s.title, d]);
+        parent[find(i)] = find(j);
+      }
+    }
+  }
+  // fold each non-root into its root
+  for (let i = 0; i < items.length; i++) {
+    const r = find(i);
+    if (r === i) continue;
+    const from = items[i].s, into = items[r].s;
+    for (const k of from.keys) into.keys.add(k);
+    for (const t of from.tempos) into.tempos.add(t);
+    for (const th of from.themes) into.themes.add(th);
+    for (const [title, w] of from.variants)
+      into.variants.set(title, (into.variants.get(title) || 0) + w);
+    if (from.fromSec1) into.fromSec1 = true;
+    if (from.hymnNo && !into.hymnNo) into.hymnNo = from.hymnNo;
+    catalog.delete(items[i].norm);
+  }
+  if (merges.length) {
+    console.log(`merged ${merges.length} near-duplicate title pair(s):`);
+    for (const [x, y, d] of merges) console.log(`   "${x}"  ⇄  "${y}"  (d=${d})`);
+  }
+}
+
 // pick best display title per song (highest weight; tie -> longest)
 function bestTitle(s) {
   return [...s.variants.entries()].sort(

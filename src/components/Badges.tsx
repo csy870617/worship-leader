@@ -26,7 +26,7 @@ export function TempoBadge({ t }: { t: Tempo }) {
 
 export function ThemeBadge({ name }: { name: string }) {
   return (
-    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-200">
       {name}
     </span>
   );
@@ -43,7 +43,7 @@ export function SongMeta({ song }: { song: Song }) {
         <TempoBadge key={t} t={t} />
       ))}
       {song.hymnNo != null && (
-        <span className="rounded-md bg-slate-200 px-1.5 py-0.5 text-xs font-semibold text-slate-600">
+        <span className="rounded-md bg-slate-200 px-1.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-200">
           새찬 {song.hymnNo}
         </span>
       )}

@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { songById } from "../data";
 import { TEMPO_LABEL } from "../types";
 import { KeyBadge, TempoBadge } from "../components/Badges";
+import FavoriteButton from "../components/FavoriteButton";
 
 export default function SongDetail() {
   const { id } = useParams();
@@ -11,8 +12,8 @@ export default function SongDetail() {
   if (!song) {
     return (
       <div className="px-4 py-16 text-center">
-        <p className="text-slate-500">곡을 찾을 수 없습니다.</p>
-        <Link to="/code" className="mt-3 inline-block text-indigo-600">
+        <p className="text-slate-500 dark:text-slate-400">곡을 찾을 수 없습니다.</p>
+        <Link to="/code" className="mt-3 inline-block text-indigo-600 dark:text-indigo-400">
           목록으로
         </Link>
       </div>
@@ -23,7 +24,7 @@ export default function SongDetail() {
     <div className="px-4 py-5">
       <button
         onClick={() => navigate(-1)}
-        className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 active:text-slate-700"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 active:text-slate-700 dark:text-slate-400"
       >
         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
           <path
@@ -35,7 +36,14 @@ export default function SongDetail() {
         뒤로
       </button>
 
-      <h1 className="text-2xl font-bold leading-snug text-slate-900">{song.title}</h1>
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="text-2xl font-bold leading-snug text-slate-900 dark:text-slate-50">
+          {song.title}
+        </h1>
+        <div className="-mr-1 mt-0.5">
+          <FavoriteButton id={song.id} size="lg" />
+        </div>
+      </div>
 
       <div className="mt-5 space-y-5">
         <Field label="코드">
@@ -69,7 +77,7 @@ export default function SongDetail() {
                 <Link
                   key={t}
                   to={`/theme?theme=${encodeURIComponent(t)}`}
-                  className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 active:bg-slate-200"
+                  className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:active:bg-slate-700"
                 >
                   {t}
                 </Link>
@@ -82,12 +90,12 @@ export default function SongDetail() {
 
         {song.hymnNo != null && (
           <Field label="새찬송가">
-            <span className="text-slate-700">{song.hymnNo}장</span>
+            <span className="text-slate-700 dark:text-slate-200">{song.hymnNo}장</span>
           </Field>
         )}
       </div>
 
-      <p className="mt-8 text-xs leading-relaxed text-slate-400">
+      <p className="mt-8 text-xs leading-relaxed text-slate-400 dark:text-slate-500">
         템포 분류: {Object.values(TEMPO_LABEL).join(" · ")}. 데이터는 인도자 시트
         스냅샷 기준입니다.
       </p>
@@ -98,7 +106,7 @@ export default function SongDetail() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
         {label}
       </p>
       {children}
@@ -107,5 +115,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function Empty() {
-  return <span className="text-sm text-slate-300">—</span>;
+  return <span className="text-sm text-slate-300 dark:text-slate-600">—</span>;
 }

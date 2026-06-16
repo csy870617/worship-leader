@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
-}
-
 html,
 body,
 #root {
@@ -15,6 +11,10 @@ body,
 body {
   margin: 0;
   -webkit-tap-highlight-color: transparent;
+}
+
+html.dark body {
+  background: #0f172a;
 }
 
 /* hide horizontal scrollbar on chip rows while keeping scroll */

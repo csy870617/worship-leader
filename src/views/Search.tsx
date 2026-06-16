@@ -21,7 +21,7 @@ export default function Search() {
 
   return (
     <div>
-      <div className="sticky top-14 z-10 border-b border-slate-100 bg-white px-4 py-3">
+      <div className="sticky top-14 z-10 border-b border-slate-100 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
         <div className="relative">
           <svg
             className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
@@ -41,7 +41,7 @@ export default function Search() {
             onChange={(e) => setQ(e.target.value)}
             inputMode="search"
             placeholder="곡 제목 · 주제 · 코드 검색"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-base outline-none focus:border-indigo-400 focus:bg-white"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-10 text-base text-slate-900 outline-none focus:border-indigo-400 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:bg-slate-800"
           />
           {q && (
             <button
@@ -59,11 +59,13 @@ export default function Search() {
 
       {q.trim() ? (
         <>
-          <div className="px-4 py-2 text-xs text-slate-400">{results.length}곡</div>
+          <div className="px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
+            {results.length}곡
+          </div>
           <SongList songs={results} />
         </>
       ) : (
-        <p className="px-4 py-16 text-center text-sm text-slate-400">
+        <p className="px-4 py-16 text-center text-sm text-slate-400 dark:text-slate-500">
           제목, 주제, 코드로 검색해 보세요.
         </p>
       )}

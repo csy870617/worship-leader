@@ -14,6 +14,20 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // apply saved/preferred theme before paint to avoid a flash
+      (function () {
+        try {
+          var t = localStorage.getItem("wl.theme");
+          if (t !== "light" && t !== "dark") {
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          var el = document.documentElement;
+          el.classList.toggle("dark", t === "dark");
+          el.style.colorScheme = t;
+        } catch (e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

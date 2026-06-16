@@ -36,7 +36,7 @@ function Chip({
       className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition ${
         selected
           ? "bg-indigo-600 text-white"
-          : "bg-slate-100 text-slate-600 active:bg-slate-200"
+          : "bg-slate-100 text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:active:bg-slate-700"
       }`}
     >
       {label}

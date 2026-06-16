@@ -6,8 +6,9 @@
 ## 스택
 
 - React + Vite + TypeScript
-- Tailwind CSS
+- Tailwind CSS (다크모드 지원)
 - react-router-dom (HashRouter — Pages 서브경로에서 안전)
+- vite-plugin-pwa (오프라인 캐싱 · 설치형 PWA)
 - GitHub Actions → GitHub Pages 배포
 
 ## 데이터
@@ -45,13 +46,23 @@ npm run preview  # 빌드 결과 미리보기
 
 ## 배포
 
-`main` 브랜치에 푸시하면 `.github/workflows/deploy.yml`이 빌드 후 Pages에 배포합니다.
-저장소 **Settings → Pages → Source**를 **GitHub Actions**로 설정하세요.
+저장소의 **기본 브랜치**에 푸시하면 `.github/workflows/deploy.yml`이 빌드 후 Pages에
+배포합니다(워크플로의 `branches` 목록은 기본 브랜치 이름에 맞춰 두었습니다). 저장소
+**Settings → Pages → Source**를 **GitHub Actions**로 한 번 설정하세요.
 
 ## 기능
 
 - **코드별 보기** — 코드 칩으로 필터, 한 곡이 여러 코드면 각 코드에 모두 표시
 - **주제별 보기** — 21개 주제 칩으로 필터
 - **템포별 보기** — 빠른곡/느린곡/미디움/찬송가
+- **즐겨찾기** — 별표로 담아두고 모아 보기(브라우저에 저장)
 - **검색** — 제목·주제·코드·새찬송가 번호
 - **곡 상세** — 코드/템포/주제/찬송가 번호, 주제 탭으로 이동
+- **다크모드** — 헤더 토글, 시스템 설정 자동 감지
+- **오프라인(PWA)** — 한 번 열면 네트워크 없이도 사용·설치 가능
+
+## 데이터 정리
+
+생성기는 두 섹션을 합치며 손으로 입력된 **오타·표기 변형을 자모 단위 편집거리로 자동 병합**
+합니다(예: "마음이 상한 자를" ⇄ "마음의 상한 자를"). 서로 다른 곡인데 비슷한 쌍
+(예: "기뻐해" vs "기도해")은 `KEEP_SEPARATE` 목록으로 분리 유지합니다.
