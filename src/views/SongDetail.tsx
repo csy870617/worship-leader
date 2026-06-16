@@ -1,5 +1,6 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { compatibleSongs, songById, youtubeSearchUrl } from "../data";
+import { youtubeSearchUrl } from "../data";
+import { compatibleSongs, isUserSong, useSongs } from "../lib/catalog";
 import { TEMPO_LABEL } from "../types";
 import { KeyBadge, TempoBadge, LastUsedBadge } from "../components/Badges";
 import FavoriteButton from "../components/FavoriteButton";
@@ -9,6 +10,7 @@ import { useHistory } from "../lib/useHistory";
 export default function SongDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { songById } = useSongs();
   const song = songById.get(Number(id));
   const { lastUsed } = useHistory();
 
@@ -25,6 +27,7 @@ export default function SongDetail() {
 
   const used = lastUsed(song.id);
   const related = compatibleSongs(song.keys, new Set([song.id]), 6);
+  const mine = isUserSong(song.id);
 
   return (
     <div className="px-4 py-5">
@@ -65,6 +68,19 @@ export default function SongDetail() {
           유튜브에서 찾기
         </a>
         {used && <LastUsedBadge iso={used} />}
+        {mine && (
+          <>
+            <span className="rounded-md bg-indigo-100 px-1.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
+              내 곡
+            </span>
+            <button
+              onClick={() => navigate(`/edit/${song.id}`)}
+              className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+            >
+              수정
+            </button>
+          </>
+        )}
       </div>
 
       <div className="mt-5 space-y-5">

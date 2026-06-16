@@ -1,13 +1,14 @@
-import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { songs } from "./data";
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "./lib/useTheme";
 import { useConti } from "./lib/useConti";
+import { useSongs } from "./lib/catalog";
 import Browse from "./views/Browse";
 import Search from "./views/Search";
 import Conti from "./views/Conti";
 import Favorites from "./views/Favorites";
 import Stage from "./views/Stage";
 import SongDetail from "./views/SongDetail";
+import EditSong from "./views/EditSong";
 
 const TABS = [
   { to: "/browse", label: "둘러보기", icon: IconGrid },
@@ -18,17 +19,27 @@ const TABS = [
 
 export default function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const { conti } = useConti();
-  const fullscreen = location.pathname.startsWith("/song/") || location.pathname.startsWith("/stage");
+  const { songs } = useSongs();
+  const fullscreen =
+    location.pathname.startsWith("/song/") ||
+    location.pathname.startsWith("/stage") ||
+    location.pathname.startsWith("/edit");
 
   return (
     <div className="mx-auto flex min-h-full max-w-md flex-col bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
       {!fullscreen && (
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-100 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
           <h1 className="text-base font-bold tracking-tight">찬양 곡 모음</h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400 dark:text-slate-500">{songs.length}곡</span>
+            <button onClick={() => navigate("/edit")} aria-label="곡 추가" className="rounded-full p-1.5 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </button>
             <button onClick={toggle} aria-label="테마 전환" className="rounded-full p-1.5 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800">
               {theme === "dark" ? <IconSun /> : <IconMoon />}
             </button>
@@ -44,6 +55,8 @@ export default function App() {
           <Route path="/conti" element={<Conti />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/stage" element={<Stage />} />
+          <Route path="/edit" element={<EditSong />} />
+          <Route path="/edit/:id" element={<EditSong />} />
           <Route path="/song/:id" element={<SongDetail />} />
           {/* legacy deep links */}
           <Route path="/code" element={<Navigate to="/browse?axis=key" replace />} />

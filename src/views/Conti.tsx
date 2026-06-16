@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { compatibleSongs, songById } from "../data";
+import { compatibleSongs, useSongs } from "../lib/catalog";
 import { useConti } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { bestRelation } from "../lib/keys";
@@ -9,6 +9,7 @@ import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
   const { conti, remove, move, setNote, clear, replace, add, has } = useConti();
+  const { songById } = useSongs();
   const { markUsed, lastUsed } = useHistory();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();

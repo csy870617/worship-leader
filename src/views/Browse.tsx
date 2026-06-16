@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { data, songs, byKey, byTheme, byTempo, sortKo } from "../data";
+import { data, sortKo } from "../data";
+import { byKey, byTheme, byTempo, useSongs } from "../lib/catalog";
 import { TEMPO_LABEL, type Song } from "../types";
 import { useHistory } from "../lib/useHistory";
 import ChipRow from "../components/ChipRow";
@@ -28,6 +29,7 @@ export default function Browse() {
   const value = params.get("v");
   const sort = params.get("sort") || "title";
   const { history } = useHistory();
+  const { songs } = useSongs();
 
   const options = useMemo(() => axisOptions(axis), [axis]);
   const filter = useMemo(() => axisFilter(axis), [axis]);
@@ -36,7 +38,7 @@ export default function Browse() {
     const m: Record<string, number> = {};
     for (const o of options) m[o.value] = filter(o.value).length;
     return m;
-  }, [options, filter]);
+  }, [options, filter, songs]);
 
   const list = useMemo(() => {
     const src = value ? filter(value) : songs;
@@ -52,7 +54,7 @@ export default function Browse() {
       arr.sort(sortKo);
     }
     return arr;
-  }, [axis, value, sort, history]);
+  }, [value, sort, history, songs, filter]);
 
   const patch = (next: Record<string, string | null>) => {
     const p = new URLSearchParams(params);

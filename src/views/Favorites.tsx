@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import { useFavorites } from "../lib/useFavorites";
-import { songById, sortKo } from "../data";
+import { sortKo } from "../data";
+import { useSongs } from "../lib/catalog";
 import SongList from "../components/SongList";
 
 export default function Favorites() {
   const { favorites } = useFavorites();
+  const { songById } = useSongs();
 
   const list = useMemo(
     () =>
@@ -12,7 +14,7 @@ export default function Favorites() {
         .map((id) => songById.get(id))
         .filter((s): s is NonNullable<typeof s> => Boolean(s))
         .sort(sortKo),
-    [favorites]
+    [favorites, songById]
   );
 
   if (list.length === 0) {

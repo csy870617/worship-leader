@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { data, songs, normalize, sortKo } from "../data";
+import { data, normalize, sortKo } from "../data";
+import { useSongs } from "../lib/catalog";
 import { TEMPO_LABEL, type Song } from "../types";
 import SongList from "../components/SongList";
 
@@ -21,6 +22,7 @@ export default function Search() {
   };
 
   const active = q.trim() || key || tempo || theme;
+  const { songs } = useSongs();
 
   const results = useMemo(() => {
     if (!active) return [];
@@ -41,7 +43,7 @@ export default function Search() {
         return true;
       })
       .sort(sortKo);
-  }, [q, key, tempo, theme, active]);
+  }, [q, key, tempo, theme, active, songs]);
 
   const selectCls =
     "rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";

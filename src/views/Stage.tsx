@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useConti } from "../lib/useConti";
-import { songById } from "../data";
+import { useSongs } from "../lib/catalog";
 import { bestRelation } from "../lib/keys";
 
 export default function Stage() {
   const { conti } = useConti();
+  const { songById } = useSongs();
   const navigate = useNavigate();
   const [idx, setIdx] = useState(0);
 

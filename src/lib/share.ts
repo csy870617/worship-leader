@@ -1,5 +1,5 @@
 import type { ContiItem } from "./useConti";
-import { songById } from "../data";
+import { getSongById } from "./catalog";
 
 // UTF-8 safe base64 (handles Korean notes)
 function b64encode(str: string): string {
@@ -28,7 +28,7 @@ export function decodeConti(token: string): ContiItem[] | null {
     if (!Array.isArray(arr)) return null;
     return arr
       .map((x) => (Array.isArray(x) ? { id: Number(x[0]), note: x[1] } : { id: Number(x) }))
-      .filter((x) => Number.isFinite(x.id) && songById.has(x.id));
+      .filter((x) => Number.isFinite(x.id) && getSongById(x.id));
   } catch {
     return null;
   }
@@ -43,7 +43,7 @@ export function contiShareUrl(items: ContiItem[]): string {
 /** Human-readable text for pasting into a chat app. */
 export function contiToText(items: ContiItem[]): string {
   const lines = items.map((it, idx) => {
-    const s = songById.get(it.id);
+    const s = getSongById(it.id);
     if (!s) return `${idx + 1}.`;
     const key = s.keys.length ? ` (${s.keys.join("/")})` : "";
     const note = it.note ? ` — ${it.note}` : "";
