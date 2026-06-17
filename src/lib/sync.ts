@@ -134,6 +134,18 @@ function schedulePush() {
   pushTimer = setTimeout(pushNow, 800);
 }
 
+/** Push any pending local changes immediately (e.g. when the app is backgrounded). */
+function flush() {
+  if (!currentUser) return;
+  const m = getMeta();
+  if (!m || !m.dirty) return; // nothing un-pushed
+  if (pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+  }
+  void pushNow();
+}
+
 function onLocalChange() {
   if (applyingRemote) return;
   markDirty();
@@ -206,6 +218,14 @@ export function initSync() {
   subscribeFavorites(onLocalChange);
   subscribeConti(onLocalChange);
   subscribeHistory(onLocalChange);
+
+  // flush pending changes promptly when the app is hidden/closed so a quick
+  // edit-then-close doesn't wait until the next login to reach the cloud
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flush();
+  });
+  window.addEventListener("pagehide", flush);
+
   onAuth((user) => {
     if (user) onLogin(user);
     else onLogout();
