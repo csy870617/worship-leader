@@ -6,8 +6,13 @@ import { TEMPO_LABEL, type Tempo } from "../types";
 
 const KEY_CHOICES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
+// remount the form when the route id changes so stale state can't carry over
 export default function EditSong() {
   const { id } = useParams();
+  return <EditSongForm key={id ?? "new"} id={id} />;
+}
+
+function EditSongForm({ id }: { id?: string }) {
   const navigate = useNavigate();
   const editing = id != null;
   const existing = editing ? getSongById(id) : undefined;

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "gen": "node scripts/generate-songs.mjs"
+    "gen": "node scripts/curated-songs.mjs",
+    "gen:sheet": "node scripts/generate-songs.mjs"
   },
   "dependencies": {
     "firebase": "^10.14.1",

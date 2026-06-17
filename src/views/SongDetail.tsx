@@ -6,6 +6,8 @@ import { KeyBadge, TempoBadge, LastUsedBadge } from "../components/Badges";
 import FavoriteButton from "../components/FavoriteButton";
 import AddToContiButton from "../components/AddToContiButton";
 import { useHistory } from "../lib/useHistory";
+import { useFavorites } from "../lib/useFavorites";
+import { useConti } from "../lib/useConti";
 
 export default function SongDetail() {
   const { id } = useParams();
@@ -13,6 +15,8 @@ export default function SongDetail() {
   const { songById } = useSongs();
   const song = id ? songById.get(id) : undefined;
   const { lastUsed } = useHistory();
+  const { favorites, toggle: toggleFav } = useFavorites();
+  const { has: inConti, toggle: toggleConti } = useConti();
 
   if (!song) {
     return (
@@ -50,8 +54,8 @@ export default function SongDetail() {
           {song.title}
         </h1>
         <div className="-mr-1 mt-0.5 flex items-center">
-          <AddToContiButton id={song.id} size="lg" />
-          <FavoriteButton id={song.id} size="lg" />
+          <AddToContiButton active={inConti(song.id)} onToggle={() => toggleConti(song.id)} size="lg" />
+          <FavoriteButton active={favorites.has(song.id)} onToggle={() => toggleFav(song.id)} size="lg" />
         </div>
       </div>
 
@@ -135,7 +139,7 @@ export default function SongDetail() {
               {song.themes.map((t) => (
                 <Link
                   key={t}
-                  to={`/theme?theme=${encodeURIComponent(t)}`}
+                  to={`/browse?axis=theme&v=${encodeURIComponent(t)}`}
                   className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:active:bg-slate-700"
                 >
                   {t}
@@ -170,7 +174,7 @@ export default function SongDetail() {
                     {s.keys.join("/")} · {relation.label}
                   </span>
                 </div>
-                <AddToContiButton id={s.id} />
+                <AddToContiButton active={inConti(s.id)} onToggle={() => toggleConti(s.id)} />
               </li>
             ))}
           </ul>

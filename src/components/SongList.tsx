@@ -1,11 +1,18 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import type { Song } from "../types";
 import { SongMeta } from "./Badges";
 import FavoriteButton from "./FavoriteButton";
 import AddToContiButton from "./AddToContiButton";
+import { useFavorites } from "../lib/useFavorites";
+import { useConti } from "../lib/useConti";
 import { useHistory } from "../lib/useHistory";
 
 export default function SongList({ songs }: { songs: Song[] }) {
+  // subscribe ONCE here; rows are memoized so a single toggle only re-renders
+  // the affected row instead of every button in the list.
+  const { favorites, toggle: toggleFav } = useFavorites();
+  const { has, toggle: toggleConti } = useConti();
   const { lastUsed } = useHistory();
 
   if (songs.length === 0) {
@@ -18,24 +25,50 @@ export default function SongList({ songs }: { songs: Song[] }) {
   return (
     <ul className="divide-y divide-slate-100 dark:divide-slate-800">
       {songs.map((song) => (
-        <li key={song.id} className="flex items-center">
-          <Link
-            to={`/song/${song.id}`}
-            className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 active:bg-slate-50 dark:active:bg-slate-800/60"
-          >
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-slate-800 dark:text-slate-100">
-                {song.title}
-              </p>
-              <SongMeta song={song} lastUsed={lastUsed(song.id)} />
-            </div>
-          </Link>
-          <div className="flex items-center pr-2">
-            <AddToContiButton id={song.id} />
-            <FavoriteButton id={song.id} />
-          </div>
-        </li>
+        <SongRow
+          key={song.id}
+          song={song}
+          fav={favorites.has(song.id)}
+          inConti={has(song.id)}
+          used={lastUsed(song.id)}
+          onFav={toggleFav}
+          onConti={toggleConti}
+        />
       ))}
     </ul>
   );
 }
+
+const SongRow = memo(function SongRow({
+  song,
+  fav,
+  inConti,
+  used,
+  onFav,
+  onConti,
+}: {
+  song: Song;
+  fav: boolean;
+  inConti: boolean;
+  used: string | null;
+  onFav: (id: string) => void;
+  onConti: (id: string) => void;
+}) {
+  return (
+    <li className="flex items-center">
+      <Link
+        to={`/song/${song.id}`}
+        className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 active:bg-slate-50 dark:active:bg-slate-800/60"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium text-slate-800 dark:text-slate-100">{song.title}</p>
+          <SongMeta song={song} lastUsed={used} />
+        </div>
+      </Link>
+      <div className="flex items-center pr-2">
+        <AddToContiButton active={inConti} onToggle={() => onConti(song.id)} />
+        <FavoriteButton active={fav} onToggle={() => onFav(song.id)} />
+      </div>
+    </li>
+  );
+});

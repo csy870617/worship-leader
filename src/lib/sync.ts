@@ -111,10 +111,18 @@ function stopWatching() {
 }
 
 async function onLogin(user: User) {
+  // drop any previous watchers/timer before re-binding (auth can re-fire)
+  stopWatching();
+  if (pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+  }
   currentUser = user;
   if (!db) return;
   try {
     const snap = await getDoc(userRef(user.uid));
+    // bail if auth changed during the await (logout / different user)
+    if (currentUser?.uid !== user.uid) return;
     const remote = (snap.exists() ? snap.data() : {}) as Partial<CloudDoc>;
     const merged = merge(snapshotLocal(), remote);
 
@@ -132,7 +140,8 @@ async function onLogin(user: User) {
     console.warn("[sync] initial sync failed", e);
     applyingRemote = false;
   }
-  startWatching();
+  // only start watching if we're still logged in as this user
+  if (currentUser?.uid === user.uid) startWatching();
 }
 
 function onLogout() {

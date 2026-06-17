@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useConti } from "../lib/useConti";
 import { useSongs } from "../lib/catalog";
 import { bestRelation } from "../lib/keys";
+import type { Song } from "../types";
+
+type StageRow = { song: Song; note: string | undefined };
 
 export default function Stage() {
   const { conti } = useConti();
@@ -10,7 +13,10 @@ export default function Stage() {
   const navigate = useNavigate();
   const [idx, setIdx] = useState(0);
 
-  const rows = conti.map((c) => songById.get(c.id)!).filter(Boolean);
+  // pair each song with its note BEFORE filtering, so indices never diverge
+  const rows: StageRow[] = conti
+    .map((c) => ({ song: songById.get(c.id), note: c.note }))
+    .filter((r): r is StageRow => Boolean(r.song));
 
   if (rows.length === 0) {
     return (
@@ -24,9 +30,9 @@ export default function Stage() {
   }
 
   const i = Math.min(idx, rows.length - 1);
-  const song = rows[i];
-  const note = conti[i]?.note;
-  const next = i < rows.length - 1 ? rows[i + 1] : null;
+  const song = rows[i].song;
+  const note = rows[i].note;
+  const next = i < rows.length - 1 ? rows[i + 1].song : null;
   const rel = next ? bestRelation(song.keys, next.keys) : null;
   const go = (d: number) => setIdx((p) => Math.max(0, Math.min(rows.length - 1, p + d)));
 

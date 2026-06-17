@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { compatibleSongs, useSongs } from "../lib/catalog";
 import { useConti } from "../lib/useConti";
@@ -30,9 +30,14 @@ export default function Conti() {
     [lastSong, excludeIds]
   );
 
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+  }, []);
   const flash = (m: string) => {
     setToast(m);
-    setTimeout(() => setToast(null), 1800);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 1800);
   };
 
   const dismissShared = () => {

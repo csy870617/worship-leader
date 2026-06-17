@@ -1,8 +1,14 @@
-import { useConti } from "../lib/useConti";
-
-export default function AddToContiButton({ id, size = "md" }: { id: string; size?: "md" | "lg" }) {
-  const { has, toggle } = useConti();
-  const active = has(id);
+// Presentational: subscription lives in the parent so a single toggle doesn't
+// re-render every row's button.
+export default function AddToContiButton({
+  active,
+  onToggle,
+  size = "md",
+}: {
+  active: boolean;
+  onToggle: () => void;
+  size?: "md" | "lg";
+}) {
   const box = size === "lg" ? "h-7 w-7" : "h-5 w-5";
 
   return (
@@ -10,7 +16,7 @@ export default function AddToContiButton({ id, size = "md" }: { id: string; size
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggle(id);
+        onToggle();
       }}
       aria-label={active ? "콘티에서 빼기" : "콘티에 담기"}
       aria-pressed={active}

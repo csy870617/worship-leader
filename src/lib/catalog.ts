@@ -7,11 +7,29 @@ import { bestRelation, type Relation } from "./keys";
 const LS = "wl.userSongs";
 const LS_HIDDEN = "wl.hidden";
 
+const arr = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+
+// guarantee a well-formed Song so a malformed record can't crash rendering
+function sanitizeSong(s: any): Song | null {
+  if (!s || typeof s.id !== "string" || typeof s.title !== "string" || !s.title) return null;
+  return {
+    id: s.id,
+    title: s.title,
+    keys: arr(s.keys),
+    tempos: arr(s.tempos) as Song["tempos"],
+    themes: arr(s.themes),
+    hymnNo: typeof s.hymnNo === "number" ? s.hymnNo : null,
+  };
+}
+
 function loadUserSongs(): Song[] {
   try {
     const raw = localStorage.getItem(LS);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr.filter((s) => s && typeof s.id === "string" && s.title) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed)
+      ? parsed.map(sanitizeSong).filter((s): s is Song => s !== null)
+      : [];
   } catch {
     return [];
   }
@@ -57,7 +75,8 @@ export function getUserSongs(): Song[] {
   return userSongs;
 }
 export function setUserSongs(next: Song[]) {
-  userSongs = next;
+  // sanitize (e.g. records merged from the cloud) before they enter the catalog
+  userSongs = next.map(sanitizeSong).filter((s): s is Song => s !== null);
   emit();
 }
 export function getHiddenIds(): string[] {

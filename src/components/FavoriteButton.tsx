@@ -1,14 +1,14 @@
-import { useFavorites } from "../lib/useFavorites";
-
+// Presentational: subscription lives in the parent so a single toggle doesn't
+// re-render every row's button.
 export default function FavoriteButton({
-  id,
+  active,
+  onToggle,
   size = "md",
 }: {
-  id: string;
+  active: boolean;
+  onToggle: () => void;
   size?: "md" | "lg";
 }) {
-  const { isFavorite, toggle } = useFavorites();
-  const active = isFavorite(id);
   const cls = size === "lg" ? "h-7 w-7" : "h-5 w-5";
 
   return (
@@ -16,7 +16,7 @@ export default function FavoriteButton({
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggle(id);
+        onToggle();
       }}
       aria-label={active ? "즐겨찾기 해제" : "즐겨찾기"}
       aria-pressed={active}
