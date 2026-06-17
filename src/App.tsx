@@ -60,7 +60,7 @@ export default function App() {
         {!isStage && (
           <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-slate-100 px-3 py-4 dark:border-slate-800 md:flex">
             <button onClick={() => navigate("/browse")} className="mb-4 px-2 text-left">
-              <span className="text-lg font-bold tracking-tight">찬양 곡 모음</span>
+              <span className="text-lg font-bold tracking-tight">Worship Leader</span>
               <span className="block text-xs text-slate-400 dark:text-slate-500">{songs.length}곡</span>
             </button>
             <nav className="flex flex-col gap-1">
@@ -95,7 +95,7 @@ export default function App() {
           {/* Mobile header */}
           {!hideMobileChrome && (
             <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-100 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 md:hidden">
-              <h1 className="text-base font-bold tracking-tight">찬양 곡 모음</h1>
+              <h1 className="text-base font-bold tracking-tight">Worship Leader</h1>
               <div className="flex items-center gap-2">
                 {controls}
                 <span className="text-xs text-slate-400 dark:text-slate-500">{songs.length}곡</span>
