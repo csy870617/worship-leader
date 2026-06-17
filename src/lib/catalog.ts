@@ -212,6 +212,34 @@ export function compatibleSongs(
     .slice(0, limit);
 }
 
+export interface Related {
+  song: Song;
+  relation: Relation;
+  sameTempo: boolean;
+  sharedThemes: string[];
+}
+
+/** Songs that fit a given song across key + tempo + theme, best matches first. */
+export function relatedSongs(
+  song: Song,
+  excludeIds: Set<string> = new Set(),
+  limit = 6
+): Related[] {
+  return songs
+    .filter((s) => !excludeIds.has(s.id))
+    .map((s) => {
+      const relation = bestRelation(song.keys, s.keys);
+      const sameTempo = song.tempos.some((t) => s.tempos.includes(t));
+      const sharedThemes = s.themes.filter((t) => song.themes.includes(t));
+      const score =
+        relation.score * 2 + (sameTempo ? 2 : 0) + Math.min(sharedThemes.length, 3) * 2;
+      return { song: s, relation, sameTempo, sharedThemes, score };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || a.song.title.localeCompare(b.song.title, "ko"))
+    .slice(0, limit);
+}
+
 // ---- React binding ----
 function subscribe(cb: () => void) {
   listeners.add(cb);
