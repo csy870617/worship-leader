@@ -1,6 +1,13 @@
-// Per-user cloud sync: merge-on-login, then debounced push of local changes.
-// Kept deliberately simple (no live multi-tab listener) to avoid echo loops —
-// cross-device sync happens whenever the app loads and the user is signed in.
+// Per-user cloud sync with document-level Last-Write-Wins.
+//
+// A small sync record { uid, at, dirty } is kept in localStorage:
+//   • at    = updatedAt of the cloud doc this device last synced with
+//   • dirty = local has un-pushed changes since then
+//
+// On login we compare the cloud doc's updatedAt against `at` to decide who wins,
+// so deletions made on one device propagate to others (no union-resurrection).
+// First-ever login on a device unions (to preserve pre-login local data); an
+// account switch takes the cloud as truth (no cross-account contamination).
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db, onAuth } from "./firebase";
@@ -37,8 +44,9 @@ interface CloudDoc {
   hidden: string[];
   updatedAt: number;
 }
+type LocalSnapshot = Omit<CloudDoc, "updatedAt">;
 
-function snapshotLocal(): Omit<CloudDoc, "updatedAt"> {
+function snapshotLocal(): LocalSnapshot {
   return {
     userSongs: getUserSongs(),
     favorites: getFavoriteIds(),
@@ -48,106 +56,144 @@ function snapshotLocal(): Omit<CloudDoc, "updatedAt"> {
   };
 }
 
-function merge(local: Omit<CloudDoc, "updatedAt">, remote: Partial<CloudDoc>) {
-  // user songs: union by id (local wins on conflict — most recently edited here)
+/** Union merge — only used for the first login (preserve local + remote). */
+function mergeUnion(local: LocalSnapshot, remote: Partial<CloudDoc>): LocalSnapshot {
   const byId = new Map<string, Song>();
   for (const s of remote.userSongs ?? []) byId.set(s.id, s);
   for (const s of local.userSongs) byId.set(s.id, s);
 
-  // favorites + hidden: union
   const favorites = [...new Set([...(remote.favorites ?? []), ...local.favorites])];
   const hidden = [...new Set([...(remote.hidden ?? []), ...local.hidden])];
 
-  // history: keep the most recent date per song
   const history: Record<string, string> = { ...(remote.history ?? {}) };
   for (const [id, date] of Object.entries(local.history)) {
     const cur = history[id];
     if (!cur || date > cur) history[id] = date;
   }
 
-  // conti is a single working set: keep local if present, else take remote
   const conti = local.conti.length ? local.conti : remote.conti ?? [];
-
   return { userSongs: [...byId.values()], favorites, conti, history, hidden };
 }
 
+// ---- sync meta (per device) ----
+const META = "wl.sync";
+interface SyncMeta {
+  uid: string;
+  at: number;
+  dirty: boolean;
+}
+function getMeta(): SyncMeta | null {
+  try {
+    const raw = localStorage.getItem(META);
+    const o = raw ? JSON.parse(raw) : null;
+    return o && typeof o.uid === "string" ? o : null;
+  } catch {
+    return null;
+  }
+}
+function saveMeta(uid: string, at: number, dirty: boolean) {
+  localStorage.setItem(META, JSON.stringify({ uid, at, dirty }));
+}
+function markDirty() {
+  const m = getMeta();
+  if (m && !m.dirty) saveMeta(m.uid, m.at, true);
+}
+
+// ---- runtime state ----
 let applyingRemote = false;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
-let unsubStores: Array<() => void> = [];
 let currentUser: User | null = null;
 
-function userRef(uid: string) {
-  return doc(db!, "users", uid);
+const userRef = (uid: string) => doc(db!, "users", uid);
+
+function applyDoc(d: Partial<CloudDoc> | LocalSnapshot) {
+  applyingRemote = true;
+  setUserSongs(d.userSongs ?? []);
+  setFavoriteIds(d.favorites ?? []);
+  setContiItems(d.conti ?? []);
+  setHistoryMap(d.history ?? {});
+  setHiddenIds(d.hidden ?? []);
+  applyingRemote = false;
 }
 
 async function pushNow() {
   if (!db || !currentUser) return;
+  const uid = currentUser.uid;
   const payload: CloudDoc = { ...snapshotLocal(), updatedAt: Date.now() };
   try {
-    await setDoc(userRef(currentUser.uid), payload, { merge: true });
+    await setDoc(userRef(uid), payload); // full replace → deletions propagate
+    if (currentUser?.uid === uid) saveMeta(uid, payload.updatedAt, false);
   } catch (e) {
     console.warn("[sync] push failed", e);
   }
 }
 
 function schedulePush() {
-  if (applyingRemote || !currentUser) return;
+  if (!currentUser) return;
   if (pushTimer) clearTimeout(pushTimer);
   pushTimer = setTimeout(pushNow, 800);
 }
 
-function startWatching() {
-  unsubStores = [
-    subscribeCatalog(schedulePush),
-    subscribeFavorites(schedulePush),
-    subscribeConti(schedulePush),
-    subscribeHistory(schedulePush),
-  ];
-}
-
-function stopWatching() {
-  unsubStores.forEach((u) => u());
-  unsubStores = [];
+function onLocalChange() {
+  if (applyingRemote) return;
+  markDirty();
+  schedulePush();
 }
 
 async function onLogin(user: User) {
-  // drop any previous watchers/timer before re-binding (auth can re-fire)
-  stopWatching();
-  if (pushTimer) {
-    clearTimeout(pushTimer);
-    pushTimer = null;
-  }
   currentUser = user;
   if (!db) return;
   try {
     const snap = await getDoc(userRef(user.uid));
-    // bail if auth changed during the await (logout / different user)
-    if (currentUser?.uid !== user.uid) return;
-    const remote = (snap.exists() ? snap.data() : {}) as Partial<CloudDoc>;
-    const merged = merge(snapshotLocal(), remote);
+    if (currentUser?.uid !== user.uid) return; // auth changed during await
 
-    // apply merged result to local stores without triggering a push storm
-    applyingRemote = true;
-    setUserSongs(merged.userSongs);
-    setFavoriteIds(merged.favorites);
-    setContiItems(merged.conti);
-    setHistoryMap(merged.history);
-    setHiddenIds(merged.hidden);
-    applyingRemote = false;
+    const remote = snap.exists() ? (snap.data() as CloudDoc) : null;
+    const meta = getMeta();
 
-    await pushNow(); // persist the merged state
+    if (!remote) {
+      await pushNow(); // seed the cloud from local
+      return;
+    }
+    if (!meta) {
+      // first sync ever on this device → union so pre-login local survives
+      applyDoc(mergeUnion(snapshotLocal(), remote));
+      await pushNow();
+      return;
+    }
+    if (meta.uid !== user.uid) {
+      // different account on this device → take cloud as truth
+      applyDoc(remote);
+      saveMeta(user.uid, remote.updatedAt, false);
+      return;
+    }
+    // same user returning → document-level last-write-wins
+    if (remote.updatedAt > meta.at) {
+      if (meta.dirty) {
+        // both sides changed → union (avoids data loss in this rare conflict)
+        applyDoc(mergeUnion(snapshotLocal(), remote));
+        await pushNow();
+      } else {
+        // remote is newer and we have no local edits → accept it (deletions land)
+        applyDoc(remote);
+        saveMeta(user.uid, remote.updatedAt, false);
+      }
+    } else if (meta.dirty) {
+      await pushNow(); // our local edits win
+    } else {
+      saveMeta(user.uid, remote.updatedAt, false); // already in sync
+    }
   } catch (e) {
     console.warn("[sync] initial sync failed", e);
     applyingRemote = false;
   }
-  // only start watching if we're still logged in as this user
-  if (currentUser?.uid === user.uid) startWatching();
 }
 
 function onLogout() {
   currentUser = null;
-  stopWatching();
-  if (pushTimer) clearTimeout(pushTimer);
+  if (pushTimer) {
+    clearTimeout(pushTimer);
+    pushTimer = null;
+  }
 }
 
 let started = false;
@@ -155,6 +201,11 @@ let started = false;
 export function initSync() {
   if (started || !db) return;
   started = true;
+  // a single always-on watcher: record local edits (dirty) and push when logged in
+  subscribeCatalog(onLocalChange);
+  subscribeFavorites(onLocalChange);
+  subscribeConti(onLocalChange);
+  subscribeHistory(onLocalChange);
   onAuth((user) => {
     if (user) onLogin(user);
     else onLogout();
