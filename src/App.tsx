@@ -9,7 +9,6 @@ import Browse from "./views/Browse";
 import Search from "./views/Search";
 import Conti from "./views/Conti";
 import Favorites from "./views/Favorites";
-import Stage from "./views/Stage";
 import SongDetail from "./views/SongDetail";
 import EditSong from "./views/EditSong";
 import Hidden from "./views/Hidden";
@@ -31,12 +30,9 @@ export default function App() {
   // start cloud sync once (no-op unless Firebase env is configured)
   useEffect(() => initSync(), []);
 
-  const isStage = location.pathname.startsWith("/stage");
   // detail / edit get a full-bleed screen on mobile (their own back button)
   const hideMobileChrome =
-    isStage ||
-    location.pathname.startsWith("/song/") ||
-    location.pathname.startsWith("/edit");
+    location.pathname.startsWith("/song/") || location.pathname.startsWith("/edit");
 
   // header / sidebar controls (shared)
   const controls = (
@@ -57,7 +53,7 @@ export default function App() {
     <div className="min-h-full bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
       <div className="mx-auto flex w-full max-w-5xl">
         {/* Desktop sidebar */}
-        {!isStage && (
+        {(
           <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-slate-100 px-3 py-4 dark:border-slate-800 md:flex">
             <button onClick={() => navigate("/browse")} className="mb-4 px-2 text-left">
               <span className="text-lg font-bold tracking-tight">Worship Leader</span>
@@ -111,7 +107,6 @@ export default function App() {
               <Route path="/conti" element={<Conti />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/hidden" element={<Hidden />} />
-              <Route path="/stage" element={<Stage />} />
               <Route path="/edit" element={<EditSong />} />
               <Route path="/edit/:id" element={<EditSong />} />
               <Route path="/song/:id" element={<SongDetail />} />
