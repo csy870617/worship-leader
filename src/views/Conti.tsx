@@ -158,7 +158,7 @@ export default function Conti() {
       )}
 
       {/* ordered list with key-flow between songs */}
-      <ol className="px-4 pt-3">
+      <ol className="space-y-1.5 px-3 pt-3">
         {rows.map((r, i) => {
           const prev = i > 0 ? rows[i - 1].song : null;
           const rel = prev ? bestRelation(prev.keys, r.song.keys) : null;
@@ -167,61 +167,68 @@ export default function Conti() {
           return (
             <li key={r.id}>
               {rel && (
-                <div className="flex items-center gap-2 py-1 pl-1 text-[11px] text-slate-400 dark:text-slate-500">
-                  <span className="h-3 w-px bg-slate-200 dark:bg-slate-700" />
-                  {rel.score > 0 ? (
-                    <span className={rel.score >= 3 ? "text-emerald-600 dark:text-emerald-400" : ""}>
-                      ↓ {rel.label}
-                    </span>
-                  ) : (
-                    <span className="text-amber-600 dark:text-amber-400">↓ 키 전환 큼</span>
-                  )}
+                <div className="flex items-center justify-center py-0.5 text-[10px] font-medium">
+                  <span
+                    className={
+                      rel.score >= 3
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : rel.score > 0
+                        ? "text-slate-400 dark:text-slate-500"
+                        : "text-amber-600 dark:text-amber-400"
+                    }
+                  >
+                    {rel.score > 0 ? `↓ ${rel.label}` : "↓ 키 전환 큼"}
+                  </span>
                 </div>
               )}
-              <div className="rounded-xl border border-slate-100 p-3 dark:border-slate-800">
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 text-sm font-bold text-slate-400">{i + 1}</span>
-                  <div className="min-w-0 flex-1">
-                    <Link to={`/song/${r.song.id}`} className="block truncate font-medium text-slate-800 dark:text-slate-100">
+              <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/50">
+                <span className="w-5 shrink-0 text-center text-sm font-bold text-slate-300 dark:text-slate-600">
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to={`/song/${r.song.id}`}
+                      className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-100"
+                    >
                       {r.song.title}
                     </Link>
-                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                    <span className="flex shrink-0 items-center gap-1">
                       {r.song.keys.map((k) => <KeyBadge key={k} k={k} />)}
-                      {recentlyUsed && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-orange-100 py-0.5 pl-1.5 pr-0.5 text-xs font-semibold text-orange-700 dark:bg-orange-500/20 dark:text-orange-300">
-                          최근 {Math.floor(daysSince(used!) / 7) || 0}주 전 사용
-                          <button
-                            onClick={() => clearUsed([r.id])}
-                            aria-label="사용 기록 삭제"
-                            title="사용 기록 삭제"
-                            className="rounded-full p-0.5 hover:text-rose-600"
-                          >
-                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} aria-hidden>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </span>
-                      )}
-                    </div>
+                    </span>
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-2">
                     <input
                       value={r.note ?? ""}
                       onChange={(e) => setNote(r.id, e.target.value)}
-                      placeholder="메모 (연주 키 / 편곡 등)"
-                      className="mt-2 w-full rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-sm text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                      placeholder="메모 추가"
+                      className="-mx-1 min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
                     />
-                  </div>
-                  <div className="flex flex-col">
-                    <button onClick={() => move(r.id, -1)} disabled={i === 0} aria-label="위로" className="p-1 text-slate-400 disabled:opacity-30">
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
-                    </button>
-                    <button onClick={() => move(r.id, 1)} disabled={i === rows.length - 1} aria-label="아래로" className="p-1 text-slate-400 disabled:opacity-30">
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
-                    </button>
-                    <button onClick={() => remove(r.id)} aria-label="빼기" className="p-1 text-slate-300 hover:text-rose-500">
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-                    </button>
+                    {recentlyUsed && (
+                      <button
+                        onClick={() => clearUsed([r.id])}
+                        title="사용 기록 삭제"
+                        className="inline-flex shrink-0 items-center gap-1 rounded-md bg-orange-100 py-0.5 pl-1.5 pr-1 text-[10px] font-semibold text-orange-700 dark:bg-orange-500/20 dark:text-orange-300"
+                      >
+                        {Math.floor(daysSince(used!) / 7) || 0}주 전 사용
+                        <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
+                <div className="flex shrink-0 flex-col text-slate-400">
+                  <button onClick={() => move(r.id, -1)} disabled={i === 0} aria-label="위로" className="p-0.5 disabled:opacity-25">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
+                  </button>
+                  <button onClick={() => move(r.id, 1)} disabled={i === rows.length - 1} aria-label="아래로" className="p-0.5 disabled:opacity-25">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                  </button>
+                </div>
+                <button onClick={() => remove(r.id)} aria-label="빼기" className="shrink-0 rounded-full p-1 text-slate-300 hover:text-rose-500 dark:text-slate-600">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                </button>
               </div>
             </li>
           );
