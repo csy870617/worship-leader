@@ -4,7 +4,7 @@ import { useSongs } from "../lib/catalog";
 import { useConti } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { bestRelation } from "../lib/keys";
-import { contiShareUrl, contiToText, copyText, decodeConti } from "../lib/share";
+import { contiToText, copyText, decodeConti, shareConti } from "../lib/share";
 import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
@@ -236,13 +236,17 @@ export default function Conti() {
           </p>
           <div className="flex gap-2">
             <button
-              onClick={async () => flash((await copyText(contiShareUrl(conti))) ? "공유 링크가 복사됐어요" : "복사 실패")}
+              onClick={async () => {
+                const r = await shareConti(conti, active.name);
+                if (r === "copied") flash("공유 링크가 복사됐어요");
+                else if (r === "failed") flash("공유에 실패했어요");
+              }}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white active:bg-indigo-700"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
               </svg>
-              링크 복사
+              링크 공유
             </button>
             <button
               onClick={async () => flash((await copyText(contiToText(conti))) ? "텍스트가 복사됐어요" : "복사 실패")}

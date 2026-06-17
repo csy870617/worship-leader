@@ -52,6 +52,28 @@ export function contiToText(items: ContiItem[]): string {
   return `🎵 콘티 (${items.length}곡)\n${lines.join("\n")}`;
 }
 
+/**
+ * Open the device's native share sheet for a conti link.
+ * Falls back to copying the link when Web Share isn't available.
+ */
+export async function shareConti(
+  items: ContiItem[],
+  title = "콘티"
+): Promise<"shared" | "copied" | "failed"> {
+  const url = contiShareUrl(items);
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text: `🎵 ${title} (${items.length}곡)`, url });
+      return "shared";
+    } catch (e) {
+      // user cancelled the share sheet — not an error
+      if (e instanceof DOMException && e.name === "AbortError") return "shared";
+      // otherwise fall through to clipboard
+    }
+  }
+  return (await copyText(url)) ? "copied" : "failed";
+}
+
 /** Copy text to clipboard with a legacy fallback. */
 export async function copyText(text: string): Promise<boolean> {
   try {
