@@ -7,16 +7,43 @@ import {
   signInWithGoogle,
   signOutUser,
 } from "../lib/firebase";
+import { isInAppBrowser, tryOpenExternal } from "../lib/inapp";
+import { copyText } from "../lib/share";
 
 export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
 
   useEffect(() => onAuth(setUser), []);
   useEffect(() => onAuthError(setError), []);
 
   if (!isFirebaseConfigured) return null;
+
+  // In-app browsers (KakaoTalk, etc.) can't do Google OAuth → guide to a real browser.
+  if (!user && isInAppBrowser()) {
+    return (
+      <div className="relative">
+        <button
+          onClick={async () => {
+            if (tryOpenExternal()) return; // KakaoTalk/Line jump out directly
+            const ok = await copyText(location.href);
+            setHint(ok ? "주소 복사됨 · 외부 브라우저에 붙여넣어 여세요" : "메뉴(⋮)에서 외부 브라우저로 열어주세요");
+          }}
+          className="flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 active:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-300"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+          브라우저로 열기
+        </button>
+        <span className="absolute right-0 top-full mt-1 w-56 rounded bg-slate-800 px-2 py-1.5 text-[10px] leading-snug text-white shadow dark:bg-slate-700">
+          {hint ?? "카카오톡 등 인앱 브라우저에선 구글 로그인이 막힙니다. Chrome/Safari로 열어주세요."}
+        </span>
+      </div>
+    );
+  }
 
   if (user) {
     return (
