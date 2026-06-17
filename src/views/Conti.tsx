@@ -8,7 +8,10 @@ import { contiShareUrl, contiToText, copyText, decodeConti } from "../lib/share"
 import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
-  const { conti, remove, move, setNote, clear, replace, add, has } = useConti();
+  const {
+    conti, remove, move, setNote, clear, replace, add, has,
+    contis, activeId, active, createConti, renameConti, deleteConti, setActive,
+  } = useConti();
   const { songById } = useSongs();
   const { markUsed, lastUsed } = useHistory();
   const navigate = useNavigate();
@@ -85,39 +88,77 @@ export default function Conti() {
     );
   }
 
-  if (rows.length === 0) {
-    return (
-      <div className="px-6 py-20 text-center">
-        <svg className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 6.75h18M3 12h18M3 17.25h18" />
-        </svg>
-        <p className="mt-3 text-sm text-slate-400 dark:text-slate-500">
-          곡 목록의 ⊕ 버튼으로 콘티에 담아 순서를 구성해 보세요.
-        </p>
-        <Link to="/browse" className="mt-3 inline-block text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-          곡 둘러보기 →
-        </Link>
-      </div>
-    );
-  }
+  const selBtn =
+    "shrink-0 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300";
 
   return (
     <div className="pb-6">
-      {/* action bar */}
-      <div className="sticky top-14 md:top-0 z-10 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-4 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">콘티 {rows.length}곡</span>
-        <div className="ml-auto flex gap-1.5">
-          <button onClick={() => navigate("/stage")} className="rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white dark:bg-slate-200 dark:text-slate-900">무대 모드</button>
+      {/* setlist switcher + action bar */}
+      <div className="sticky top-14 md:top-0 z-10 space-y-2 border-b border-slate-100 bg-white/95 px-4 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+        <div className="flex items-center gap-2">
+          <select
+            value={activeId}
+            onChange={(e) => setActive(e.target.value)}
+            aria-label="콘티 선택"
+            className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          >
+            {contis.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} ({c.items.length})
+              </option>
+            ))}
+          </select>
           <button
-            onClick={async () => flash((await copyText(contiShareUrl(conti))) ? "공유 링크 복사됨" : "복사 실패")}
-            className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-semibold text-white"
-          >링크</button>
+            onClick={() => {
+              const name = prompt("새 콘티 이름", `콘티 ${contis.length + 1}`);
+              if (name !== null) {
+                createConti(name);
+                flash("새 콘티 생성됨");
+              }
+            }}
+            className={selBtn}
+            aria-label="새 콘티"
+          >＋ 새 콘티</button>
           <button
-            onClick={async () => flash((await copyText(contiToText(conti))) ? "텍스트 복사됨" : "복사 실패")}
-            className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-          >텍스트</button>
+            onClick={() => {
+              const name = prompt("콘티 이름 변경", active.name);
+              if (name) renameConti(activeId, name);
+            }}
+            className={selBtn}
+          >이름</button>
+          <button
+            onClick={() => {
+              if (confirm(`'${active.name}' 콘티를 삭제할까요?`)) deleteConti(activeId);
+            }}
+            className="shrink-0 rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-600 active:bg-rose-100 dark:bg-rose-500/15 dark:text-rose-400"
+          >삭제</button>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{rows.length}곡</span>
+          <div className="ml-auto flex gap-1.5">
+            <button onClick={() => navigate("/stage")} className="rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white dark:bg-slate-200 dark:text-slate-900">무대 모드</button>
+            <button
+              onClick={async () => flash((await copyText(contiShareUrl(conti))) ? "공유 링크 복사됨" : "복사 실패")}
+              className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-semibold text-white"
+            >링크</button>
+            <button
+              onClick={async () => flash((await copyText(contiToText(conti))) ? "텍스트 복사됨" : "복사 실패")}
+              className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+            >텍스트</button>
+          </div>
         </div>
       </div>
+
+      {rows.length === 0 && (
+        <div className="px-6 py-16 text-center">
+          <p className="text-sm text-slate-400 dark:text-slate-500">
+            이 콘티는 비어 있어요. 곡 목록의 ⊕ 버튼으로 담아 보세요.
+          </p>
+          <Link to="/browse" className="mt-3 inline-block text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+            곡 둘러보기 →
+          </Link>
+        </div>
+      )}
 
       {/* ordered list with key-flow between songs */}
       <ol className="px-4 pt-3">
@@ -208,16 +249,18 @@ export default function Conti() {
       )}
 
       {/* footer actions */}
-      <div className="mt-6 flex gap-2 px-4">
-        <button
-          onClick={() => { markUsed(conti.map((c) => c.id)); flash("오늘 사용으로 기록됨"); }}
-          className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
-        >예배에 사용함 (날짜 기록)</button>
-        <button
-          onClick={() => { if (confirm("콘티를 비울까요?")) clear(); }}
-          className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-rose-500 dark:border-slate-700"
-        >비우기</button>
-      </div>
+      {rows.length > 0 && (
+        <div className="mt-6 flex gap-2 px-4">
+          <button
+            onClick={() => { markUsed(conti.map((c) => c.id)); flash("오늘 사용으로 기록됨"); }}
+            className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
+          >예배에 사용함 (날짜 기록)</button>
+          <button
+            onClick={() => { if (confirm("이 콘티를 비울까요?")) clear(); }}
+            className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-rose-500 dark:border-slate-700"
+          >비우기</button>
+        </div>
+      )}
 
       {toast && (
         <div className="fixed inset-x-0 bottom-24 z-30 mx-auto w-fit rounded-full bg-slate-900 px-4 py-2 text-sm text-white shadow-lg dark:bg-slate-200 dark:text-slate-900">

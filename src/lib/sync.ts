@@ -27,9 +27,10 @@ import {
   subscribeFavorites,
 } from "./useFavorites";
 import {
-  getContiItems,
-  setContiItems,
+  getContiState,
+  setContiState,
   subscribeConti,
+  type Conti,
   type ContiItem,
 } from "./useConti";
 import {
@@ -41,7 +42,8 @@ import {
 interface CloudDoc {
   userSongs: Song[];
   favorites: string[];
-  conti: ContiItem[];
+  contis: Conti[];
+  activeContiId: string;
   history: Record<string, string>;
   hidden: string[];
   overrides: Record<string, Partial<Song>>;
@@ -49,11 +51,25 @@ interface CloudDoc {
 }
 type LocalSnapshot = Omit<CloudDoc, "updatedAt">;
 
+// read conti collection from a doc, migrating the old single-conti shape
+function readContis(d: any): { contis: Conti[]; activeContiId: string } {
+  if (Array.isArray(d?.contis)) {
+    return { contis: d.contis, activeContiId: d.activeContiId ?? d.contis[0]?.id ?? "" };
+  }
+  if (Array.isArray(d?.conti)) {
+    const c: Conti = { id: "c_legacy", name: "콘티 1", items: d.conti as ContiItem[] };
+    return { contis: [c], activeContiId: c.id };
+  }
+  return { contis: [], activeContiId: "" };
+}
+
 function snapshotLocal(): LocalSnapshot {
+  const cs = getContiState();
   return {
     userSongs: getUserSongs(),
     favorites: getFavoriteIds(),
-    conti: getContiItems(),
+    contis: cs.contis,
+    activeContiId: cs.activeId,
     history: getHistoryMap(),
     hidden: getHiddenIds(),
     overrides: getOverrides(),
@@ -78,8 +94,16 @@ function mergeUnion(local: LocalSnapshot, remote: Partial<CloudDoc>): LocalSnaps
   // overrides: union by song id (local wins on conflict)
   const overrides = { ...(remote.overrides ?? {}), ...local.overrides };
 
-  const conti = local.conti.length ? local.conti : remote.conti ?? [];
-  return { userSongs: [...byId.values()], favorites, conti, history, hidden, overrides };
+  // contis: union by id (local wins); prefer local active selection
+  const lc = readContis(local);
+  const rc = readContis(remote);
+  const cById = new Map<string, Conti>();
+  for (const c of rc.contis) cById.set(c.id, c);
+  for (const c of lc.contis) cById.set(c.id, c);
+  const contis = [...cById.values()];
+  const activeContiId = lc.activeContiId || rc.activeContiId || contis[0]?.id || "";
+
+  return { userSongs: [...byId.values()], favorites, contis, activeContiId, history, hidden, overrides };
 }
 
 // ---- sync meta (per device) ----
@@ -117,7 +141,8 @@ function applyDoc(d: Partial<CloudDoc> | LocalSnapshot) {
   applyingRemote = true;
   setUserSongs(d.userSongs ?? []);
   setFavoriteIds(d.favorites ?? []);
-  setContiItems(d.conti ?? []);
+  const rc = readContis(d);
+  setContiState({ contis: rc.contis, activeId: rc.activeContiId });
   setHistoryMap(d.history ?? {});
   setHiddenIds(d.hidden ?? []);
   setOverrides(d.overrides ?? {});

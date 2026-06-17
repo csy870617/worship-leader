@@ -1,39 +1,93 @@
 import { useCallback, useEffect, useState } from "react";
 
-const KEY = "wl.conti";
+const KEY = "wl.contis";
+const LEGACY = "wl.conti"; // previous single-conti storage
 
 export interface ContiItem {
   id: string;
   note?: string;
 }
+export interface Conti {
+  id: string;
+  name: string;
+  items: ContiItem[];
+}
+interface State {
+  contis: Conti[];
+  activeId: string;
+}
 
-function load(): ContiItem[] {
+const newId = () => "c_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+
+function sanitizeItems(arr: unknown): ContiItem[] {
+  return Array.isArray(arr)
+    ? arr
+        .filter((x: any) => x && typeof x.id === "string")
+        .map((x: any) => (x.note ? { id: x.id, note: String(x.note) } : { id: x.id }))
+    : [];
+}
+function sanitizeConti(c: any): Conti | null {
+  if (!c || typeof c.id !== "string") return null;
+  return {
+    id: c.id,
+    name: typeof c.name === "string" && c.name ? c.name : "콘티",
+    items: sanitizeItems(c.items),
+  };
+}
+
+function load(): State {
   try {
     const raw = localStorage.getItem(KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(arr)) return [];
-    return arr.filter((x) => x && typeof x.id === "string");
+    if (raw) {
+      const o = JSON.parse(raw);
+      const contis = Array.isArray(o?.contis)
+        ? o.contis.map(sanitizeConti).filter((c: Conti | null): c is Conti => !!c)
+        : [];
+      if (contis.length) {
+        const activeId = contis.some((c: Conti) => c.id === o.activeId) ? o.activeId : contis[0].id;
+        return { contis, activeId };
+      }
+    }
+    // migrate a previously-saved single conti
+    const legacyRaw = localStorage.getItem(LEGACY);
+    const items = legacyRaw ? sanitizeItems(JSON.parse(legacyRaw)) : [];
+    const c: Conti = { id: newId(), name: "콘티 1", items };
+    return { contis: [c], activeId: c.id };
   } catch {
-    return [];
+    const c: Conti = { id: newId(), name: "콘티 1", items: [] };
+    return { contis: [c], activeId: c.id };
   }
 }
 
-// shared in-memory state so every component using the hook stays in sync
-let items: ContiItem[] = load();
-const listeners = new Set<(s: ContiItem[]) => void>();
-
-function emit() {
-  localStorage.setItem(KEY, JSON.stringify(items));
-  for (const l of listeners) l(items.slice());
+let state: State = load();
+const listeners = new Set<(s: State) => void>();
+function commit(next: State) {
+  state = next;
+  localStorage.setItem(KEY, JSON.stringify(state));
+  for (const l of listeners) l(state);
 }
 
-// module-level accessors (used by the cloud sync engine)
-export function getContiItems(): ContiItem[] {
-  return items.slice();
+const active = (s: State = state) => s.contis.find((c) => c.id === s.activeId) ?? s.contis[0];
+function mutateActive(fn: (items: ContiItem[]) => ContiItem[]) {
+  const a = active();
+  commit({ ...state, contis: state.contis.map((c) => (c.id === a.id ? { ...c, items: fn(c.items) } : c)) });
 }
-export function setContiItems(next: ContiItem[]) {
-  items = next.slice();
-  emit();
+
+// ---- module-level accessors (cloud sync engine) ----
+export function getContiState(): State {
+  return state;
+}
+export function setContiState(next: { contis: Conti[]; activeId: string }) {
+  const contis = Array.isArray(next?.contis)
+    ? next.contis.map(sanitizeConti).filter((c): c is Conti => !!c)
+    : [];
+  if (!contis.length) {
+    const c: Conti = { id: newId(), name: "콘티 1", items: [] };
+    commit({ contis: [c], activeId: c.id });
+    return;
+  }
+  const activeId = contis.some((c) => c.id === next.activeId) ? next.activeId : contis[0].id;
+  commit({ contis, activeId });
 }
 export function subscribeConti(cb: () => void) {
   const l = () => cb();
@@ -42,59 +96,88 @@ export function subscribeConti(cb: () => void) {
 }
 
 export function useConti() {
-  const [conti, setConti] = useState<ContiItem[]>(() => items.slice());
-
+  const [s, setS] = useState<State>(state);
   useEffect(() => {
-    const l = (s: ContiItem[]) => setConti(s);
+    const l = (x: State) => setS(x);
     listeners.add(l);
     return () => {
       listeners.delete(l);
     };
   }, []);
 
-  const has = useCallback((id: string) => items.some((i) => i.id === id), []);
+  const cur = active(s);
 
-  const add = useCallback((id: string) => {
-    if (items.some((i) => i.id === id)) return;
-    items = [...items, { id }];
-    emit();
+  // active-conti item ops
+  const has = useCallback((id: string) => active().items.some((i) => i.id === id), []);
+  const add = useCallback(
+    (id: string) => mutateActive((items) => (items.some((i) => i.id === id) ? items : [...items, { id }])),
+    []
+  );
+  const remove = useCallback((id: string) => mutateActive((items) => items.filter((i) => i.id !== id)), []);
+  const toggle = useCallback(
+    (id: string) =>
+      mutateActive((items) =>
+        items.some((i) => i.id === id) ? items.filter((i) => i.id !== id) : [...items, { id }]
+      ),
+    []
+  );
+  const move = useCallback(
+    (id: string, dir: -1 | 1) =>
+      mutateActive((items) => {
+        const idx = items.findIndex((i) => i.id === id);
+        const next = idx + dir;
+        if (idx < 0 || next < 0 || next >= items.length) return items;
+        const copy = items.slice();
+        [copy[idx], copy[next]] = [copy[next], copy[idx]];
+        return copy;
+      }),
+    []
+  );
+  const setNote = useCallback(
+    (id: string, note: string) => mutateActive((items) => items.map((i) => (i.id === id ? { ...i, note } : i))),
+    []
+  );
+  const clear = useCallback(() => mutateActive(() => []), []);
+  const replace = useCallback((items: ContiItem[]) => mutateActive(() => items.slice()), []);
+
+  // collection ops
+  const createConti = useCallback((name?: string) => {
+    const c: Conti = { id: newId(), name: name?.trim() || `콘티 ${state.contis.length + 1}`, items: [] };
+    commit({ contis: [...state.contis, c], activeId: c.id });
+    return c.id;
+  }, []);
+  const renameConti = useCallback((id: string, name: string) => {
+    commit({
+      ...state,
+      contis: state.contis.map((c) => (c.id === id ? { ...c, name: name.trim() || c.name } : c)),
+    });
+  }, []);
+  const deleteConti = useCallback((id: string) => {
+    let contis = state.contis.filter((c) => c.id !== id);
+    if (!contis.length) contis = [{ id: newId(), name: "콘티 1", items: [] }];
+    const activeId = state.activeId === id ? contis[0].id : state.activeId;
+    commit({ contis, activeId });
+  }, []);
+  const setActive = useCallback((id: string) => {
+    if (state.contis.some((c) => c.id === id)) commit({ ...state, activeId: id });
   }, []);
 
-  const remove = useCallback((id: string) => {
-    items = items.filter((i) => i.id !== id);
-    emit();
-  }, []);
-
-  const toggle = useCallback((id: string) => {
-    if (items.some((i) => i.id === id)) items = items.filter((i) => i.id !== id);
-    else items = [...items, { id }];
-    emit();
-  }, []);
-
-  const move = useCallback((id: string, dir: -1 | 1) => {
-    const idx = items.findIndex((i) => i.id === id);
-    const next = idx + dir;
-    if (idx < 0 || next < 0 || next >= items.length) return;
-    const copy = items.slice();
-    [copy[idx], copy[next]] = [copy[next], copy[idx]];
-    items = copy;
-    emit();
-  }, []);
-
-  const setNote = useCallback((id: string, note: string) => {
-    items = items.map((i) => (i.id === id ? { ...i, note } : i));
-    emit();
-  }, []);
-
-  const clear = useCallback(() => {
-    items = [];
-    emit();
-  }, []);
-
-  const replace = useCallback((next: ContiItem[]) => {
-    items = next.slice();
-    emit();
-  }, []);
-
-  return { conti, has, add, remove, toggle, move, setNote, clear, replace };
+  return {
+    contis: s.contis,
+    activeId: s.activeId,
+    active: cur,
+    conti: cur.items,
+    has,
+    add,
+    remove,
+    toggle,
+    move,
+    setNote,
+    clear,
+    replace,
+    createConti,
+    renameConti,
+    deleteConti,
+    setActive,
+  };
 }
