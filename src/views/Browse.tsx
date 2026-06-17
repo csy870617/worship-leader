@@ -61,7 +61,7 @@ export default function Browse() {
 
   return (
     <div>
-      <div className="sticky top-14 z-10 space-y-2 border-b border-slate-100 bg-white/95 px-4 pt-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+      <div className="sticky top-14 md:top-0 z-10 space-y-2 border-b border-slate-100 bg-white/95 px-4 pt-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
         <div className="flex items-center justify-between gap-2">
           {/* axis segmented control */}
           <div className="flex rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">

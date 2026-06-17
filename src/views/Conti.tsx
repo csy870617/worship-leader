@@ -104,7 +104,7 @@ export default function Conti() {
   return (
     <div className="pb-6">
       {/* action bar */}
-      <div className="sticky top-14 z-10 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-4 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+      <div className="sticky top-14 md:top-0 z-10 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-4 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">콘티 {rows.length}곡</span>
         <div className="ml-auto flex gap-1.5">
           <button onClick={() => navigate("/stage")} className="rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white dark:bg-slate-200 dark:text-slate-900">무대 모드</button>

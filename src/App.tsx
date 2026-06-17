@@ -31,53 +31,103 @@ export default function App() {
   // start cloud sync once (no-op unless Firebase env is configured)
   useEffect(() => initSync(), []);
 
-  const fullscreen =
+  const isStage = location.pathname.startsWith("/stage");
+  // detail / edit get a full-bleed screen on mobile (their own back button)
+  const hideMobileChrome =
+    isStage ||
     location.pathname.startsWith("/song/") ||
-    location.pathname.startsWith("/stage") ||
     location.pathname.startsWith("/edit");
 
+  // header / sidebar controls (shared)
+  const controls = (
+    <>
+      <AuthButton />
+      <button onClick={() => navigate("/edit")} aria-label="곡 추가" className="rounded-full p-1.5 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800 md:hover:bg-slate-100 md:dark:hover:bg-slate-800">
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      </button>
+      <button onClick={toggle} aria-label="테마 전환" className="rounded-full p-1.5 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800 md:hover:bg-slate-100 md:dark:hover:bg-slate-800">
+        {theme === "dark" ? <IconSun /> : <IconMoon />}
+      </button>
+    </>
+  );
+
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-      {!fullscreen && (
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-100 bg-white px-4 dark:border-slate-800 dark:bg-slate-900">
-          <h1 className="text-base font-bold tracking-tight">찬양 곡 모음</h1>
-          <div className="flex items-center gap-2">
-            <AuthButton />
-            <span className="text-xs text-slate-400 dark:text-slate-500">{songs.length}곡</span>
-            <button onClick={() => navigate("/edit")} aria-label="곡 추가" className="rounded-full p-1.5 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
+    <div className="min-h-full bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+      <div className="mx-auto flex w-full max-w-5xl">
+        {/* Desktop sidebar */}
+        {!isStage && (
+          <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-slate-100 px-3 py-4 dark:border-slate-800 md:flex">
+            <button onClick={() => navigate("/browse")} className="mb-4 px-2 text-left">
+              <span className="text-lg font-bold tracking-tight">찬양 곡 모음</span>
+              <span className="block text-xs text-slate-400 dark:text-slate-500">{songs.length}곡</span>
             </button>
-            <button onClick={toggle} aria-label="테마 전환" className="rounded-full p-1.5 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800">
-              {theme === "dark" ? <IconSun /> : <IconMoon />}
-            </button>
-          </div>
-        </header>
-      )}
+            <nav className="flex flex-col gap-1">
+              {TABS.map(({ to, label, icon: Icon, badge }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${
+                      isActive
+                        ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300"
+                        : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                    }`
+                  }
+                >
+                  <Icon />
+                  {label}
+                  {badge && conti.length > 0 && (
+                    <span className="ml-auto rounded-full bg-indigo-600 px-1.5 text-[11px] font-bold leading-5 text-white">
+                      {conti.length}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+            </nav>
+            <div className="mt-auto flex items-center gap-2 px-1 pt-3">{controls}</div>
+          </aside>
+        )}
 
-      <main className={fullscreen ? "flex-1" : "flex-1 pb-20"}>
-        <Routes>
-          <Route path="/" element={<Navigate to="/browse" replace />} />
-          <Route path="/browse" element={<Browse />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/conti" element={<Conti />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/hidden" element={<Hidden />} />
-          <Route path="/stage" element={<Stage />} />
-          <Route path="/edit" element={<EditSong />} />
-          <Route path="/edit/:id" element={<EditSong />} />
-          <Route path="/song/:id" element={<SongDetail />} />
-          {/* legacy deep links */}
-          <Route path="/code" element={<Navigate to="/browse?axis=key" replace />} />
-          <Route path="/theme" element={<Navigate to="/browse?axis=theme" replace />} />
-          <Route path="/tempo" element={<Navigate to="/browse?axis=tempo" replace />} />
-          <Route path="*" element={<Navigate to="/browse" replace />} />
-        </Routes>
-      </main>
+        {/* Content column */}
+        <div className="flex min-h-screen w-full min-w-0 flex-1 flex-col md:border-x md:border-slate-100 md:dark:border-slate-800">
+          {/* Mobile header */}
+          {!hideMobileChrome && (
+            <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-100 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 md:hidden">
+              <h1 className="text-base font-bold tracking-tight">찬양 곡 모음</h1>
+              <div className="flex items-center gap-2">
+                {controls}
+                <span className="text-xs text-slate-400 dark:text-slate-500">{songs.length}곡</span>
+              </div>
+            </header>
+          )}
 
-      {!fullscreen && (
-        <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+          <main className={hideMobileChrome ? "flex-1 md:pb-10" : "flex-1 pb-20 md:pb-10"}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/browse" replace />} />
+              <Route path="/browse" element={<Browse />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/conti" element={<Conti />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/hidden" element={<Hidden />} />
+              <Route path="/stage" element={<Stage />} />
+              <Route path="/edit" element={<EditSong />} />
+              <Route path="/edit/:id" element={<EditSong />} />
+              <Route path="/song/:id" element={<SongDetail />} />
+              {/* legacy deep links */}
+              <Route path="/code" element={<Navigate to="/browse?axis=key" replace />} />
+              <Route path="/theme" element={<Navigate to="/browse?axis=theme" replace />} />
+              <Route path="/tempo" element={<Navigate to="/browse?axis=tempo" replace />} />
+              <Route path="*" element={<Navigate to="/browse" replace />} />
+            </Routes>
+          </main>
+        </div>
+      </div>
+
+      {/* Mobile bottom nav */}
+      {!hideMobileChrome && (
+        <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 md:hidden">
           {TABS.map(({ to, label, icon: Icon, badge }) => (
             <NavLink
               key={to}
