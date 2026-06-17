@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { data } from "../data";
-import { addSong, getSongById, isUserSong, removeSong, updateSong } from "../lib/catalog";
+import {
+  addSong,
+  getSongById,
+  isOverridden,
+  isUserSong,
+  removeSong,
+  resetOverride,
+  updateSong,
+} from "../lib/catalog";
 import { TEMPO_LABEL, type Tempo } from "../types";
 
 const KEY_CHOICES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
@@ -23,14 +31,14 @@ function EditSongForm({ id }: { id?: string }) {
   const [themes, setThemes] = useState<string[]>(existing?.themes ?? []);
   const [hymnNo, setHymnNo] = useState(existing?.hymnNo != null ? String(existing.hymnNo) : "");
 
-  // editing is only allowed for user-added songs
-  if (editing && (!existing || !isUserSong(existing.id))) {
+  if (editing && !existing) {
     return (
       <div className="px-4 py-16 text-center text-slate-500 dark:text-slate-400">
-        수정할 수 없는 곡입니다.
+        곡을 찾을 수 없습니다.
       </div>
     );
   }
+  const userSong = editing ? isUserSong(id!) : false;
 
   const toggle = <T,>(arr: T[], v: T, set: (x: T[]) => void) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
@@ -129,7 +137,7 @@ function EditSongForm({ id }: { id?: string }) {
         />
       </Section>
 
-      {editing && existing && (
+      {editing && existing && userSong && (
         <button
           onClick={() => {
             if (confirm("이 곡을 삭제할까요?")) {
@@ -143,8 +151,24 @@ function EditSongForm({ id }: { id?: string }) {
         </button>
       )}
 
+      {editing && existing && !userSong && isOverridden(existing.id) && (
+        <button
+          onClick={() => {
+            if (confirm("수정 내용을 지우고 원래대로 되돌릴까요?")) {
+              resetOverride(existing.id);
+              navigate(`/song/${existing.id}`, { replace: true });
+            }
+          }}
+          className="mt-8 w-full rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
+        >
+          원래대로 되돌리기
+        </button>
+      )}
+
       <p className="mt-6 text-xs leading-relaxed text-slate-400 dark:text-slate-500">
-        추가한 곡은 이 브라우저에 저장되며 둘러보기·검색·콘티에 함께 나타납니다.
+        {userSong
+          ? "추가한 곡은 이 브라우저에 저장되며 둘러보기·검색·콘티에 함께 나타납니다."
+          : "수정 내용은 내 계정/브라우저에만 저장됩니다(원본은 그대로). 로그인 시 동기화됩니다."}
       </p>
     </div>
   );

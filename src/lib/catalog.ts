@@ -6,6 +6,7 @@ import { bestRelation, type Relation } from "./keys";
 // ---- merged catalog = static snapshot + user-added songs, minus hidden ----
 const LS = "wl.userSongs";
 const LS_HIDDEN = "wl.hidden";
+const LS_OVERRIDES = "wl.overrides"; // per-user edits to base (static) songs
 
 const arr = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
@@ -43,16 +44,33 @@ function loadHidden(): Set<string> {
     return new Set();
   }
 }
+function loadOverrides(): Record<string, Partial<Song>> {
+  try {
+    const raw = localStorage.getItem(LS_OVERRIDES);
+    const o = raw ? JSON.parse(raw) : {};
+    return o && typeof o === "object" && !Array.isArray(o) ? o : {};
+  } catch {
+    return {};
+  }
+}
 
 let userSongs: Song[] = loadUserSongs();
 let hidden: Set<string> = loadHidden();
+let overrides: Record<string, Partial<Song>> = loadOverrides();
 let allSongs: Song[] = []; // user + static (full, incl. hidden)
 let songs: Song[] = []; // visible (hidden removed)
 let byId = new Map<string, Song>(); // full lookup (incl. hidden)
 let version = 0;
 
+// apply a user override (edited base song) on top of the static entry
+function withOverride(s: Song): Song {
+  const ov = overrides[s.id];
+  if (!ov) return s;
+  return sanitizeSong({ ...s, ...ov, id: s.id }) ?? s;
+}
+
 function recompute() {
-  allSongs = [...userSongs, ...staticSongs];
+  allSongs = [...userSongs, ...staticSongs.map(withOverride)];
   byId = new Map(allSongs.map((s) => [s.id, s]));
   songs = allSongs.filter((s) => !hidden.has(s.id));
 }
@@ -62,6 +80,7 @@ const listeners = new Set<() => void>();
 function emit() {
   localStorage.setItem(LS, JSON.stringify(userSongs));
   localStorage.setItem(LS_HIDDEN, JSON.stringify([...hidden]));
+  localStorage.setItem(LS_OVERRIDES, JSON.stringify(overrides));
   recompute();
   version++;
   listeners.forEach((l) => l());
@@ -84,6 +103,13 @@ export function getHiddenIds(): string[] {
 }
 export function setHiddenIds(next: string[]) {
   hidden = new Set(next);
+  emit();
+}
+export function getOverrides(): Record<string, Partial<Song>> {
+  return overrides;
+}
+export function setOverrides(next: Record<string, Partial<Song>>) {
+  overrides = next && typeof next === "object" ? next : {};
   emit();
 }
 export function subscribeCatalog(cb: () => void) {
@@ -132,11 +158,28 @@ export function addSong(input: SongInput): Song {
   return song;
 }
 export function updateSong(id: string, input: SongInput) {
-  userSongs = userSongs.map((s) => (s.id === id ? { ...s, ...input } : s));
+  if (userSongs.some((s) => s.id === id)) {
+    // user-added song: edit in place
+    userSongs = userSongs.map((s) => (s.id === id ? { ...s, ...input } : s));
+  } else {
+    // base (static) song: store a per-user override, leaving the original intact
+    overrides = { ...overrides, [id]: input };
+  }
   emit();
 }
 export function removeSong(id: string) {
   userSongs = userSongs.filter((s) => s.id !== id);
+  emit();
+}
+
+// edited base songs
+export function isOverridden(id: string): boolean {
+  return Object.prototype.hasOwnProperty.call(overrides, id);
+}
+export function resetOverride(id: string) {
+  if (!isOverridden(id)) return;
+  const { [id]: _removed, ...rest } = overrides;
+  overrides = rest;
   emit();
 }
 

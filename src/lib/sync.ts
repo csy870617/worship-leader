@@ -14,8 +14,10 @@ import { db, onAuth } from "./firebase";
 import type { Song } from "../types";
 import {
   getHiddenIds,
+  getOverrides,
   getUserSongs,
   setHiddenIds,
+  setOverrides,
   setUserSongs,
   subscribeCatalog,
 } from "./catalog";
@@ -42,6 +44,7 @@ interface CloudDoc {
   conti: ContiItem[];
   history: Record<string, string>;
   hidden: string[];
+  overrides: Record<string, Partial<Song>>;
   updatedAt: number;
 }
 type LocalSnapshot = Omit<CloudDoc, "updatedAt">;
@@ -53,6 +56,7 @@ function snapshotLocal(): LocalSnapshot {
     conti: getContiItems(),
     history: getHistoryMap(),
     hidden: getHiddenIds(),
+    overrides: getOverrides(),
   };
 }
 
@@ -71,8 +75,11 @@ function mergeUnion(local: LocalSnapshot, remote: Partial<CloudDoc>): LocalSnaps
     if (!cur || date > cur) history[id] = date;
   }
 
+  // overrides: union by song id (local wins on conflict)
+  const overrides = { ...(remote.overrides ?? {}), ...local.overrides };
+
   const conti = local.conti.length ? local.conti : remote.conti ?? [];
-  return { userSongs: [...byId.values()], favorites, conti, history, hidden };
+  return { userSongs: [...byId.values()], favorites, conti, history, hidden, overrides };
 }
 
 // ---- sync meta (per device) ----
@@ -113,6 +120,7 @@ function applyDoc(d: Partial<CloudDoc> | LocalSnapshot) {
   setContiItems(d.conti ?? []);
   setHistoryMap(d.history ?? {});
   setHiddenIds(d.hidden ?? []);
+  setOverrides(d.overrides ?? {});
   applyingRemote = false;
 }
 
