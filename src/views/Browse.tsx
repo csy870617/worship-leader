@@ -34,12 +34,6 @@ export default function Browse() {
   const options = useMemo(() => axisOptions(axis), [axis]);
   const filter = useMemo(() => axisFilter(axis), [axis]);
 
-  const counts = useMemo(() => {
-    const m: Record<string, number> = {};
-    for (const o of options) m[o.value] = filter(o.value).length;
-    return m;
-  }, [options, filter, songs]);
-
   const list = useMemo(() => {
     const src = value ? filter(value) : songs;
     const arr = [...src];
@@ -97,7 +91,7 @@ export default function Browse() {
           </select>
         </div>
         <ChipRow
-          options={options.map((o) => ({ ...o, count: counts[o.value] }))}
+          options={options}
           active={value}
           onSelect={(v) => patch({ v })}
         />
