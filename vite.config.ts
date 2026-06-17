@@ -23,8 +23,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg"],
       manifest: {
-        name: "찬양 곡 모음",
-        short_name: "찬양곡",
+        name: "Worship Leader",
+        short_name: "Worship Leader",
         description: "찬양 인도자를 위한 코드별·주제별·템포별 찬양곡 모음",
         lang: "ko",
         theme_color: "#4f46e5",
