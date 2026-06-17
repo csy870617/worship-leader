@@ -16,8 +16,10 @@ import { PDF_ROWS } from "./pdf-songs.mjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(__dirname, "../src/data/songs.json");
 
-// real keys extracted from the worship-team PDF sheet (overrides estimated keys)
-const PDF_KEYS = JSON.parse(readFileSync(resolve(__dirname, "pdf-keys.json"), "utf8"));
+// real data extracted from the worship-team sheets (overrides estimates)
+const PDF_KEYS = JSON.parse(readFileSync(resolve(__dirname, "pdf-keys.json"), "utf8")); // keys
+const SHEET_TEMPO = JSON.parse(readFileSync(resolve(__dirname, "sheet-tempo.json"), "utf8")); // tempo
+const SHEET_THEMES = JSON.parse(readFileSync(resolve(__dirname, "sheet-themes.json"), "utf8")); // themes
 const keyNorm = (t) =>
   t.replace(/\([^)]*\)/g, "").replace(/[0-9]/g, "").replace(/[\s,+\-#./]/g, "").toLowerCase();
 
@@ -250,13 +252,16 @@ for (const [title, tempo, keys, themes] of [...ROWS, ...PDF_ROWS]) {
   if (ids.has(id)) throw new Error(`id collision for "${title}" (${id})`);
   ids.add(id);
   const songThemes = themes.split("|").filter((t) => THEMES.includes(t));
-  const realKeys = PDF_KEYS[keyNorm(title)];
+  const kn = keyNorm(title);
+  const realKeys = PDF_KEYS[kn];
+  const realTempo = SHEET_TEMPO[kn];
+  const realThemes = (SHEET_THEMES[kn] || []).filter((t) => THEMES.includes(t));
   songs.push({
     id,
     title,
     keys: realKeys && realKeys.length ? realKeys : keys.split(/\s+/).filter(Boolean),
-    tempos: [tempo],
-    themes: songThemes,
+    tempos: [realTempo || tempo],
+    themes: realThemes.length ? realThemes : songThemes,
     hymnNo: null,
   });
 }
