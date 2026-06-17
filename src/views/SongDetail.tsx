@@ -159,7 +159,7 @@ export default function SongDetail() {
               {song.themes.map((t) => (
                 <Link
                   key={t}
-                  to={`/browse?axis=theme&v=${encodeURIComponent(t)}`}
+                  to={`/browse?axis=theme&theme=${encodeURIComponent(t)}`}
                   className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:active:bg-slate-700"
                 >
                   {t}
