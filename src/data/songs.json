@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-06-17",
-  "source": "Curated Korean worship songs; keys from team PDF sheet where available, else estimated",
+  "source": "User-edited CSV (songs-base.csv)",
   "keys": [
     "C",
     "D",
@@ -19,8 +19,7 @@
   ],
   "themes": [
     "감사",
-    "찬양(빠른곡)",
-    "찬양(느린곡)",
+    "찬양",
     "경배",
     "말씀",
     "결단과 헌신",
@@ -65,7 +64,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "고백",
@@ -80,7 +79,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "예수",
@@ -104,21 +103,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_481al",
-      "title": "갈보리 십자가의 사랑",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "십자가",
-        "사랑"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_2pptl",
       "title": "감사",
       "keys": [
@@ -134,46 +118,17 @@
       "hymnNo": null
     },
     {
-      "id": "b_1qx3pq5",
-      "title": "감사로 제사를 드리는 자가",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "감사"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_4e65wk",
       "title": "감사와 찬양 드리며",
       "keys": [
         "D"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "감사",
-        "찬양(빠른곡)"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_2hk9d9",
-      "title": "감사해",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "감사",
-        "고백"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -184,7 +139,7 @@
         "C"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "감사"
@@ -201,21 +156,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_waih8c",
-      "title": "거룩하신 하나님",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "감사"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -226,7 +167,7 @@
         "F"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "감사",
@@ -274,7 +215,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -285,7 +226,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "고백",
@@ -379,7 +320,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "예수",
@@ -425,7 +366,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "결단과 헌신",
@@ -440,7 +381,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "예수",
@@ -576,7 +517,7 @@
         "E"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "인도와 보호",
@@ -591,7 +532,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "간구",
@@ -640,7 +581,7 @@
         "Bb"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "간구",
@@ -672,7 +613,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -775,7 +716,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "감사",
@@ -837,7 +778,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "은혜"
       ],
       "hymnNo": null
@@ -849,7 +790,7 @@
         "F"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "간구"
@@ -878,7 +819,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "결단과 헌신",
@@ -893,7 +834,7 @@
         "E"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "결단과 헌신",
@@ -959,7 +900,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -973,7 +914,7 @@
         "SLOW"
       ],
       "themes": [
-        "찬양(느린곡)",
+        "찬양",
         "예수",
         "영광"
       ],
@@ -986,7 +927,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "은혜",
@@ -1032,7 +973,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "경배",
@@ -1092,7 +1033,7 @@
         "E"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "은혜",
@@ -1167,8 +1108,8 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
-        "찬양(느린곡)"
+        "찬양",
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -1193,7 +1134,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "예수",
@@ -1212,36 +1153,6 @@
         "SLOW"
       ],
       "themes": [
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_eo9jgx",
-      "title": "나의 영혼이 주를 찬양",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "찬양(느린곡)",
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_t24tss",
-      "title": "나의 입술로",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
         "고백"
       ],
       "hymnNo": null
@@ -1297,7 +1208,7 @@
         "C"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "은혜",
@@ -1327,7 +1238,7 @@
         "C"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "고백",
@@ -1357,7 +1268,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "결단과 헌신",
@@ -1422,7 +1333,7 @@
         "MEDIUM"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "사랑"
       ],
       "hymnNo": null
@@ -1449,7 +1360,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "결단과 헌신",
@@ -1480,7 +1391,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "경배",
@@ -1511,7 +1422,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "성령",
@@ -1543,7 +1454,7 @@
         "SLOW"
       ],
       "themes": [
-        "찬양(느린곡)",
+        "찬양",
         "사랑"
       ],
       "hymnNo": null
@@ -1555,26 +1466,11 @@
         "E"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
-        "찬양(느린곡)",
+        "찬양",
         "경배"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_ln77yp",
-      "title": "내 영혼아 주를 찬양하라",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "찬양(느린곡)",
-        "고백"
       ],
       "hymnNo": null
     },
@@ -1585,7 +1481,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "감사",
@@ -1626,21 +1522,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_f9do7z",
-      "title": "내 영혼의 그윽히 깊은 데서",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "고백",
-        "인도와 보호"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_11wyfec",
       "title": "내 영혼이 은총 입어",
       "keys": [
@@ -1656,21 +1537,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_zl5vg0",
-      "title": "내 영혼이 잠잠히",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "간구",
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_now7jt",
       "title": "내 이름 아시죠",
       "keys": [
@@ -1681,21 +1547,6 @@
       ],
       "themes": [
         "고백",
-        "치유"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1nkbmh",
-      "title": "내 잔이 넘치나이다",
-      "keys": [
-        "C"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "감사",
         "치유"
       ],
       "hymnNo": null
@@ -1752,7 +1603,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "은혜",
@@ -1767,7 +1618,7 @@
         "F"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "예수",
@@ -1787,8 +1638,8 @@
         "MEDIUM"
       ],
       "themes": [
-        "찬양(빠른곡)",
-        "찬양(느린곡)"
+        "찬양",
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -1890,7 +1741,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "결단과 헌신",
@@ -1908,7 +1759,7 @@
         "Bb"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "고백",
@@ -1938,7 +1789,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "고백",
@@ -2019,7 +1870,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "사랑",
@@ -2050,7 +1901,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "십자가",
@@ -2100,7 +1951,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -2202,10 +2053,10 @@
         "E"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -2217,10 +2068,10 @@
         "D"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "선교"
       ],
       "hymnNo": null
@@ -2322,7 +2173,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "성령",
@@ -2383,26 +2234,11 @@
         "C"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "말씀",
         "간구"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_z3x5c6",
-      "title": "멈출 수 없는 사랑",
-      "keys": [
-        "Bb"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "은혜",
-        "사랑"
       ],
       "hymnNo": null
     },
@@ -2413,7 +2249,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "십자가"
@@ -2441,10 +2277,10 @@
         "F"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
-        "찬양(느린곡)",
+        "찬양",
         "간구",
         "고백"
       ],
@@ -2457,10 +2293,10 @@
         "D"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -2487,7 +2323,7 @@
         "D"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "경배",
@@ -2517,7 +2353,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "간구",
@@ -2532,7 +2368,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "영적전쟁"
@@ -2546,7 +2382,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "영광",
@@ -2592,7 +2428,7 @@
         "D"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "고백",
@@ -2637,7 +2473,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "사랑",
@@ -2854,7 +2690,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "간구",
@@ -2914,7 +2750,7 @@
         "D"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "은혜",
@@ -2932,7 +2768,7 @@
         "SLOW"
       ],
       "themes": [
-        "찬양(느린곡)",
+        "찬양",
         "하나님",
         "사랑"
       ],
@@ -2945,7 +2781,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "예수",
@@ -2961,7 +2797,7 @@
         "F"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "경배",
@@ -2994,7 +2830,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "은혜"
       ],
       "hymnNo": null
@@ -3006,7 +2842,7 @@
         "C"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "감사",
@@ -3024,8 +2860,8 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
-        "찬양(느린곡)"
+        "찬양",
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -3040,7 +2876,7 @@
       ],
       "themes": [
         "감사",
-        "찬양(빠른곡)"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -3070,7 +2906,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -3113,7 +2949,7 @@
         "D"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "예수",
@@ -3174,7 +3010,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "성령",
@@ -3204,7 +3040,7 @@
         "D"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "성령"
@@ -3218,7 +3054,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "성령",
@@ -3248,7 +3084,7 @@
         "C"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "은혜",
@@ -3288,28 +3124,13 @@
       "hymnNo": null
     },
     {
-      "id": "b_1xurbfo",
-      "title": "소중한 사람",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "사랑",
-        "교제"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_jqzu68",
       "title": "속죄하신 구세주를",
       "keys": [
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "감사",
@@ -3327,7 +3148,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -3342,7 +3163,7 @@
         "MEDIUM"
       ],
       "themes": [
-        "찬양(느린곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -3431,7 +3252,7 @@
         "D"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "결단과 헌신",
@@ -3447,7 +3268,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "간구",
@@ -3557,7 +3378,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "선교"
       ],
       "hymnNo": null
@@ -3589,7 +3410,7 @@
         "SLOW"
       ],
       "themes": [
-        "찬양(느린곡)",
+        "찬양",
         "십자가"
       ],
       "hymnNo": null
@@ -3601,7 +3422,7 @@
         "C"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "사랑",
@@ -3616,25 +3437,11 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "예수",
         "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1l0i8lw",
-      "title": "아름답고 놀라운 주 예수",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "예수"
       ],
       "hymnNo": null
     },
@@ -3709,7 +3516,7 @@
         "C"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "예수",
@@ -3880,7 +3687,7 @@
         "SLOW"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -3896,7 +3703,7 @@
       ],
       "themes": [
         "감사",
-        "찬양(빠른곡)",
+        "찬양",
         "하나님"
       ],
       "hymnNo": null
@@ -3932,36 +3739,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_nooi11",
-      "title": "영광 영광",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)",
-        "영광"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_eimavs",
-      "title": "영광 영광 왕께 영광",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)",
-        "영광"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_hytkm9",
       "title": "영광 영광 할렐루야",
       "keys": [
@@ -3971,53 +3748,8 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "영광"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_932eax",
-      "title": "영광을 돌리세",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "영광"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_4itkok",
-      "title": "영광의 주님 찬양하세",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)",
-        "찬양(느린곡)",
-        "예수",
-        "영광"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_sawt7w",
-      "title": "영원한 생명의 주님",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "고백"
       ],
       "hymnNo": null
     },
@@ -4063,21 +3795,6 @@
         "SLOW"
       ],
       "themes": [
-        "예수"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1vvcl19",
-      "title": "예수 그 이름",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
         "예수"
       ],
       "hymnNo": null
@@ -4137,25 +3854,10 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
-        "찬양(느린곡)",
+        "찬양",
+        "찬양",
         "결단과 헌신",
         "예수"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_sxdnht",
-      "title": "예수 나의 치료자",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "예수",
-        "치유"
       ],
       "hymnNo": null
     },
@@ -4168,7 +3870,7 @@
         "F"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "예수",
@@ -4197,42 +3899,10 @@
       "hymnNo": null
     },
     {
-      "id": "b_1vtyjsx",
-      "title": "예수 메시야",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(느린곡)",
-        "예수",
-        "십자가",
-        "영광"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_16alw2k",
       "title": "예수 사랑하심은",
       "keys": [
         "C"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "예수",
-        "사랑"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_16alw2g",
-      "title": "예수 사랑하심을",
-      "keys": [
-        "D"
       ],
       "tempos": [
         "SLOW"
@@ -4311,7 +3981,7 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "예수",
@@ -4341,10 +4011,10 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "예수"
       ],
       "hymnNo": null
@@ -4357,7 +4027,7 @@
         "F"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "예수",
@@ -4452,7 +4122,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "예수"
       ],
       "hymnNo": null
@@ -4464,42 +4134,10 @@
         "E"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "예수",
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1vsgsnd",
-      "title": "예수님처럼",
-      "keys": [
-        "E"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "결단과 헌신",
-        "예수",
-        "사랑"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1gmsi91",
-      "title": "예수로 나의 구주 삼고",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "예수",
-        "은혜",
         "고백"
       ],
       "hymnNo": null
@@ -4511,26 +4149,11 @@
         "C"
       ],
       "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "예수",
-        "은혜",
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_nkufut",
-      "title": "예수보다",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
         "MEDIUM"
       ],
       "themes": [
         "예수",
+        "은혜",
         "고백"
       ],
       "hymnNo": null
@@ -4558,7 +4181,7 @@
         "D"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "예수",
@@ -4592,7 +4215,7 @@
       ],
       "themes": [
         "감사",
-        "찬양(빠른곡)"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -4603,7 +4226,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "간구",
@@ -4618,7 +4241,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "성령",
@@ -4758,7 +4381,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -4864,7 +4487,7 @@
         "SLOW"
       ],
       "themes": [
-        "찬양(느린곡)"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -4875,7 +4498,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "고백",
@@ -4984,7 +4607,7 @@
         "E"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "성령",
@@ -5018,7 +4641,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "교제"
       ],
       "hymnNo": null
@@ -5031,7 +4654,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "선교",
@@ -5046,7 +4669,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "십자가",
@@ -5093,7 +4716,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "간구",
@@ -5141,7 +4764,7 @@
         "SLOW"
       ],
       "themes": [
-        "찬양(느린곡)",
+        "찬양",
         "예수",
         "선교"
       ],
@@ -5207,36 +4830,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_16btjhq",
-      "title": "이 곳에 임하신",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "성령"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1cpi49",
-      "title": "이 땅에 오직 주밖에 없네",
-      "keys": [
-        "F"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "고백",
-        "선교"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_fw0hh5",
       "title": "이 땅의 황무함을 보소서",
       "keys": [
@@ -5258,7 +4851,7 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "결단과 헌신",
@@ -5273,7 +4866,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "간구",
@@ -5288,7 +4881,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "성령",
@@ -5333,7 +4926,7 @@
         "C"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "감사",
@@ -5348,7 +4941,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "은혜",
@@ -5418,22 +5011,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_1ru84mo",
-      "title": "잔다리 동산",
-      "keys": [
-        "C",
-        "G"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "결단과 헌신",
-        "교제"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_1lqqv8x",
       "title": "저 높은 곳을 향하여",
       "keys": [
@@ -5441,7 +5018,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "결단과 헌신",
@@ -5472,7 +5049,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "말씀",
@@ -5493,35 +5070,6 @@
       "themes": [
         "결단과 헌신",
         "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_qvuwct",
-      "title": "전심으로",
-      "keys": [
-        "E"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1mf0zw4",
-      "title": "정결하게 하는 샘이",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "보혈"
       ],
       "hymnNo": null
     },
@@ -5550,7 +5098,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -5591,7 +5139,7 @@
         "F"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "예수",
@@ -5615,20 +5163,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_k4l9xt",
-      "title": "주 다스리네",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "영적전쟁"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_pkersh",
       "title": "주 달려 죽은 십자가",
       "keys": [
@@ -5639,20 +5173,6 @@
       ],
       "themes": [
         "십자가"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1ihhbs8",
-      "title": "주 말씀 내 발의 등이요",
-      "keys": [
-        "F"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "말씀"
       ],
       "hymnNo": null
     },
@@ -5672,21 +5192,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_1iz0vhp",
-      "title": "주 보좌로부터",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "영광"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_deczdk",
       "title": "주 보혈 날 정결케 하고",
       "keys": [
@@ -5697,21 +5202,6 @@
       ],
       "themes": [
         "보혈"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1fui4ix",
-      "title": "주 사랑 놀라운 그 사랑",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "예수",
-        "사랑"
       ],
       "hymnNo": null
     },
@@ -5737,70 +5227,10 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "은혜"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_ivjl10",
-      "title": "주 십자가를 지심으로",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "십자가",
-        "보혈"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_efyghh",
-      "title": "주 안에 거하는 너",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "말씀",
-        "인도와 보호"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_tk2a0t",
-      "title": "주 안에 새 생명 있네",
-      "keys": [
-        "C"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "은혜",
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1mvi99t",
-      "title": "주 안에 우리 하나 되어",
-      "keys": [
-        "F"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "결단과 헌신",
-        "교제"
       ],
       "hymnNo": null
     },
@@ -5820,41 +5250,11 @@
       "hymnNo": null
     },
     {
-      "id": "b_n7kqpd",
-      "title": "주 안에서 우리 하나 되니",
-      "keys": [
-        "F"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "결단과 헌신",
-        "교제"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_xcv8sv",
       "title": "주 앞에 나와",
       "keys": [
         "A",
         "Bb"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_u9au3u",
-      "title": "주 앞에 무릎 꿇고",
-      "keys": [
-        "G"
       ],
       "tempos": [
         "SLOW"
@@ -5890,23 +5290,8 @@
         "SLOW"
       ],
       "themes": [
-        "찬양(느린곡)",
+        "찬양",
         "영적전쟁"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_kbokg",
-      "title": "주 예수 기뻐 찬양해",
-      "keys": [
-        "F"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)",
-        "예수"
       ],
       "hymnNo": null
     },
@@ -5932,10 +5317,10 @@
         "E"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "예수"
       ],
       "hymnNo": null
@@ -5997,22 +5382,8 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "예수"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_163xmma",
-      "title": "주 임재하시는 곳에",
-      "keys": [
-        "F"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)"
       ],
       "hymnNo": null
     },
@@ -6026,7 +5397,7 @@
         "MEDIUM"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -6053,7 +5424,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "예수"
@@ -6098,10 +5469,10 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "영광"
       ],
       "hymnNo": null
@@ -6139,21 +5510,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_ipka49",
-      "title": "주께 가까이",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "간구"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_bpoyh",
       "title": "주께 가까이 날 이끄소서",
       "keys": [
@@ -6183,21 +5539,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_nifv8e",
-      "title": "주께 가오니 나를 받으소서",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "결단과 헌신",
-        "간구"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_10uf3kn",
       "title": "주께와 엎드려",
       "keys": [
@@ -6218,7 +5559,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "예수",
@@ -6238,21 +5579,6 @@
       "themes": [
         "경배",
         "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1hm5tg5",
-      "title": "주님 나라 위하여",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "결단과 헌신",
-        "선교"
       ],
       "hymnNo": null
     },
@@ -6291,7 +5617,7 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "결단과 헌신"
@@ -6324,21 +5650,6 @@
       "themes": [
         "말씀",
         "결단과 헌신"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_a1k3m4",
-      "title": "주님 사랑 온 누리에",
-      "keys": [
-        "F"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "사랑",
-        "선교"
       ],
       "hymnNo": null
     },
@@ -6384,7 +5695,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "영광"
@@ -6419,37 +5730,6 @@
       "themes": [
         "고백",
         "인도와 보호"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_tj2mep",
-      "title": "주님께 감사해",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "감사",
-        "경배",
-        "예수"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_huol0t",
-      "title": "주님께서 다스리네",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)",
-        "영광"
       ],
       "hymnNo": null
     },
@@ -6519,7 +5799,7 @@
         "E"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "은혜",
@@ -6565,7 +5845,7 @@
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "결단과 헌신",
@@ -6586,21 +5866,6 @@
         "사랑",
         "간구",
         "교제"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_k5e20h",
-      "title": "주님의 성령",
-      "keys": [
-        "C"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "성령",
-        "간구"
       ],
       "hymnNo": null
     },
@@ -6635,35 +5900,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_3730ud",
-      "title": "주님의 영광 나타나셨네",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "영광"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_o3xsx2",
-      "title": "주를 높이기 원합니다",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "결단과 헌신"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_novyq0",
       "title": "주를 앙모하는 자",
       "keys": [
@@ -6685,7 +5921,7 @@
         "D"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "경배"
@@ -6702,22 +5938,8 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1e9lc",
-      "title": "주를 찬양하며",
-      "keys": [
-        "F"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "찬양(느린곡)"
       ],
       "hymnNo": null
     },
@@ -6774,7 +5996,7 @@
         "E"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "고백",
@@ -6789,7 +6011,7 @@
         "F"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "말씀",
@@ -6819,7 +6041,7 @@
         "E"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "십자가",
@@ -6844,21 +6066,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_111e9yy",
-      "title": "주의 성령이 이곳에 임하여",
-      "keys": [
-        "E"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "성령"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_1cj2mf9",
       "title": "주의 손에 나의 손을 포개고",
       "keys": [
@@ -6870,36 +6077,6 @@
       "themes": [
         "결단과 헌신",
         "간구"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_o9tw41",
-      "title": "주의 신실하심",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "은혜",
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1va86y",
-      "title": "주의 영광 빛나니",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "영광"
       ],
       "hymnNo": null
     },
@@ -6979,75 +6156,16 @@
       "hymnNo": null
     },
     {
-      "id": "b_1sd4lzm",
-      "title": "주의 인자는 끝이 없고",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "찬양(느린곡)"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_bwamjt",
       "title": "주의 인자하심이",
       "keys": [
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "은혜",
-        "고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_166lhep",
-      "title": "주의 임재 안에 우리 모였네",
-      "keys": [
-        "E"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "교제"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1ubtq6r",
-      "title": "주의 임재 앞에 잠잠해",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "영광"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_e31fln",
-      "title": "주의 임재 앞에서",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
         "고백"
       ],
       "hymnNo": null
@@ -7077,22 +6195,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_6q547h",
-      "title": "주의 집에 영광이 가득해",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)",
-        "영광"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -7103,7 +6206,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "인도와 보호"
@@ -7132,7 +6235,7 @@
         "D"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "결단과 헌신",
@@ -7195,7 +6298,7 @@
       ],
       "themes": [
         "감사",
-        "찬양(빠른곡)"
+        "찬양"
       ],
       "hymnNo": null
     },
@@ -7206,10 +6309,10 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -7223,10 +6326,10 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "경배"
       ],
       "hymnNo": null
@@ -7241,7 +6344,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "예수"
       ],
       "hymnNo": null
@@ -7257,7 +6360,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "교제",
         "성탄"
       ],
@@ -7285,7 +6388,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "하나님",
@@ -7301,7 +6404,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "말씀",
@@ -7332,7 +6435,7 @@
         "F"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "영광",
@@ -7363,26 +6466,11 @@
         "E"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "간구",
         "교제"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1c1st09",
-      "title": "춤추는 사자처럼",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)",
-        "영적전쟁"
       ],
       "hymnNo": null
     },
@@ -7458,21 +6546,6 @@
       "themes": [
         "인도와 보호",
         "교제"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_1p5l5p",
-      "title": "하나님 아버지",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배",
-        "하나님"
       ],
       "hymnNo": null
     },
@@ -7635,7 +6708,7 @@
         "D"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "은혜",
@@ -7700,7 +6773,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "고백",
@@ -7738,21 +6811,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_1qo3n0s",
-      "title": "하늘과 땅 모두 즐거워하라",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)",
-        "영광"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_8s7oyl",
       "title": "하늘의 문을 여소서",
       "keys": [
@@ -7778,23 +6836,8 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "영광"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "b_al7pah",
-      "title": "하늘이 열리고",
-      "keys": [
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "찬양(빠른곡)",
-        "경배"
       ],
       "hymnNo": null
     },
@@ -7805,7 +6848,7 @@
         "C"
       ],
       "tempos": [
-        "SLOW"
+        "MEDIUM"
       ],
       "themes": [
         "결단과 헌신",
@@ -7869,7 +6912,7 @@
         "FAST"
       ],
       "themes": [
-        "찬양(빠른곡)",
+        "찬양",
         "선교"
       ],
       "hymnNo": null
@@ -7936,21 +6979,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_2t45ad",
-      "title": "Again",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "간구",
-        "선교"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_1hzhddg",
       "title": "born again",
       "keys": [
@@ -7959,7 +6987,7 @@
         "Bb"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "예수",

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "gen": "node scripts/curated-songs.mjs",
+    "gen": "node scripts/import-songs.mjs songs-base.csv",
+    "gen:curated": "node scripts/curated-songs.mjs",
     "gen:sheet": "node scripts/generate-songs.mjs"
   },
   "dependencies": {

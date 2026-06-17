@@ -14,8 +14,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const IN = resolve(process.cwd(), process.argv[2] || "songs-base.csv");
 const OUT = resolve(__dirname, "../src/data/songs.json");
 
-const THEMES = [
-  "감사", "찬양(빠른곡)", "찬양(느린곡)", "경배", "말씀", "결단과 헌신",
+// preferred display order; any extra themes the user introduces are appended
+const THEME_ORDER = [
+  "감사", "찬양", "찬양(빠른곡)", "찬양(느린곡)", "경배", "말씀", "결단과 헌신",
   "하나님", "성령", "예수", "십자가", "보혈", "영광", "은혜", "사랑",
   "간구", "고백", "치유", "인도와 보호", "선교", "영적전쟁", "교제", "성탄",
 ];
@@ -73,15 +74,15 @@ for (const r of rows) {
   const rawTempo = (r[ci.tempo] || "").trim();
   const tempo = TEMPO_FROM[rawTempo];
   if (rawTempo && !tempo) warnings.push(`알 수 없는 템포 "${rawTempo}" (${title})`);
+  // accept the user's themes as-is (this CSV is the source of truth)
   const themes = (r[ci.themes] || "").split(/[,|]/).map((s) => s.trim()).filter(Boolean);
-  for (const th of themes) if (!THEMES.includes(th)) warnings.push(`알 수 없는 주제 "${th}" (${title})`);
 
   songs.push({
     id,
     title,
     keys,
     tempos: tempo ? [tempo] : [],
-    themes: themes.filter((t) => THEMES.includes(t)),
+    themes,
     hymnNo: null,
   });
 }
@@ -91,7 +92,11 @@ songs.sort((a, b) => a.title.localeCompare(b.title, "ko"));
 const usedKeys = KEY_ORDER.filter((k) => songs.some((s) => s.keys.includes(k)));
 const extraKeys = [...new Set(songs.flatMap((s) => s.keys))].filter((k) => !KEY_ORDER.includes(k));
 const usedTempos = TEMPO_ORDER.filter((t) => songs.some((s) => s.tempos.includes(t)));
-const usedThemes = THEMES.filter((t) => songs.some((s) => s.themes.includes(t)));
+const allThemes = [...new Set(songs.flatMap((s) => s.themes))];
+const usedThemes = [
+  ...THEME_ORDER.filter((t) => allThemes.includes(t)),
+  ...allThemes.filter((t) => !THEME_ORDER.includes(t)).sort((a, b) => a.localeCompare(b, "ko")),
+];
 
 const data = {
   generatedAt: new Date().toISOString().slice(0, 10),
