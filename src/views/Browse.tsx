@@ -96,18 +96,17 @@ export default function Browse() {
           onSelect={(v) => patch({ v })}
         />
       </div>
-      <div className="px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
-        {value ?? "전체"} · {list.length}곡
+      <div className="flex items-center justify-between px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
+        <span>
+          {value ?? "전체"} · {list.length}곡
+        </span>
+        {hiddenCount > 0 && (
+          <Link to="/hidden" className="font-medium text-indigo-500 dark:text-indigo-400">
+            숨긴 곡 {hiddenCount} 관리
+          </Link>
+        )}
       </div>
       <SongList songs={list} />
-
-      {hiddenCount > 0 && (
-        <div className="px-4 py-5 text-center">
-          <Link to="/hidden" className="text-sm font-medium text-slate-400 underline dark:text-slate-500">
-            숨긴 곡 {hiddenCount}곡 관리
-          </Link>
-        </div>
-      )}
     </div>
   );
 }

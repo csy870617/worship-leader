@@ -11,6 +11,7 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PDF_ROWS } from "./pdf-songs.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(__dirname, "../src/data/songs.json");
@@ -18,7 +19,7 @@ const OUT = resolve(__dirname, "../src/data/songs.json");
 const THEMES = [
   "감사", "찬양(빠른곡)", "찬양(느린곡)", "경배", "말씀", "결단과 헌신",
   "하나님", "성령", "예수", "십자가", "보혈", "영광", "은혜", "사랑",
-  "간구", "고백", "치유", "인도와 보호", "선교", "영적전쟁", "교제",
+  "간구", "고백", "치유", "인도와 보호", "선교", "영적전쟁", "교제", "성탄",
 ];
 const KEY_ORDER = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 const TEMPO_ORDER = ["FAST", "SLOW", "MEDIUM"];
@@ -236,7 +237,7 @@ const hashId = (n) => {
 const seen = new Set();
 const ids = new Set();
 const songs = [];
-for (const [title, tempo, keys, themes] of ROWS) {
+for (const [title, tempo, keys, themes] of [...ROWS, ...PDF_ROWS]) {
   const n = norm(title);
   if (seen.has(n)) continue;
   seen.add(n);
