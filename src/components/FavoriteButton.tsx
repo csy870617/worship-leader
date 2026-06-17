@@ -4,7 +4,7 @@ export default function FavoriteButton({
   id,
   size = "md",
 }: {
-  id: number;
+  id: string;
   size?: "md" | "lg";
 }) {
   const { isFavorite, toggle } = useFavorites();

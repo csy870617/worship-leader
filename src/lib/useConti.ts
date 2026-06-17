@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 const KEY = "wl.conti";
 
 export interface ContiItem {
-  id: number;
+  id: string;
   note?: string;
 }
 
@@ -12,9 +12,7 @@ function load(): ContiItem[] {
     const raw = localStorage.getItem(KEY);
     const arr = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(arr)) return [];
-    return arr
-      .map((x) => (typeof x === "number" ? { id: x } : x))
-      .filter((x) => x && typeof x.id === "number");
+    return arr.filter((x) => x && typeof x.id === "string");
   } catch {
     return [];
   }
@@ -54,26 +52,26 @@ export function useConti() {
     };
   }, []);
 
-  const has = useCallback((id: number) => items.some((i) => i.id === id), []);
+  const has = useCallback((id: string) => items.some((i) => i.id === id), []);
 
-  const add = useCallback((id: number) => {
+  const add = useCallback((id: string) => {
     if (items.some((i) => i.id === id)) return;
     items = [...items, { id }];
     emit();
   }, []);
 
-  const remove = useCallback((id: number) => {
+  const remove = useCallback((id: string) => {
     items = items.filter((i) => i.id !== id);
     emit();
   }, []);
 
-  const toggle = useCallback((id: number) => {
+  const toggle = useCallback((id: string) => {
     if (items.some((i) => i.id === id)) items = items.filter((i) => i.id !== id);
     else items = [...items, { id }];
     emit();
   }, []);
 
-  const move = useCallback((id: number, dir: -1 | 1) => {
+  const move = useCallback((id: string, dir: -1 | 1) => {
     const idx = items.findIndex((i) => i.id === id);
     const next = idx + dir;
     if (idx < 0 || next < 0 || next >= items.length) return;
@@ -83,7 +81,7 @@ export function useConti() {
     emit();
   }, []);
 
-  const setNote = useCallback((id: number, note: string) => {
+  const setNote = useCallback((id: string, note: string) => {
     items = items.map((i) => (i.id === id ? { ...i, note } : i));
     emit();
   }, []);

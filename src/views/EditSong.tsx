@@ -10,7 +10,7 @@ export default function EditSong() {
   const { id } = useParams();
   const navigate = useNavigate();
   const editing = id != null;
-  const existing = editing ? getSongById(Number(id)) : undefined;
+  const existing = editing ? getSongById(id) : undefined;
 
   const [title, setTitle] = useState(existing?.title ?? "");
   const [keys, setKeys] = useState<string[]>(existing?.keys ?? []);

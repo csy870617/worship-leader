@@ -235,9 +235,16 @@ const keyRank = (k) => {
 };
 const tempoRank = (t) => TEMPO_ORDER.indexOf(t);
 
+// stable, title-derived id (so user data survives dataset edits)
+const hashId = (n) => {
+  let h = 5381;
+  for (const ch of n) h = ((h * 33) ^ ch.codePointAt(0)) >>> 0;
+  return "b_" + h.toString(36);
+};
+
 const songs = [...catalog.values()]
-  .map((s, idx) => ({
-    id: idx + 1,
+  .map((s) => ({
+    id: hashId(normTitle(bestTitle(s))),
     title: bestTitle(s),
     keys: [...s.keys].sort((a, b) => keyRank(a) - keyRank(b)),
     tempos: [...s.tempos].sort((a, b) => tempoRank(a) - tempoRank(b)),
@@ -245,8 +252,6 @@ const songs = [...catalog.values()]
     hymnNo: s.hymnNo,
   }))
   .sort((a, b) => a.title.localeCompare(b.title, "ko"));
-// reassign ids after sort for stable ascending ids
-songs.forEach((s, i) => (s.id = i + 1));
 
 const data = {
   generatedAt: new Date().toISOString().slice(0, 10),

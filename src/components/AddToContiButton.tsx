@@ -1,6 +1,6 @@
 import { useConti } from "../lib/useConti";
 
-export default function AddToContiButton({ id, size = "md" }: { id: number; size?: "md" | "lg" }) {
+export default function AddToContiButton({ id, size = "md" }: { id: string; size?: "md" | "lg" }) {
   const { has, toggle } = useConti();
   const active = has(id);
   const box = size === "lg" ? "h-7 w-7" : "h-5 w-5";

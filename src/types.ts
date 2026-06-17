@@ -1,7 +1,7 @@
 export type Tempo = "FAST" | "SLOW" | "MEDIUM" | "HYMN";
 
 export interface Song {
-  id: number;
+  id: string;
   title: string;
   keys: string[];
   tempos: Tempo[];

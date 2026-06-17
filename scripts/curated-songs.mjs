@@ -226,14 +226,26 @@ const ROWS = [
 
 // de-dupe by normalized title
 const norm = (t) => t.replace(/\s+/g, "").toLowerCase();
+// Stable, title-derived id so user data (favorites/conti/history/hidden) survives
+// dataset edits — ids never depend on list order.
+const hashId = (n) => {
+  let h = 5381;
+  for (const ch of n) h = ((h * 33) ^ ch.codePointAt(0)) >>> 0;
+  return "b_" + h.toString(36);
+};
 const seen = new Set();
+const ids = new Set();
 const songs = [];
 for (const [title, tempo, keys, themes] of ROWS) {
   const n = norm(title);
   if (seen.has(n)) continue;
   seen.add(n);
+  const id = hashId(n);
+  if (ids.has(id)) throw new Error(`id collision for "${title}" (${id})`);
+  ids.add(id);
   const songThemes = themes.split("|").filter((t) => THEMES.includes(t));
   songs.push({
+    id,
     title,
     keys: keys.split(/\s+/).filter(Boolean),
     tempos: [tempo],
@@ -243,7 +255,6 @@ for (const [title, tempo, keys, themes] of ROWS) {
 }
 
 songs.sort((a, b) => a.title.localeCompare(b.title, "ko"));
-songs.forEach((s, i) => (s.id = i + 1));
 
 const usedKeys = KEY_ORDER.filter((k) => songs.some((s) => s.keys.includes(k)));
 const usedTempos = TEMPO_ORDER.filter((t) => songs.some((s) => s.tempos.includes(t)));

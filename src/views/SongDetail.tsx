@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { youtubeSearchUrl } from "../data";
-import { compatibleSongs, isUserSong, useSongs } from "../lib/catalog";
+import { compatibleSongs, hideSong, isUserSong, removeSong, useSongs } from "../lib/catalog";
 import { TEMPO_LABEL } from "../types";
 import { KeyBadge, TempoBadge, LastUsedBadge } from "../components/Badges";
 import FavoriteButton from "../components/FavoriteButton";
@@ -11,7 +11,7 @@ export default function SongDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { songById } = useSongs();
-  const song = songById.get(Number(id));
+  const song = id ? songById.get(id) : undefined;
   const { lastUsed } = useHistory();
 
   if (!song) {
@@ -68,7 +68,7 @@ export default function SongDetail() {
           유튜브에서 찾기
         </a>
         {used && <LastUsedBadge iso={used} />}
-        {mine && (
+        {mine ? (
           <>
             <span className="rounded-md bg-indigo-100 px-1.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
               내 곡
@@ -79,7 +79,28 @@ export default function SongDetail() {
             >
               수정
             </button>
+            <button
+              onClick={() => {
+                if (confirm("이 곡을 삭제할까요?")) {
+                  removeSong(song.id);
+                  navigate(-1);
+                }
+              }}
+              className="rounded-lg bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-600 active:bg-rose-100 dark:bg-rose-500/15 dark:text-rose-400"
+            >
+              삭제
+            </button>
           </>
+        ) : (
+          <button
+            onClick={() => {
+              hideSong(song.id);
+              navigate(-1);
+            }}
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+          >
+            목록에서 숨기기
+          </button>
         )}
       </div>
 

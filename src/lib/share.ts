@@ -27,8 +27,8 @@ export function decodeConti(token: string): ContiItem[] | null {
     const arr = JSON.parse(b64decode(token));
     if (!Array.isArray(arr)) return null;
     return arr
-      .map((x) => (Array.isArray(x) ? { id: Number(x[0]), note: x[1] } : { id: Number(x) }))
-      .filter((x) => Number.isFinite(x.id) && getSongById(x.id));
+      .map((x) => (Array.isArray(x) ? { id: String(x[0]), note: x[1] } : { id: String(x) }))
+      .filter((x) => x.id && getSongById(x.id));
   } catch {
     return null;
   }

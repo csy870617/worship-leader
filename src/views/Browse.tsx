@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { data, sortKo } from "../data";
 import { byKey, byTheme, byTempo, useSongs } from "../lib/catalog";
 import { TEMPO_LABEL, type Song } from "../types";
@@ -29,7 +29,7 @@ export default function Browse() {
   const value = params.get("v");
   const sort = params.get("sort") || "title";
   const { history } = useHistory();
-  const { songs } = useSongs();
+  const { songs, hiddenCount } = useSongs();
 
   const options = useMemo(() => axisOptions(axis), [axis]);
   const filter = useMemo(() => axisFilter(axis), [axis]);
@@ -106,6 +106,14 @@ export default function Browse() {
         {value ?? "전체"} · {list.length}곡
       </div>
       <SongList songs={list} />
+
+      {hiddenCount > 0 && (
+        <div className="px-4 py-5 text-center">
+          <Link to="/hidden" className="text-sm font-medium text-slate-400 underline dark:text-slate-500">
+            숨긴 곡 {hiddenCount}곡 관리
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

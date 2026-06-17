@@ -12,6 +12,7 @@ import Favorites from "./views/Favorites";
 import Stage from "./views/Stage";
 import SongDetail from "./views/SongDetail";
 import EditSong from "./views/EditSong";
+import Hidden from "./views/Hidden";
 
 const TABS = [
   { to: "/browse", label: "둘러보기", icon: IconGrid },
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/conti" element={<Conti />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/hidden" element={<Hidden />} />
           <Route path="/stage" element={<Stage />} />
           <Route path="/edit" element={<EditSong />} />
           <Route path="/edit/:id" element={<EditSong />} />

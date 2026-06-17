@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 const KEY = "wl.history";
 
-type History = Record<number, string>; // songId -> ISO date (YYYY-MM-DD)
+type History = Record<string, string>; // songId -> ISO date (YYYY-MM-DD)
 
 function load(): History {
   try {
@@ -23,10 +23,10 @@ function emit() {
 }
 
 // module-level accessors (used by the cloud sync engine)
-export function getHistoryMap(): Record<number, string> {
+export function getHistoryMap(): Record<string, string> {
   return { ...history };
 }
-export function setHistoryMap(next: Record<number, string>) {
+export function setHistoryMap(next: Record<string, string>) {
   history = { ...next };
   emit();
 }
@@ -54,13 +54,13 @@ export function useHistory() {
     };
   }, []);
 
-  const markUsed = useCallback((ids: number[], date = today()) => {
+  const markUsed = useCallback((ids: string[], date = today()) => {
     history = { ...history };
     for (const id of ids) history[id] = date;
     emit();
   }, []);
 
-  const lastUsed = useCallback((id: number): string | null => state[id] ?? null, [state]);
+  const lastUsed = useCallback((id: string): string | null => state[id] ?? null, [state]);
 
   return { history: state, markUsed, lastUsed };
 }

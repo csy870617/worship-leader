@@ -6,7 +6,9 @@ import type { User } from "firebase/auth";
 import { db, onAuth } from "./firebase";
 import type { Song } from "../types";
 import {
+  getHiddenIds,
   getUserSongs,
+  setHiddenIds,
   setUserSongs,
   subscribeCatalog,
 } from "./catalog";
@@ -29,9 +31,10 @@ import {
 
 interface CloudDoc {
   userSongs: Song[];
-  favorites: number[];
+  favorites: string[];
   conti: ContiItem[];
-  history: Record<number, string>;
+  history: Record<string, string>;
+  hidden: string[];
   updatedAt: number;
 }
 
@@ -41,29 +44,31 @@ function snapshotLocal(): Omit<CloudDoc, "updatedAt"> {
     favorites: getFavoriteIds(),
     conti: getContiItems(),
     history: getHistoryMap(),
+    hidden: getHiddenIds(),
   };
 }
 
 function merge(local: Omit<CloudDoc, "updatedAt">, remote: Partial<CloudDoc>) {
   // user songs: union by id (local wins on conflict — most recently edited here)
-  const byId = new Map<number, Song>();
+  const byId = new Map<string, Song>();
   for (const s of remote.userSongs ?? []) byId.set(s.id, s);
   for (const s of local.userSongs) byId.set(s.id, s);
 
-  // favorites: union
+  // favorites + hidden: union
   const favorites = [...new Set([...(remote.favorites ?? []), ...local.favorites])];
+  const hidden = [...new Set([...(remote.hidden ?? []), ...local.hidden])];
 
   // history: keep the most recent date per song
-  const history: Record<number, string> = { ...(remote.history ?? {}) };
+  const history: Record<string, string> = { ...(remote.history ?? {}) };
   for (const [id, date] of Object.entries(local.history)) {
-    const cur = history[Number(id)];
-    if (!cur || date > cur) history[Number(id)] = date;
+    const cur = history[id];
+    if (!cur || date > cur) history[id] = date;
   }
 
   // conti is a single working set: keep local if present, else take remote
   const conti = local.conti.length ? local.conti : remote.conti ?? [];
 
-  return { userSongs: [...byId.values()], favorites, conti, history };
+  return { userSongs: [...byId.values()], favorites, conti, history, hidden };
 }
 
 let applyingRemote = false;
@@ -119,6 +124,7 @@ async function onLogin(user: User) {
     setFavoriteIds(merged.favorites);
     setContiItems(merged.conti);
     setHistoryMap(merged.history);
+    setHiddenIds(merged.hidden);
     applyingRemote = false;
 
     await pushNow(); // persist the merged state
