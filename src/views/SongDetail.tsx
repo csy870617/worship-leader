@@ -14,7 +14,7 @@ export default function SongDetail() {
   const navigate = useNavigate();
   const { songById } = useSongs();
   const song = id ? songById.get(id) : undefined;
-  const { lastUsed } = useHistory();
+  const { lastUsed, clearUsed } = useHistory();
   const { favorites, toggle: toggleFav } = useFavorites();
   const { has: inConti, toggle: toggleConti } = useConti();
 
@@ -72,7 +72,21 @@ export default function SongDetail() {
           </svg>
           유튜브에서 찾기
         </a>
-        {used && <LastUsedBadge iso={used} />}
+        {used && (
+          <span className="inline-flex items-center gap-1">
+            <LastUsedBadge iso={used} />
+            <button
+              onClick={() => clearUsed([song.id])}
+              aria-label="사용 기록 삭제"
+              title="사용 기록 삭제"
+              className="rounded-full p-0.5 text-slate-400 hover:text-rose-500 dark:text-slate-500"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </span>
+        )}
         {mine && (
           <span className="rounded-md bg-indigo-100 px-1.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
             내 곡

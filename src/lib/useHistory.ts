@@ -60,7 +60,18 @@ export function useHistory() {
     emit();
   }, []);
 
+  const clearUsed = useCallback((ids: string[]) => {
+    history = { ...history };
+    let changed = false;
+    for (const id of ids)
+      if (id in history) {
+        delete history[id];
+        changed = true;
+      }
+    if (changed) emit();
+  }, []);
+
   const lastUsed = useCallback((id: string): string | null => state[id] ?? null, [state]);
 
-  return { history: state, markUsed, lastUsed };
+  return { history: state, markUsed, clearUsed, lastUsed };
 }

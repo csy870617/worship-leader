@@ -13,7 +13,7 @@ export default function Conti() {
     contis, activeId, active, createConti, renameConti, deleteConti, setActive,
   } = useConti();
   const { songById } = useSongs();
-  const { markUsed, lastUsed } = useHistory();
+  const { markUsed, lastUsed, clearUsed } = useHistory();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [toast, setToast] = useState<string | null>(null);
@@ -191,8 +191,18 @@ export default function Conti() {
                     <div className="mt-1 flex flex-wrap items-center gap-1">
                       {r.song.keys.map((k) => <KeyBadge key={k} k={k} />)}
                       {recentlyUsed && (
-                        <span className="rounded-md bg-orange-100 px-1.5 py-0.5 text-xs font-semibold text-orange-700 dark:bg-orange-500/20 dark:text-orange-300">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-orange-100 py-0.5 pl-1.5 pr-0.5 text-xs font-semibold text-orange-700 dark:bg-orange-500/20 dark:text-orange-300">
                           최근 {Math.floor(daysSince(used!) / 7) || 0}주 전 사용
+                          <button
+                            onClick={() => clearUsed([r.id])}
+                            aria-label="사용 기록 삭제"
+                            title="사용 기록 삭제"
+                            className="rounded-full p-0.5 hover:text-rose-600"
+                          >
+                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} aria-hidden>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </span>
                       )}
                     </div>
