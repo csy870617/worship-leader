@@ -8,13 +8,18 @@
 //   tempo: FAST | SLOW | MEDIUM
 //   keys:  space-separated (e.g. "A" or "A E")
 //   themes: from THEMES below, "|"-separated
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PDF_ROWS } from "./pdf-songs.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(__dirname, "../src/data/songs.json");
+
+// real keys extracted from the worship-team PDF sheet (overrides estimated keys)
+const PDF_KEYS = JSON.parse(readFileSync(resolve(__dirname, "pdf-keys.json"), "utf8"));
+const keyNorm = (t) =>
+  t.replace(/\([^)]*\)/g, "").replace(/[0-9]/g, "").replace(/[\s,+\-#./]/g, "").toLowerCase();
 
 const THEMES = [
   "감사", "찬양(빠른곡)", "찬양(느린곡)", "경배", "말씀", "결단과 헌신",
@@ -245,10 +250,11 @@ for (const [title, tempo, keys, themes] of [...ROWS, ...PDF_ROWS]) {
   if (ids.has(id)) throw new Error(`id collision for "${title}" (${id})`);
   ids.add(id);
   const songThemes = themes.split("|").filter((t) => THEMES.includes(t));
+  const realKeys = PDF_KEYS[keyNorm(title)];
   songs.push({
     id,
     title,
-    keys: keys.split(/\s+/).filter(Boolean),
+    keys: realKeys && realKeys.length ? realKeys : keys.split(/\s+/).filter(Boolean),
     tempos: [tempo],
     themes: songThemes,
     hymnNo: null,
@@ -263,7 +269,7 @@ const usedThemes = THEMES.filter((t) => songs.some((s) => s.themes.includes(t)))
 
 const data = {
   generatedAt: new Date().toISOString().slice(0, 10),
-  source: "Curated: widely-sung Korean worship songs 2000–present (keys are estimates)",
+  source: "Curated Korean worship songs; keys from team PDF sheet where available, else estimated",
   keys: usedKeys,
   tempos: usedTempos,
   themes: usedThemes,

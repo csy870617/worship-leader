@@ -1,9 +1,10 @@
 {
   "generatedAt": "2026-06-17",
-  "source": "Curated: widely-sung Korean worship songs 2000–present (keys are estimates)",
+  "source": "Curated Korean worship songs; keys from team PDF sheet where available, else estimated",
   "keys": [
     "C",
     "D",
+    "Eb",
     "E",
     "F",
     "G",
@@ -615,7 +616,8 @@
       "id": "b_bh0pzt",
       "title": "그의 생각",
       "keys": [
-        "E"
+        "E",
+        "F"
       ],
       "tempos": [
         "SLOW"
@@ -1009,7 +1011,8 @@
       "id": "b_tgx5jd",
       "title": "나의 가는 길",
       "keys": [
-        "G"
+        "G",
+        "A"
       ],
       "tempos": [
         "SLOW"
@@ -1402,7 +1405,7 @@
       "id": "b_oxcw7p",
       "title": "내 구주 예수를 더욱 사랑",
       "keys": [
-        "D"
+        "G"
       ],
       "tempos": [
         "SLOW"
@@ -1554,7 +1557,6 @@
       "id": "b_4yvpp8",
       "title": "내 영이 주를 찬양합니다",
       "keys": [
-        "D",
         "E"
       ],
       "tempos": [
@@ -1782,7 +1784,9 @@
       "id": "b_gu04a4",
       "title": "내 평생 사는 동안",
       "keys": [
-        "D"
+        "C",
+        "D",
+        "E"
       ],
       "tempos": [
         "MEDIUM"
@@ -1797,7 +1801,7 @@
       "id": "b_h3m28p",
       "title": "내 평생에 가는 길",
       "keys": [
-        "D"
+        "C"
       ],
       "tempos": [
         "SLOW"
@@ -2439,7 +2443,7 @@
       "id": "b_aonpr8",
       "title": "모든 상황 속에서",
       "keys": [
-        "A"
+        "F"
       ],
       "tempos": [
         "MEDIUM"
@@ -2650,7 +2654,7 @@
       "id": "b_1icb5px",
       "title": "보라 너희는 두려워 말고",
       "keys": [
-        "A"
+        "G"
       ],
       "tempos": [
         "MEDIUM"
@@ -2665,6 +2669,7 @@
       "id": "b_g3r3r9",
       "title": "보혈을 지나",
       "keys": [
+        "F",
         "G"
       ],
       "tempos": [
@@ -2726,7 +2731,8 @@
       "id": "b_r0k38u",
       "title": "부르신 곳에서",
       "keys": [
-        "E"
+        "E",
+        "F"
       ],
       "tempos": [
         "MEDIUM"
@@ -2756,6 +2762,10 @@
       "id": "b_2nbfk",
       "title": "부흥",
       "keys": [
+        "C",
+        "D",
+        "F",
+        "G",
         "A"
       ],
       "tempos": [
@@ -2771,7 +2781,8 @@
       "id": "b_iytksp",
       "title": "비 준비하시니",
       "keys": [
-        "G"
+        "G",
+        "A"
       ],
       "tempos": [
         "MEDIUM"
@@ -2801,7 +2812,7 @@
       "id": "b_v838qs",
       "title": "빈 들에 마른 풀 같이",
       "keys": [
-        "G"
+        "A"
       ],
       "tempos": [
         "MEDIUM"
@@ -2816,7 +2827,8 @@
       "id": "b_8dawfu",
       "title": "빛 되신 주",
       "keys": [
-        "E"
+        "E",
+        "F"
       ],
       "tempos": [
         "MEDIUM"
@@ -2937,7 +2949,7 @@
       "id": "b_pwm505",
       "title": "사랑합니다 나의 예수님",
       "keys": [
-        "A"
+        "G"
       ],
       "tempos": [
         "SLOW"
@@ -3181,7 +3193,8 @@
       "id": "b_85r35d",
       "title": "성령이 오셨네",
       "keys": [
-        "C"
+        "C",
+        "A"
       ],
       "tempos": [
         "FAST"
@@ -3686,7 +3699,7 @@
       "id": "b_9lmggt",
       "title": "아버지 사랑합니다",
       "keys": [
-        "A"
+        "F"
       ],
       "tempos": [
         "SLOW"
@@ -3807,7 +3820,8 @@
       "id": "b_1pamdgp",
       "title": "약할 때 강함 되시네",
       "keys": [
-        "F"
+        "F",
+        "G"
       ],
       "tempos": [
         "SLOW"
@@ -4096,7 +4110,7 @@
       "id": "b_1648a1t",
       "title": "예수 나를 위하여",
       "keys": [
-        "E"
+        "F"
       ],
       "tempos": [
         "SLOW"
@@ -4281,7 +4295,7 @@
       "id": "b_ade94g",
       "title": "예수 안에 소망 있네",
       "keys": [
-        "D"
+        "Eb"
       ],
       "tempos": [
         "MEDIUM"
@@ -4689,7 +4703,7 @@
       "id": "b_nlhmy8",
       "title": "오직 예수",
       "keys": [
-        "G"
+        "A"
       ],
       "tempos": [
         "MEDIUM"
@@ -4842,7 +4856,8 @@
       "id": "b_1vdlvi4",
       "title": "왕이신 나의 하나님",
       "keys": [
-        "F"
+        "F",
+        "G"
       ],
       "tempos": [
         "FAST"
@@ -5118,7 +5133,7 @@
       "id": "b_9j48th",
       "title": "위대하신 주",
       "keys": [
-        "Bb"
+        "A"
       ],
       "tempos": [
         "MEDIUM"
@@ -5148,6 +5163,7 @@
       "id": "b_34ihl",
       "title": "은혜",
       "keys": [
+        "C",
         "A"
       ],
       "tempos": [
@@ -5588,6 +5604,7 @@
       "id": "b_1b4ckla",
       "title": "죄에서 자유를 얻게 함은",
       "keys": [
+        "G",
         "A"
       ],
       "tempos": [
@@ -5950,7 +5967,9 @@
       "id": "b_wykiit",
       "title": "주 은혜임을",
       "keys": [
-        "D"
+        "F",
+        "G",
+        "A"
       ],
       "tempos": [
         "SLOW"
@@ -5980,7 +5999,7 @@
       "id": "b_3oj2q9",
       "title": "주 이름 큰 능력 있도다",
       "keys": [
-        "C"
+        "D"
       ],
       "tempos": [
         "FAST"
@@ -6163,7 +6182,7 @@
       "id": "b_ip4o19",
       "title": "주께 가오니",
       "keys": [
-        "G"
+        "A"
       ],
       "tempos": [
         "SLOW"
@@ -6268,7 +6287,7 @@
       "id": "b_1iwipa1",
       "title": "주님 다시 오실 때까지",
       "keys": [
-        "D"
+        "C"
       ],
       "tempos": [
         "MEDIUM"
@@ -6283,7 +6302,7 @@
       "id": "b_1js0yhe",
       "title": "주님 뜻대로 살기로 했네",
       "keys": [
-        "D"
+        "A"
       ],
       "tempos": [
         "MEDIUM"
@@ -6298,7 +6317,7 @@
       "id": "b_1heoci9",
       "title": "주님 마음 내게 주소서",
       "keys": [
-        "G"
+        "C"
       ],
       "tempos": [
         "SLOW"
@@ -6407,7 +6426,8 @@
       "id": "b_k8lfe8",
       "title": "주님과 같이",
       "keys": [
-        "F"
+        "F",
+        "G"
       ],
       "tempos": [
         "SLOW"
@@ -6736,7 +6756,9 @@
       "id": "b_1jtterp",
       "title": "주를 향한 나의 사랑을",
       "keys": [
-        "E"
+        "E",
+        "F",
+        "G"
       ],
       "tempos": [
         "SLOW"
@@ -6960,7 +6982,8 @@
       "id": "b_3pm3c7",
       "title": "주의 이름 높이며",
       "keys": [
-        "G"
+        "G",
+        "A"
       ],
       "tempos": [
         "FAST"
@@ -7095,7 +7118,7 @@
       "id": "b_q6i2y5",
       "title": "주의 친절한 팔에 안기세",
       "keys": [
-        "F"
+        "G"
       ],
       "tempos": [
         "SLOW"
@@ -7247,7 +7270,8 @@
       "id": "b_zy83fs",
       "title": "참 반가운 성도여",
       "keys": [
-        "G"
+        "G",
+        "A"
       ],
       "tempos": [
         "FAST"
@@ -7354,7 +7378,7 @@
       "id": "b_1o1r2n4",
       "title": "축복합니다",
       "keys": [
-        "C"
+        "E"
       ],
       "tempos": [
         "MEDIUM"
@@ -7639,7 +7663,8 @@
       "id": "b_1ni921",
       "title": "하나님의 은혜",
       "keys": [
-        "D"
+        "D",
+        "F"
       ],
       "tempos": [
         "SLOW"
@@ -7809,7 +7834,8 @@
       "id": "b_1862jpl",
       "title": "할 수 있다 하신 이는",
       "keys": [
-        "C"
+        "C",
+        "A"
       ],
       "tempos": [
         "FAST"
@@ -7915,7 +7941,7 @@
       "id": "b_2sku5x",
       "title": "호산나",
       "keys": [
-        "E"
+        "G"
       ],
       "tempos": [
         "MEDIUM"
