@@ -244,6 +244,35 @@ const hashId = (n) => {
 const seen = new Set();
 const ids = new Set();
 const songs = [];
+
+// high-precision theme signals from the title text (added, never removed)
+const THEME_RULES = [
+  [/십자가|갈보리/, "십자가"],
+  [/보혈|유월절|어린\s?양|정결케/, "보혈"],
+  [/성령|오순절|진리의\s?영/, "성령"],
+  [/감사/, "감사"],
+  [/은혜/, "은혜"],
+  [/사랑/, "사랑"],
+  [/경배|엎드려|무릎\s?꿇|보좌\s?앞|주를\s?높이/, "경배"],
+  [/성탄|구주\s?오셨네|고요한\s?밤|천사|베들레헴|그\s?어린\s?주|밤중에/, "성탄"],
+  [/선교|열방|민족|땅\s?끝|황무함|복음\s?들고|모든\s?민족|물이\s?바다/, "선교"],
+  [/말씀/, "말씀"],
+  [/영광/, "영광"],
+  [/치료|치유|상한|위로|눈물/, "치유"],
+  [/기도|간구|구하라|간절/, "간구"],
+  [/목자|인도|동행|지키시|피난처|평안|평강/, "인도와 보호"],
+  [/아버지/, "하나님"],
+  [/교회|함께|모일|모였|성도|하나\s?되/, "교제"],
+  [/헌신|결단|드리리|순종|따르리/, "결단과 헌신"],
+  [/마귀|대적|군병|승리|문들아|일어나라/, "영적전쟁"],
+  [/예수|그리스도|구주/, "예수"],
+];
+function titleThemes(title) {
+  const out = [];
+  for (const [re, theme] of THEME_RULES) if (re.test(title) && THEMES.includes(theme)) out.push(theme);
+  return out;
+}
+
 for (const [title, tempo, keys, themes] of [...ROWS, ...PDF_ROWS]) {
   const n = norm(title);
   if (seen.has(n)) continue;
@@ -256,12 +285,17 @@ for (const [title, tempo, keys, themes] of [...ROWS, ...PDF_ROWS]) {
   const realKeys = PDF_KEYS[kn];
   const realTempo = SHEET_TEMPO[kn];
   const realThemes = (SHEET_THEMES[kn] || []).filter((t) => THEMES.includes(t));
+  const base = realThemes.length ? realThemes : songThemes;
+  // merge base themes with high-precision title-keyword themes (cap 4, ordered)
+  const mergedThemes = [...new Set([...base, ...titleThemes(title)])]
+    .sort((a, b) => THEMES.indexOf(a) - THEMES.indexOf(b))
+    .slice(0, 4);
   songs.push({
     id,
     title,
     keys: realKeys && realKeys.length ? realKeys : keys.split(/\s+/).filter(Boolean),
     tempos: [realTempo || tempo],
-    themes: realThemes.length ? realThemes : songThemes,
+    themes: mergedThemes.length ? mergedThemes : base,
     hymnNo: null,
   });
 }
