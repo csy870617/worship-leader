@@ -16,10 +16,13 @@ const OUT = resolve(__dirname, "../src/data/songs.json");
 
 // preferred display order; any extra themes the user introduces are appended
 const THEME_ORDER = [
-  "감사", "찬양", "찬양(빠른곡)", "찬양(느린곡)", "경배", "말씀", "결단과 헌신",
+  "감사", "찬양", "경배", "말씀", "결단과 헌신",
   "하나님", "성령", "예수", "십자가", "보혈", "영광", "은혜", "사랑",
   "간구", "고백", "치유", "인도와 보호", "선교", "영적전쟁", "교제", "성탄",
 ];
+// normalize legacy/variant theme names to the unified set
+const THEME_ALIAS = { "찬양(빠른곡)": "찬양", "찬양(느린곡)": "찬양", "찬양(빠른)": "찬양", "찬양(느린)": "찬양" };
+const normTheme = (t) => THEME_ALIAS[t] || t;
 const KEY_ORDER = ["C", "C#", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 const TEMPO_ORDER = ["FAST", "SLOW", "MEDIUM"];
 const TEMPO_FROM = {
@@ -74,8 +77,12 @@ for (const r of rows) {
   const rawTempo = (r[ci.tempo] || "").trim();
   const tempo = TEMPO_FROM[rawTempo];
   if (rawTempo && !tempo) warnings.push(`알 수 없는 템포 "${rawTempo}" (${title})`);
-  // accept the user's themes as-is (this CSV is the source of truth)
-  const themes = (r[ci.themes] || "").split(/[,|]/).map((s) => s.trim()).filter(Boolean);
+  // accept the user's themes as-is (this CSV is the source of truth), unifying 찬양 variants
+  const themes = [
+    ...new Set(
+      (r[ci.themes] || "").split(/[,|]/).map((s) => normTheme(s.trim())).filter(Boolean)
+    ),
+  ];
 
   songs.push({
     id,
