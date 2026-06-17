@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { compatibleSongs, useSongs } from "../lib/catalog";
+import { useSongs } from "../lib/catalog";
 import { useConti } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { bestRelation } from "../lib/keys";
@@ -9,7 +9,7 @@ import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
   const {
-    conti, remove, move, setNote, clear, replace, add, has,
+    conti, remove, move, setNote, clear, replace,
     contis, activeId, active, createConti, renameConti, deleteConti, setActive,
   } = useConti();
   const { songById } = useSongs();
@@ -23,13 +23,6 @@ export default function Conti() {
   const rows = useMemo(
     () => conti.map((it) => ({ ...it, song: songById.get(it.id)! })).filter((r) => r.song),
     [conti]
-  );
-
-  const excludeIds = useMemo(() => new Set(conti.map((c) => c.id)), [conti]);
-  const lastSong = rows.length ? rows[rows.length - 1].song : null;
-  const suggestions = useMemo(
-    () => (lastSong ? compatibleSongs(lastSong.keys, excludeIds, 8) : []),
-    [lastSong, excludeIds]
   );
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -234,33 +227,6 @@ export default function Conti() {
           );
         })}
       </ol>
-
-      {/* next-song suggestions by key */}
-      {suggestions.length > 0 && (
-        <section className="mt-5 px-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            다음 곡 추천 · {lastSong!.keys.join("/")} 키와 연결
-          </h2>
-          <ul className="mt-2 space-y-1.5">
-            {suggestions.map(({ song, relation }) => (
-              <li key={song.id} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
-                <div className="min-w-0 flex-1">
-                  <Link to={`/song/${song.id}`} className="block truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-                    {song.title}
-                  </Link>
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                    {song.keys.join("/")} · {relation.label}
-                  </span>
-                </div>
-                <button
-                  onClick={() => has(song.id) || add(song.id)}
-                  className="shrink-0 rounded-md bg-indigo-600 px-2 py-1 text-xs font-semibold text-white"
-                >담기</button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {/* footer: share & record */}
       {rows.length > 0 && (
