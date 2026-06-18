@@ -104,7 +104,7 @@ export default function App() {
             </header>
           )}
 
-          <main className={hideMobileChrome ? "flex-1 md:pb-10" : "flex-1 pb-20 md:pb-10"}>
+          <main className="flex-1 pb-20 md:pb-10">
             <Routes>
               <Route path="/" element={<Navigate to="/browse" replace />} />
               <Route path="/browse" element={<Browse />} />
@@ -125,8 +125,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Mobile bottom nav */}
-      {!hideMobileChrome && (
+      {/* Mobile bottom nav (always visible) */}
+      {(
         <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 md:hidden">
           {TABS.map(({ to, label, icon: Icon, badge }) => (
             <NavLink
