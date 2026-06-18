@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { data, sortKo } from "../data";
 import { useSongs } from "../lib/catalog";
 import { TEMPO_LABEL, type Song } from "../types";
 import { useHistory } from "../lib/useHistory";
+import { setLastBrowse } from "../lib/browseState";
 import ChipRow from "../components/ChipRow";
 import SongList from "../components/SongList";
 
@@ -26,6 +27,12 @@ export default function Browse() {
   const selTempo = params.get("tempo");
   const { history } = useHistory();
   const { songs, hiddenCount } = useSongs();
+
+  // remember the current filters so returning to 둘러보기 restores them
+  useEffect(() => {
+    const qs = params.toString();
+    setLastBrowse(qs ? `/browse?${qs}` : "/browse");
+  }, [params]);
 
   const options = useMemo(() => {
     if (axis === "key") return data.keys.map((k) => ({ value: k, label: k }));

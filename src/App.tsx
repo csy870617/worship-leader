@@ -3,6 +3,7 @@ import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "reac
 import { useTheme } from "./lib/useTheme";
 import { useConti } from "./lib/useConti";
 import { useSongs } from "./lib/catalog";
+import { getLastBrowse } from "./lib/browseState";
 import { initSync } from "./lib/sync";
 import AuthButton from "./components/AuthButton";
 import Browse from "./views/Browse";
@@ -34,6 +35,10 @@ export default function App() {
   const hideMobileChrome =
     location.pathname.startsWith("/song/") || location.pathname.startsWith("/edit");
 
+  // 둘러보기 tab restores the last filters (recomputed each render on navigation)
+  const browseTo = getLastBrowse();
+  const tabTo = (to: string) => (to === "/browse" ? browseTo : to);
+
   // header / sidebar controls (shared)
   const controls = (
     <>
@@ -63,7 +68,7 @@ export default function App() {
               {TABS.map(({ to, label, icon: Icon, badge }) => (
                 <NavLink
                   key={to}
-                  to={to}
+                  to={tabTo(to)}
                   className={({ isActive }) =>
                     `relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${
                       isActive
@@ -126,7 +131,7 @@ export default function App() {
           {TABS.map(({ to, label, icon: Icon, badge }) => (
             <NavLink
               key={to}
-              to={to}
+              to={tabTo(to)}
               className={({ isActive }) =>
                 `relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${
                   isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"
