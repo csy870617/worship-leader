@@ -9,7 +9,7 @@ import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
   const {
-    conti, remove, move, setNote, clear, replace,
+    conti, remove, move, setNote, setKey, clear, replace,
     contis, activeId, active, createConti, renameConti, deleteConti, setActive,
   } = useConti();
   const { songById } = useSongs();
@@ -153,8 +153,11 @@ export default function Conti() {
       {/* ordered list with key-flow between songs */}
       <ol className="space-y-1.5 px-3 pt-3">
         {rows.map((r, i) => {
-          const prev = i > 0 ? rows[i - 1].song : null;
-          const rel = prev ? bestRelation(prev.keys, r.song.keys) : null;
+          // use the chosen key (if any) for the smooth-transition hint
+          const curKeys = r.key ? [r.key] : r.song.keys;
+          const prevRow = i > 0 ? rows[i - 1] : null;
+          const prevKeys = prevRow ? (prevRow.key ? [prevRow.key] : prevRow.song.keys) : null;
+          const rel = prevKeys ? bestRelation(prevKeys, curKeys) : null;
           const used = lastUsed(r.id);
           const recentlyUsed = used && daysSince(used) <= 28;
           return (
@@ -187,7 +190,26 @@ export default function Conti() {
                       {r.song.title}
                     </Link>
                     <span className="flex shrink-0 items-center gap-1">
-                      {r.song.keys.map((k) => <KeyBadge key={k} k={k} />)}
+                      {r.song.keys.length > 1
+                        ? r.song.keys.map((k) => (
+                            <button
+                              key={k}
+                              onClick={() => setKey(r.id, r.key === k ? null : k)}
+                              aria-pressed={r.key === k}
+                              title={r.key === k ? "선택 해제" : `${k} 키로 선택`}
+                              className={
+                                "min-w-[1.6rem] rounded-md px-1.5 py-0.5 text-xs font-bold " +
+                                (r.key === k
+                                  ? "bg-indigo-600 text-white"
+                                  : r.key
+                                  ? "bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500"
+                                  : "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300")
+                              }
+                            >
+                              {k}
+                            </button>
+                          ))
+                        : r.song.keys.map((k) => <KeyBadge key={k} k={k} />)}
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-center gap-2">

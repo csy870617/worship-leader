@@ -6,6 +6,7 @@ const LEGACY = "wl.conti"; // previous single-conti storage
 export interface ContiItem {
   id: string;
   note?: string;
+  key?: string; // chosen key when the song has several
 }
 export interface Conti {
   id: string;
@@ -23,7 +24,12 @@ function sanitizeItems(arr: unknown): ContiItem[] {
   return Array.isArray(arr)
     ? arr
         .filter((x: any) => x && typeof x.id === "string")
-        .map((x: any) => (x.note ? { id: x.id, note: String(x.note) } : { id: x.id }))
+        .map((x: any) => {
+          const it: ContiItem = { id: x.id };
+          if (x.note) it.note = String(x.note);
+          if (typeof x.key === "string" && x.key) it.key = x.key;
+          return it;
+        })
     : [];
 }
 function sanitizeConti(c: any): Conti | null {
@@ -137,6 +143,17 @@ export function useConti() {
     (id: string, note: string) => mutateActive((items) => items.map((i) => (i.id === id ? { ...i, note } : i))),
     []
   );
+  const setKey = useCallback(
+    (id: string, key: string | null) =>
+      mutateActive((items) =>
+        items.map((i) => {
+          if (i.id !== id) return i;
+          const { key: _omit, ...rest } = i;
+          return key ? { ...rest, key } : rest;
+        })
+      ),
+    []
+  );
   const clear = useCallback(() => mutateActive(() => []), []);
   const replace = useCallback((items: ContiItem[]) => mutateActive(() => items.slice()), []);
 
@@ -173,6 +190,7 @@ export function useConti() {
     toggle,
     move,
     setNote,
+    setKey,
     clear,
     replace,
     createConti,

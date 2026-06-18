@@ -18,7 +18,11 @@ function b64decode(b64: string): string {
 
 /** Encode a conti into a compact URL-safe token. */
 export function encodeConti(items: ContiItem[]): string {
-  const compact = items.map((i) => (i.note ? [i.id, i.note] : [i.id]));
+  const compact = items.map((i) => {
+    if (i.key) return [i.id, i.note ?? "", i.key];
+    if (i.note) return [i.id, i.note];
+    return [i.id];
+  });
   return b64encode(JSON.stringify(compact));
 }
 
@@ -27,7 +31,13 @@ export function decodeConti(token: string): ContiItem[] | null {
     const arr = JSON.parse(b64decode(token));
     if (!Array.isArray(arr)) return null;
     return arr
-      .map((x) => (Array.isArray(x) ? { id: String(x[0]), note: x[1] } : { id: String(x) }))
+      .map((x): ContiItem => {
+        if (!Array.isArray(x)) return { id: String(x) };
+        const item: ContiItem = { id: String(x[0]) };
+        if (x[1]) item.note = String(x[1]);
+        if (x[2]) item.key = String(x[2]);
+        return item;
+      })
       .filter((x) => x.id && getSongById(x.id));
   } catch {
     return null;
@@ -45,7 +55,7 @@ export function contiToText(items: ContiItem[]): string {
   const lines = items.map((it, idx) => {
     const s = getSongById(it.id);
     if (!s) return `${idx + 1}.`;
-    const key = s.keys.length ? ` (${s.keys.join("/")})` : "";
+    const key = it.key ? ` (${it.key})` : s.keys.length ? ` (${s.keys.join("/")})` : "";
     const note = it.note ? ` — ${it.note}` : "";
     return `${idx + 1}. ${s.title}${key}${note}`;
   });
