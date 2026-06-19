@@ -22,12 +22,14 @@ const BASE_STYLE =
   `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;` +
   "font-family:'Pretendard',-apple-system,sans-serif;padding:14px 18px;box-sizing:border-box;";
 
+type SheetImg = { url: string; note?: string };
+
 /** Info page: number, title, key, memo, and (optionally) the first sheet. */
 function buildInfoEl(
   index: number,
   song: Song,
   item: ContiItem,
-  firstSheet?: string,
+  firstSheet?: SheetImg,
   playlistUrl?: string
 ): HTMLDivElement {
   const el = document.createElement("div");
@@ -56,7 +58,11 @@ function buildInfoEl(
   }
   if (firstSheet) {
     parts.push(
-      `<div style="margin:12px 0 0 0;"><img src="${firstSheet}" style="width:100%;display:block;" /></div>`
+      `<div style="margin:12px 0 0 0;"><img src="${firstSheet.url}" style="width:100%;display:block;" />${
+        firstSheet.note
+          ? `<div style="margin-top:6px;font-size:16px;color:#374151;">${esc(firstSheet.note)}</div>`
+          : ""
+      }</div>`
     );
   }
 
@@ -64,12 +70,16 @@ function buildInfoEl(
   return el;
 }
 
-/** A page that holds a single sheet image, edge to edge. */
-function buildSheetEl(url: string): HTMLDivElement {
+/** A page that holds a single sheet image (edge to edge) with its memo. */
+function buildSheetEl(sheet: SheetImg): HTMLDivElement {
   const el = document.createElement("div");
   el.style.cssText =
-    `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;padding:0;box-sizing:border-box;`;
-  el.innerHTML = `<img src="${url}" style="width:100%;display:block;" />`;
+    `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;font-family:'Pretendard',-apple-system,sans-serif;padding:0;box-sizing:border-box;`;
+  el.innerHTML = `<img src="${sheet.url}" style="width:100%;display:block;" />${
+    sheet.note
+      ? `<div style="padding:8px 12px 0;font-size:16px;color:#374151;">${esc(sheet.note)}</div>`
+      : ""
+  }`;
   return el;
 }
 
@@ -88,18 +98,20 @@ export async function shareContiPdf(
     import("html2canvas"),
   ]);
 
-  // resolve to (song, item, sheet image urls), skipping missing songs
-  const entries: { song: Song; item: ContiItem; urls: string[] }[] = [];
+  // resolve to (song, item, sheet images with memos), skipping missing songs
+  const entries: { song: Song; item: ContiItem; sheets: SheetImg[] }[] = [];
   for (const item of items) {
     const song = songById.get(item.id);
     if (!song) continue;
-    let urls: string[] = [];
+    const sheets: SheetImg[] = [];
     if (item.sheets?.length) {
-      urls = (await Promise.all(item.sheets.map((aid) => loadSheet(aid)))).filter(
-        (u): u is string => !!u
-      );
+      const urls = await Promise.all(item.sheets.map((aid) => loadSheet(aid)));
+      item.sheets.forEach((aid, idx) => {
+        const u = urls[idx];
+        if (u) sheets.push({ url: u, note: item.sheetNotes?.[aid] });
+      });
     }
-    entries.push({ song, item, urls });
+    entries.push({ song, item, sheets });
   }
   if (!entries.length) return "failed";
 
@@ -168,12 +180,12 @@ export async function shareContiPdf(
 
   try {
     for (let i = 0; i < entries.length; i++) {
-      const { song, item, urls } = entries[i];
+      const { song, item, sheets } = entries[i];
       // page 1: info + first sheet (+ playlist link on the very first page)
-      await renderPage(buildInfoEl(i, song, item, urls[0], i === 0 ? playlistUrl : undefined), false);
+      await renderPage(buildInfoEl(i, song, item, sheets[0], i === 0 ? playlistUrl : undefined), false);
       // remaining sheets: one per page so they're never shrunk together / cut
-      for (let k = 1; k < urls.length; k++) {
-        await renderPage(buildSheetEl(urls[k]), true);
+      for (let k = 1; k < sheets.length; k++) {
+        await renderPage(buildSheetEl(sheets[k]), true);
       }
     }
 
