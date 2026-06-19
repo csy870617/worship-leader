@@ -634,6 +634,7 @@ const TEXT_SIZES: { label: string; value: number }[] = [
   { label: "보통", value: 0.045 },
   { label: "크게", value: 0.07 },
 ];
+const TEXT_PRESETS = ["Intro", "V1", "V2", "V3", "PC", "C", "B", "Inter", "Tag", "Out"];
 
 function SheetLightbox({
   ids,
@@ -658,6 +659,8 @@ function SheetLightbox({
   const [size, setSize] = useState(TEXT_SIZES[1].value);
   const [boxW, setBoxW] = useState(0);
   const boxRef = useRef<HTMLDivElement>(null);
+  const annosRef = useRef<SheetText[]>([]);
+  const dragRef = useRef<{ i: number; moved: boolean } | null>(null);
   const many = ids.length > 1;
   const currentId = ids[index];
 
@@ -669,7 +672,9 @@ function SheetLightbox({
     setUrl(null);
     setSel(null);
     setPlacing(false);
-    setAnnos(texts[ids[index]] ?? []);
+    const init = texts[ids[index]] ?? [];
+    setAnnos(init);
+    annosRef.current = init;
     loadSheet(ids[index]).then((u) => {
       if (!alive) return;
       setUrl(u ?? null);
@@ -703,8 +708,16 @@ function SheetLightbox({
   }, [many, ids.length]);
 
   const commit = (next: SheetText[]) => {
+    annosRef.current = next;
     setAnnos(next);
     onTexts(currentId, next);
+  };
+
+  const addPreset = (label: string) => {
+    const next = [...annosRef.current, { x: 0.5, y: 0.5, text: label, color, size }];
+    commit(next);
+    setSel(next.length - 1);
+    setPlacing(false);
   };
 
   const onBoxClick = (e: React.MouseEvent) => {
@@ -754,7 +767,7 @@ function SheetLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 px-4 pt-4 pb-32"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 px-4 pt-4 pb-44"
       onClick={onClose}
     >
       <button
@@ -775,14 +788,36 @@ function SheetLightbox({
           onClick={onBoxClick}
           className={"relative inline-block " + (placing ? "cursor-crosshair" : "")}
         >
-          <img src={url} alt="악보" onLoad={measure} className="block max-h-[70vh] max-w-full rounded-lg" />
+          <img src={url} alt="악보" onLoad={measure} className="block max-h-[58vh] max-w-full rounded-lg" />
           {annos.map((a, i) => (
             <span
               key={i}
-              onClick={(e) => {
+              onPointerDown={(e) => {
                 e.stopPropagation();
+                (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+                dragRef.current = { i, moved: false };
                 setSel(i);
               }}
+              onPointerMove={(e) => {
+                const d = dragRef.current;
+                if (!d || d.i !== i) return;
+                const el = boxRef.current;
+                if (!el) return;
+                const rect = el.getBoundingClientRect();
+                const nx = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+                const ny = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+                d.moved = true;
+                const next = annosRef.current.map((p, idx) => (idx === i ? { ...p, x: nx, y: ny } : p));
+                annosRef.current = next;
+                setAnnos(next);
+              }}
+              onPointerUp={(e) => {
+                const d = dragRef.current;
+                dragRef.current = null;
+                (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+                if (d?.moved) onTexts(currentId, annosRef.current);
+              }}
+              onClick={(e) => e.stopPropagation()}
               style={{
                 position: "absolute",
                 left: `${a.x * 100}%`,
@@ -793,7 +828,8 @@ function SheetLightbox({
                 fontWeight: 700,
                 lineHeight: 1,
                 whiteSpace: "nowrap",
-                cursor: "pointer",
+                cursor: "move",
+                touchAction: "none",
                 padding: "1px 3px",
                 outline: sel === i ? "1px dashed rgba(255,255,255,0.8)" : "none",
               }}
@@ -883,6 +919,18 @@ function SheetLightbox({
               </button>
             ))}
           </div>
+        </div>
+        {/* quick-insert presets */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          {TEXT_PRESETS.map((p) => (
+            <button
+              key={p}
+              onClick={() => addPreset(p)}
+              className="rounded-md bg-white/15 px-2.5 py-1 text-xs font-bold text-white active:bg-white/30"
+            >
+              {p}
+            </button>
+          ))}
         </div>
       </div>
     </div>
