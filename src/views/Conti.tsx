@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useSongs } from "../lib/catalog";
 import { useConti, type SheetText } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
-import { bestRelation } from "../lib/keys";
 import { decodeConti, youtubePlaylistUrl } from "../lib/share";
 import { shareContiPdf } from "../lib/contiPdf";
 import {
@@ -170,34 +169,14 @@ export default function Conti() {
         </div>
       )}
 
-      {/* ordered list with key-flow between songs */}
+      {/* ordered list */}
       <ol className="space-y-1.5 px-3 pt-3">
         {rows.map((r, i) => {
-          // use the chosen key (if any) for the smooth-transition hint
-          const curKeys = r.key ? [r.key] : r.song.keys;
-          const prevRow = i > 0 ? rows[i - 1] : null;
-          const prevKeys = prevRow ? (prevRow.key ? [prevRow.key] : prevRow.song.keys) : null;
-          const rel = prevKeys ? bestRelation(prevKeys, curKeys) : null;
           const used = lastUsed(r.id);
           const recentlyUsed = used && daysSince(used) <= 28;
           const sheetCount = r.sheets?.length ?? 0;
           return (
             <li key={r.id}>
-              {rel && (
-                <div className="flex items-center justify-center py-0.5 text-[10px] font-medium">
-                  <span
-                    className={
-                      rel.score >= 3
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : rel.score > 0
-                        ? "text-slate-400 dark:text-slate-500"
-                        : "text-amber-600 dark:text-amber-400"
-                    }
-                  >
-                    {rel.score > 0 ? `↓ ${rel.label}` : "↓ 키 전환 큼"}
-                  </span>
-                </div>
-              )}
               <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/50">
                 <span className="w-5 shrink-0 text-center text-sm font-bold text-slate-300 dark:text-slate-600">
                   {i + 1}
