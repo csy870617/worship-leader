@@ -707,6 +707,22 @@ function SheetLightbox({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [many, ids.length]);
 
+  // delete the selected text with the keyboard (PC)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (sel == null) return;
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      e.preventDefault();
+      commit(annosRef.current.filter((_, i) => i !== sel));
+      setSel(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sel, currentId]);
+
   const commit = (next: SheetText[]) => {
     annosRef.current = next;
     setAnnos(next);
