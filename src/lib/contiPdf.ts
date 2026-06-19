@@ -1,6 +1,7 @@
 import type { Song } from "../types";
 import type { ContiItem } from "./useConti";
 import { loadSheet } from "./attachments";
+import { youtubePlaylistUrl } from "./share";
 
 const esc = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
@@ -26,8 +27,9 @@ function buildInfoEl(
   index: number,
   song: Song,
   item: ContiItem,
-  firstSheet?: string
-): { el: HTMLDivElement; yt: HTMLAnchorElement | null } {
+  firstSheet?: string,
+  playlistUrl?: string
+): HTMLDivElement {
   const el = document.createElement("div");
   el.style.cssText = BASE_STYLE;
 
@@ -35,6 +37,12 @@ function buildInfoEl(
   const yt = item.youtube?.trim();
   const parts: string[] = [];
 
+  // whole-conti playlist link (only passed for the very first page)
+  if (playlistUrl) {
+    parts.push(
+      `<a data-pdf-link href="${esc(playlistUrl)}" style="display:inline-block;margin:0 0 16px 0;padding:9px 14px;border-radius:8px;background:#dc2626;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;">▶ 전체 재생목록 재생</a>`
+    );
+  }
   parts.push(
     `<div style="display:flex;align-items:baseline;gap:10px;">
       <span style="font-size:22px;font-weight:800;color:#c7d2fe;min-width:28px;">${index + 1}</span>
@@ -49,7 +57,7 @@ function buildInfoEl(
   }
   if (yt) {
     parts.push(
-      `<a id="yt" href="${esc(yt)}" style="display:inline-block;margin:10px 0 0 38px;padding:9px 14px;border-radius:8px;background:#fee2e2;color:#b91c1c;font-size:14px;font-weight:700;text-decoration:none;word-break:break-all;max-width:600px;">▶ 유튜브로 보기</a>`
+      `<a data-pdf-link href="${esc(yt)}" style="display:inline-block;margin:10px 0 0 38px;padding:9px 14px;border-radius:8px;background:#fee2e2;color:#b91c1c;font-size:14px;font-weight:700;text-decoration:none;word-break:break-all;max-width:600px;">▶ 유튜브로 보기</a>`
     );
   }
   if (firstSheet) {
@@ -59,7 +67,7 @@ function buildInfoEl(
   }
 
   el.innerHTML = parts.join("");
-  return { el, yt: el.querySelector<HTMLAnchorElement>("#yt") };
+  return el;
 }
 
 /** A page that holds a single sheet image. */
@@ -100,15 +108,13 @@ export async function shareContiPdf(
   }
   if (!entries.length) return "failed";
 
+  const playlistUrl = youtubePlaylistUrl(items.map((it) => it.youtube)) ?? undefined;
+
   const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
   let pageAdded = false;
 
   // render one off-screen element onto its own page (contain-fit, never cut)
-  const renderPage = async (
-    el: HTMLDivElement,
-    yt: HTMLAnchorElement | null,
-    vCenter: boolean
-  ) => {
+  const renderPage = async (el: HTMLDivElement, vCenter: boolean) => {
     document.body.appendChild(el);
     try {
       const imgEls = Array.from(el.querySelectorAll("img"));
@@ -127,7 +133,10 @@ export async function shareContiPdf(
       const rootRect = el.getBoundingClientRect();
       const cssW = rootRect.width;
       const cssH = rootRect.height;
-      const ytRect = yt ? yt.getBoundingClientRect() : null;
+      // capture clickable links before rasterizing
+      const links = Array.from(el.querySelectorAll<HTMLAnchorElement>("a[data-pdf-link]")).map(
+        (a) => ({ href: a.href, rect: a.getBoundingClientRect() })
+      );
 
       const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
       const aspect = canvas.height / canvas.width;
@@ -146,14 +155,16 @@ export async function shareContiPdf(
       pageAdded = true;
       pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", x, y, imgW, imgH);
 
-      if (yt && ytRect && cssW > 0 && cssH > 0) {
-        // pad the hit area so it's easy to tap in any PDF viewer
-        const pad = 2; // mm
-        const lx = x + ((ytRect.left - rootRect.left) / cssW) * imgW - pad;
-        const ly = y + ((ytRect.top - rootRect.top) / cssH) * imgH - pad;
-        const lw = (ytRect.width / cssW) * imgW + pad * 2;
-        const lh = (ytRect.height / cssH) * imgH + pad * 2;
-        pdf.link(lx, ly, lw, lh, { url: yt.href });
+      if (cssW > 0 && cssH > 0) {
+        const pad = 2; // mm — enlarge the hit area for easy tapping
+        for (const { href, rect } of links) {
+          if (!href) continue;
+          const lx = x + ((rect.left - rootRect.left) / cssW) * imgW - pad;
+          const ly = y + ((rect.top - rootRect.top) / cssH) * imgH - pad;
+          const lw = (rect.width / cssW) * imgW + pad * 2;
+          const lh = (rect.height / cssH) * imgH + pad * 2;
+          pdf.link(lx, ly, lw, lh, { url: href });
+        }
       }
     } finally {
       document.body.removeChild(el);
@@ -163,12 +174,11 @@ export async function shareContiPdf(
   try {
     for (let i = 0; i < entries.length; i++) {
       const { song, item, urls } = entries[i];
-      // page 1: info + first sheet (if any)
-      const info = buildInfoEl(i, song, item, urls[0]);
-      await renderPage(info.el, info.yt, false);
+      // page 1: info + first sheet (+ playlist link on the very first page)
+      await renderPage(buildInfoEl(i, song, item, urls[0], i === 0 ? playlistUrl : undefined), false);
       // remaining sheets: one per page so they're never shrunk together / cut
       for (let k = 1; k < urls.length; k++) {
-        await renderPage(buildSheetEl(urls[k]), null, true);
+        await renderPage(buildSheetEl(urls[k]), true);
       }
     }
 
@@ -177,7 +187,12 @@ export async function shareContiPdf(
 
     if (mode === "share" && navigator.canShare?.({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: name });
+        await navigator.share({
+          files: [file],
+          title: name,
+          // include the playlist link alongside the PDF
+          ...(playlistUrl ? { text: `${name} 유튜브 재생목록\n${playlistUrl}` } : {}),
+        });
         return "shared";
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return "shared";
