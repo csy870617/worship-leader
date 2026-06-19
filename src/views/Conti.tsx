@@ -338,7 +338,7 @@ export default function Conti() {
                   setPdfBusy(false);
                 }
               }}
-              className="flex-1 rounded-lg border border-indigo-200 py-2.5 text-sm font-semibold text-indigo-600 active:bg-indigo-50 disabled:opacity-60 dark:border-indigo-500/40 dark:text-indigo-300"
+              className="flex-1 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white active:bg-indigo-700 disabled:opacity-60"
             >
               다운로드
             </button>
@@ -359,7 +359,7 @@ export default function Conti() {
                   setPdfBusy(false);
                 }
               }}
-              className="flex-1 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white active:bg-indigo-700 disabled:opacity-60"
+              className="flex-1 rounded-lg border border-indigo-200 py-2.5 text-sm font-semibold text-indigo-600 active:bg-indigo-50 disabled:opacity-60 dark:border-indigo-500/40 dark:text-indigo-300"
             >
               {pdfBusy ? "만드는 중…" : "콘티 공유"}
             </button>
