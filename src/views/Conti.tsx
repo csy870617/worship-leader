@@ -218,13 +218,8 @@ export default function Conti() {
                       <span className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-100">
                         {r.song.title}
                       </span>
-                      {!open.has(r.id) && (r.note || r.youtube || sheetCount > 0) && (
+                      {!open.has(r.id) && (r.youtube || sheetCount > 0) && (
                         <span className="flex shrink-0 items-center gap-1 text-slate-400 dark:text-slate-500">
-                          {r.note && (
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
-                            </svg>
-                          )}
                           {r.youtube && (
                             <svg className="h-3.5 w-3.5 text-red-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                               <path d="M21.6 7.2a2.4 2.4 0 0 0-1.7-1.7C18.4 5.1 12 5.1 12 5.1s-6.4 0-7.9.4A2.4 2.4 0 0 0 2.4 7.2 25 25 0 0 0 2 12a25 25 0 0 0 .4 4.8 2.4 2.4 0 0 0 1.7 1.7c1.5.4 7.9.4 7.9.4s6.4 0 7.9-.4a2.4 2.4 0 0 0 1.7-1.7A25 25 0 0 0 22 12a25 25 0 0 0-.4-4.8ZM10 15V9l5 3-5 3Z" />
@@ -264,8 +259,14 @@ export default function Conti() {
                         : r.song.keys.map((k) => <KeyBadge key={k} k={k} />)}
                     </span>
                   </div>
-                  {recentlyUsed && (
-                    <div className="mt-1">
+                  <div className="mt-0.5 flex items-center gap-2">
+                    <input
+                      value={r.note ?? ""}
+                      onChange={(e) => setNote(r.id, e.target.value)}
+                      placeholder="메모 추가"
+                      className="-mx-1 min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
+                    />
+                    {recentlyUsed && (
                       <button
                         onClick={() => clearUsed([r.id])}
                         title="사용 기록 삭제"
@@ -276,8 +277,8 @@ export default function Conti() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
                 <div className="flex shrink-0 flex-col text-slate-400">
                   <button onClick={() => move(r.id, -1)} disabled={i === 0} aria-label="위로" className="p-0.5 disabled:opacity-25">
@@ -296,10 +297,8 @@ export default function Conti() {
                 <ContiAttachPanel
                   songId={r.id}
                   songTitle={r.song.title}
-                  note={r.note}
                   youtubeUrl={r.youtube}
                   sheetIds={r.sheets ?? []}
-                  onNote={(v) => setNote(r.id, v)}
                   onYoutube={(u) => setYoutube(r.id, u)}
                   onAddSheet={(aid) => addSheet(r.id, aid)}
                   onRemoveSheet={(aid) => removeSheet(r.id, aid)}
@@ -391,10 +390,8 @@ export default function Conti() {
 function ContiAttachPanel({
   songId,
   songTitle,
-  note,
   youtubeUrl,
   sheetIds,
-  onNote,
   onYoutube,
   onAddSheet,
   onRemoveSheet,
@@ -402,10 +399,8 @@ function ContiAttachPanel({
 }: {
   songId: string;
   songTitle: string;
-  note?: string;
   youtubeUrl?: string;
   sheetIds: string[];
-  onNote: (v: string) => void;
   onYoutube: (url: string | null) => void;
   onAddSheet: (aid: string) => void;
   onRemoveSheet: (aid: string) => void;
@@ -434,23 +429,6 @@ function ContiAttachPanel({
 
   return (
     <div className="mt-1 ml-7 space-y-3 rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-      {/* memo */}
-      <div>
-        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-          메모
-        </label>
-        <textarea
-          defaultValue={note ?? ""}
-          onBlur={(e) => {
-            const v = e.target.value;
-            if (v !== (note ?? "")) onNote(v);
-          }}
-          rows={2}
-          placeholder="메모 추가 (예: 1절만, 키 올림, 간주 생략 …)"
-          className="w-full resize-y rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-        />
-      </div>
-
       {/* YouTube link */}
       <div>
         <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
