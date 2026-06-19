@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSongs } from "../lib/catalog";
-import { useConti } from "../lib/useConti";
+import { useConti, type SheetText } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { bestRelation } from "../lib/keys";
 import { decodeConti, youtubePlaylistUrl } from "../lib/share";
@@ -17,7 +17,7 @@ import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
   const {
-    conti, remove, move, setNote, setKey, setYoutube, addSheet, removeSheet, setSheetNote, clear, replace,
+    conti, remove, move, setNote, setKey, setYoutube, addSheet, removeSheet, setSheetTexts, clear, replace,
     contis, activeId, active, createConti, renameConti, deleteConti, setActive,
   } = useConti();
   const { songById } = useSongs();
@@ -292,11 +292,11 @@ export default function Conti() {
                   songTitle={r.song.title}
                   youtubeUrl={r.youtube}
                   sheetIds={r.sheets ?? []}
-                  sheetNotes={r.sheetNotes ?? {}}
+                  sheetTexts={r.sheetTexts ?? {}}
                   onYoutube={(u) => setYoutube(r.id, u)}
                   onAddSheet={(aid) => addSheet(r.id, aid)}
                   onRemoveSheet={(aid) => removeSheet(r.id, aid)}
-                  onSheetNote={(aid, v) => setSheetNote(r.id, aid, v)}
+                  onSheetTexts={(aid, list) => setSheetTexts(r.id, aid, list)}
                   flash={flash}
                 />
               )}
@@ -395,22 +395,22 @@ function ContiAttachPanel({
   songTitle,
   youtubeUrl,
   sheetIds,
-  sheetNotes,
+  sheetTexts,
   onYoutube,
   onAddSheet,
   onRemoveSheet,
-  onSheetNote,
+  onSheetTexts,
   flash,
 }: {
   songId: string;
   songTitle: string;
   youtubeUrl?: string;
   sheetIds: string[];
-  sheetNotes: Record<string, string>;
+  sheetTexts: Record<string, SheetText[]>;
   onYoutube: (url: string | null) => void;
   onAddSheet: (aid: string) => void;
   onRemoveSheet: (aid: string) => void;
-  onSheetNote: (aid: string, note: string) => void;
+  onSheetTexts: (aid: string, list: SheetText[]) => void;
   flash: (m: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -490,8 +490,8 @@ function ContiAttachPanel({
           <SheetLightbox
             ids={sheetIds}
             start={viewer}
-            notes={sheetNotes}
-            onNote={onSheetNote}
+            texts={sheetTexts}
+            onTexts={onSheetTexts}
             onClose={() => setViewer(null)}
           />
         )}
@@ -594,23 +594,38 @@ function SheetThumb({
   );
 }
 
+const TEXT_COLORS = ["#ef4444", "#000000", "#ffffff", "#2563eb", "#16a34a", "#eab308"];
+const TEXT_SIZES: { label: string; value: number }[] = [
+  { label: "작게", value: 0.03 },
+  { label: "보통", value: 0.045 },
+  { label: "크게", value: 0.07 },
+];
+
 function SheetLightbox({
   ids,
   start,
-  notes,
-  onNote,
+  texts,
+  onTexts,
   onClose,
 }: {
   ids: string[];
   start: number;
-  notes: Record<string, string>;
-  onNote: (aid: string, note: string) => void;
+  texts: Record<string, SheetText[]>;
+  onTexts: (aid: string, list: SheetText[]) => void;
   onClose: () => void;
 }) {
   const [index, setIndex] = useState(start);
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [annos, setAnnos] = useState<SheetText[]>([]);
+  const [sel, setSel] = useState<number | null>(null);
+  const [placing, setPlacing] = useState(false);
+  const [color, setColor] = useState(TEXT_COLORS[0]);
+  const [size, setSize] = useState(TEXT_SIZES[1].value);
+  const [boxW, setBoxW] = useState(0);
+  const boxRef = useRef<HTMLDivElement>(null);
   const many = ids.length > 1;
+  const currentId = ids[index];
 
   const go = (d: number) => setIndex((i) => (i + d + ids.length) % ids.length);
 
@@ -618,6 +633,9 @@ function SheetLightbox({
     let alive = true;
     setLoading(true);
     setUrl(null);
+    setSel(null);
+    setPlacing(false);
+    setAnnos(texts[ids[index]] ?? []);
     loadSheet(ids[index]).then((u) => {
       if (!alive) return;
       setUrl(u ?? null);
@@ -626,7 +644,18 @@ function SheetLightbox({
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids, index]);
+
+  const measure = () => {
+    const el = boxRef.current;
+    if (el) setBoxW(el.getBoundingClientRect().width);
+  };
+  useEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [url]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -636,17 +665,68 @@ function SheetLightbox({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [many, ids.length]);
+
+  const commit = (next: SheetText[]) => {
+    setAnnos(next);
+    onTexts(currentId, next);
+  };
+
+  const onBoxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!placing) {
+      setSel(null);
+      return;
+    }
+    const el = boxRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    const text = prompt("텍스트 입력");
+    setPlacing(false);
+    if (text && text.trim()) {
+      const next = [...annos, { x, y, text: text.trim(), color, size }];
+      commit(next);
+      setSel(next.length - 1);
+    }
+  };
+
+  const applyColor = (c: string) => {
+    setColor(c);
+    if (sel != null) commit(annos.map((a, i) => (i === sel ? { ...a, color: c } : a)));
+  };
+  const applySize = (s: number) => {
+    setSize(s);
+    if (sel != null) commit(annos.map((a, i) => (i === sel ? { ...a, size: s } : a)));
+  };
+  const editSel = () => {
+    if (sel == null) return;
+    const t = prompt("텍스트 수정", annos[sel].text);
+    if (t == null) return;
+    if (!t.trim()) {
+      commit(annos.filter((_, i) => i !== sel));
+      setSel(null);
+    } else {
+      commit(annos.map((a, i) => (i === sel ? { ...a, text: t.trim() } : a)));
+    }
+  };
+  const delSel = () => {
+    if (sel == null) return;
+    commit(annos.filter((_, i) => i !== sel));
+    setSel(null);
+  };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 px-4 pt-4 pb-28"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 px-4 pt-4 pb-32"
       onClick={onClose}
     >
       <button
         onClick={onClose}
         aria-label="닫기"
-        className="absolute right-3 top-3 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
+        className="absolute right-3 top-3 z-10 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
       >
         <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -656,12 +736,38 @@ function SheetLightbox({
       {loading ? (
         <span className="text-sm text-white/70">불러오는 중…</span>
       ) : url ? (
-        <img
-          src={url}
-          alt="악보"
-          onClick={(e) => e.stopPropagation()}
-          className="max-h-full max-w-full rounded-lg object-contain"
-        />
+        <div
+          ref={boxRef}
+          onClick={onBoxClick}
+          className={"relative inline-block " + (placing ? "cursor-crosshair" : "")}
+        >
+          <img src={url} alt="악보" onLoad={measure} className="block max-h-[70vh] max-w-full rounded-lg" />
+          {annos.map((a, i) => (
+            <span
+              key={i}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSel(i);
+              }}
+              style={{
+                position: "absolute",
+                left: `${a.x * 100}%`,
+                top: `${a.y * 100}%`,
+                transform: "translate(-50%, -50%)",
+                color: a.color,
+                fontSize: boxW ? a.size * boxW : 16,
+                fontWeight: 700,
+                lineHeight: 1,
+                whiteSpace: "nowrap",
+                cursor: "pointer",
+                padding: "1px 3px",
+                outline: sel === i ? "1px dashed rgba(255,255,255,0.8)" : "none",
+              }}
+            >
+              {a.text}
+            </span>
+          ))}
+        </div>
       ) : (
         <span className="text-sm text-white/70">악보를 불러올 수 없어요</span>
       )}
@@ -669,45 +775,81 @@ function SheetLightbox({
       {many && (
         <>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              go(-1);
-            }}
+            onClick={(e) => { e.stopPropagation(); go(-1); }}
             aria-label="이전"
-            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
+            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
           >
             <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
           </button>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              go(1);
-            }}
+            onClick={(e) => { e.stopPropagation(); go(1); }}
             aria-label="다음"
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
+            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
           >
             <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </button>
-          <span className="absolute bottom-24 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-            {index + 1} / {ids.length}
-          </span>
         </>
       )}
 
-      {/* per-sheet memo */}
-      <div className="absolute inset-x-0 bottom-0 p-3" onClick={(e) => e.stopPropagation()}>
-        <textarea
-          key={ids[index]}
-          defaultValue={notes[ids[index]] ?? ""}
-          onBlur={(e) => onNote(ids[index], e.target.value)}
-          rows={2}
-          placeholder="이 악보에 메모 추가"
-          className="mx-auto block w-full max-w-xl resize-none rounded-lg border border-white/20 bg-black/50 px-3 py-2 text-sm text-white outline-none backdrop-blur placeholder:text-white/50"
-        />
+      {/* annotation toolbar */}
+      <div
+        className="absolute inset-x-0 bottom-0 space-y-2 bg-black/60 p-3 backdrop-blur"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => { setSel(null); setPlacing((p) => !p); }}
+            className={
+              "rounded-full px-3 py-1.5 text-sm font-semibold " +
+              (placing ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
+            }
+          >
+            {placing ? "위치를 탭하세요" : "＋ 텍스트"}
+          </button>
+          {sel != null && (
+            <>
+              <button onClick={editSel} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">수정</button>
+              <button onClick={delSel} className="rounded-full bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white">삭제</button>
+            </>
+          )}
+          {many && (
+            <span className="ml-1 text-xs font-semibold text-white/70">{index + 1} / {ids.length}</span>
+          )}
+        </div>
+        <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center gap-1.5">
+            {TEXT_COLORS.map((c) => (
+              <button
+                key={c}
+                onClick={() => applyColor(c)}
+                aria-label={`색 ${c}`}
+                className={
+                  "h-6 w-6 rounded-full border " +
+                  (color === c ? "border-white ring-2 ring-white/60" : "border-white/40")
+                }
+                style={{ background: c }}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-1">
+            {TEXT_SIZES.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => applySize(s.value)}
+                className={
+                  "rounded-md px-2 py-1 text-xs font-semibold " +
+                  (size === s.value ? "bg-white text-slate-900" : "bg-white/15 text-white")
+                }
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

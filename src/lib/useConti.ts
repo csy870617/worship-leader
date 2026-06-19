@@ -3,13 +3,20 @@ import { useCallback, useEffect, useState } from "react";
 const KEY = "wl.contis";
 const LEGACY = "wl.conti"; // previous single-conti storage
 
+export interface SheetText {
+  x: number; // 0..1 — center position relative to image width
+  y: number; // 0..1 — center position relative to image height
+  text: string;
+  color: string; // hex
+  size: number; // font size as a fraction of image width
+}
 export interface ContiItem {
   id: string;
   note?: string;
   key?: string; // chosen key when the song has several
   youtube?: string; // custom YouTube URL
   sheets?: string[]; // sheet-music attachment ids (stored in IndexedDB)
-  sheetNotes?: Record<string, string>; // memo per sheet, keyed by attachment id
+  sheetTexts?: Record<string, SheetText[]>; // text annotations per sheet (by attachment id)
 }
 export interface Conti {
   id: string;
@@ -36,12 +43,29 @@ function sanitizeItems(arr: unknown): ContiItem[] {
             const s = x.sheets.filter((v: any) => typeof v === "string" && v);
             if (s.length) it.sheets = s;
           }
-          if (x.sheetNotes && typeof x.sheetNotes === "object" && !Array.isArray(x.sheetNotes)) {
-            const n: Record<string, string> = {};
-            for (const [k, v] of Object.entries(x.sheetNotes)) {
-              if (typeof v === "string" && v) n[k] = v;
+          if (x.sheetTexts && typeof x.sheetTexts === "object" && !Array.isArray(x.sheetTexts)) {
+            const out: Record<string, SheetText[]> = {};
+            for (const [k, v] of Object.entries(x.sheetTexts)) {
+              if (!Array.isArray(v)) continue;
+              const arr = v
+                .filter(
+                  (t: any) =>
+                    t &&
+                    typeof t.text === "string" &&
+                    t.text &&
+                    typeof t.x === "number" &&
+                    typeof t.y === "number"
+                )
+                .map((t: any) => ({
+                  x: t.x,
+                  y: t.y,
+                  text: String(t.text),
+                  color: typeof t.color === "string" ? t.color : "#ef4444",
+                  size: typeof t.size === "number" ? t.size : 0.045,
+                }));
+              if (arr.length) out[k] = arr;
             }
-            if (Object.keys(n).length) it.sheetNotes = n;
+            if (Object.keys(out).length) it.sheetTexts = out;
           }
           return it;
         })
@@ -194,28 +218,27 @@ export function useConti() {
         items.map((i) => {
           if (i.id !== id) return i;
           const sheets = (i.sheets ?? []).filter((x) => x !== aid);
-          const { sheets: _omit, sheetNotes: _n, ...rest } = i;
-          const notes = { ...(i.sheetNotes ?? {}) };
-          delete notes[aid];
+          const { sheets: _omit, sheetTexts: _t, ...rest } = i;
+          const tx = { ...(i.sheetTexts ?? {}) };
+          delete tx[aid];
           const next: ContiItem = { ...rest };
           if (sheets.length) next.sheets = sheets;
-          if (Object.keys(notes).length) next.sheetNotes = notes;
+          if (Object.keys(tx).length) next.sheetTexts = tx;
           return next;
         })
       ),
     []
   );
-  const setSheetNote = useCallback(
-    (id: string, aid: string, note: string) =>
+  const setSheetTexts = useCallback(
+    (id: string, aid: string, list: SheetText[]) =>
       mutateActive((items) =>
         items.map((i) => {
           if (i.id !== id) return i;
-          const notes = { ...(i.sheetNotes ?? {}) };
-          const v = note.trim();
-          if (v) notes[aid] = v;
-          else delete notes[aid];
-          const { sheetNotes: _omit, ...rest } = i;
-          return Object.keys(notes).length ? { ...rest, sheetNotes: notes } : rest;
+          const tx = { ...(i.sheetTexts ?? {}) };
+          if (list.length) tx[aid] = list;
+          else delete tx[aid];
+          const { sheetTexts: _omit, ...rest } = i;
+          return Object.keys(tx).length ? { ...rest, sheetTexts: tx } : rest;
         })
       ),
     []
@@ -260,7 +283,7 @@ export function useConti() {
     setYoutube,
     addSheet,
     removeSheet,
-    setSheetNote,
+    setSheetTexts,
     clear,
     replace,
     createConti,

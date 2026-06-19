@@ -1,5 +1,5 @@
 import type { Song } from "../types";
-import type { ContiItem } from "./useConti";
+import type { ContiItem, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
 import { youtubePlaylistUrl } from "./share";
 
@@ -22,7 +22,22 @@ const BASE_STYLE =
   `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;` +
   "font-family:'Pretendard',-apple-system,sans-serif;padding:14px 18px;box-sizing:border-box;";
 
-type SheetImg = { url: string; note?: string };
+type SheetImg = { url: string; texts?: SheetText[] };
+
+/** An image with positioned text annotations baked over it. */
+function sheetOverlay(url: string, widthPx: number, texts?: SheetText[]): string {
+  const spans = (texts ?? [])
+    .map(
+      (t) =>
+        `<span style="position:absolute;left:${t.x * 100}%;top:${t.y * 100}%;transform:translate(-50%,-50%);color:${esc(
+          t.color
+        )};font-size:${Math.round(t.size * widthPx)}px;font-weight:700;line-height:1;white-space:nowrap;">${esc(
+          t.text
+        )}</span>`
+    )
+    .join("");
+  return `<div style="position:relative;width:100%;"><img src="${url}" style="width:100%;display:block;" />${spans}</div>`;
+}
 
 /** Info page: number, title, key, memo, and (optionally) the first sheet. */
 function buildInfoEl(
@@ -57,29 +72,20 @@ function buildInfoEl(
     );
   }
   if (firstSheet) {
-    parts.push(
-      `<div style="margin:12px 0 0 0;"><img src="${firstSheet.url}" style="width:100%;display:block;" />${
-        firstSheet.note
-          ? `<div style="margin-top:6px;font-size:16px;color:#374151;">${esc(firstSheet.note)}</div>`
-          : ""
-      }</div>`
-    );
+    // image width = render width minus the 18px horizontal padding on each side
+    parts.push(`<div style="margin:12px 0 0 0;">${sheetOverlay(firstSheet.url, PX_W - 36, firstSheet.texts)}</div>`);
   }
 
   el.innerHTML = parts.join("");
   return el;
 }
 
-/** A page that holds a single sheet image (edge to edge) with its memo. */
+/** A page that holds a single sheet image (edge to edge) with its annotations. */
 function buildSheetEl(sheet: SheetImg): HTMLDivElement {
   const el = document.createElement("div");
   el.style.cssText =
     `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;font-family:'Pretendard',-apple-system,sans-serif;padding:0;box-sizing:border-box;`;
-  el.innerHTML = `<img src="${sheet.url}" style="width:100%;display:block;" />${
-    sheet.note
-      ? `<div style="padding:8px 12px 0;font-size:16px;color:#374151;">${esc(sheet.note)}</div>`
-      : ""
-  }`;
+  el.innerHTML = sheetOverlay(sheet.url, PX_W, sheet.texts);
   return el;
 }
 
@@ -108,7 +114,7 @@ export async function shareContiPdf(
       const urls = await Promise.all(item.sheets.map((aid) => loadSheet(aid)));
       item.sheets.forEach((aid, idx) => {
         const u = urls[idx];
-        if (u) sheets.push({ url: u, note: item.sheetNotes?.[aid] });
+        if (u) sheets.push({ url: u, texts: item.sheetTexts?.[aid] });
       });
     }
     entries.push({ song, item, sheets });
