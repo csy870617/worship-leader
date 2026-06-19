@@ -9,9 +9,67 @@ function safeName(name: string) {
   return name.replace(/[\\/:*?"<>|]/g, "_").trim() || "conti";
 }
 
+// Letter size in mm
+const PAGE_W = 215.9;
+const PAGE_H = 279.4;
+const MARGIN = 12.7; // 0.5"
+const CONTENT_W = PAGE_W - 2 * MARGIN;
+const CONTENT_H = PAGE_H - 2 * MARGIN;
+const PX_W = 794; // off-screen render width
+
+/** Build the off-screen DOM for a single song page; returns its root + yt anchor. */
+function buildSongEl(
+  conti: string,
+  index: number,
+  total: number,
+  song: Song,
+  item: ContiItem,
+  sheetUrls: string[]
+): { el: HTMLDivElement; yt: HTMLAnchorElement | null } {
+  const el = document.createElement("div");
+  el.style.cssText =
+    `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;` +
+    "font-family:'Pretendard',-apple-system,sans-serif;padding:40px 44px;box-sizing:border-box;";
+
+  const keys = item.key ? item.key : song.keys.join(" / ");
+  const yt = item.youtube?.trim();
+  const parts: string[] = [];
+
+  parts.push(
+    `<div style="display:flex;justify-content:space-between;border-bottom:1.5px solid #4f46e5;padding-bottom:8px;margin-bottom:18px;font-size:12px;color:#6b7280;letter-spacing:1px;">
+      <span>${esc(conti)}</span><span>${index + 1} / ${total}</span>
+    </div>`
+  );
+  parts.push(
+    `<div style="display:flex;align-items:baseline;gap:10px;">
+      <span style="font-size:22px;font-weight:800;color:#c7d2fe;min-width:28px;">${index + 1}</span>
+      <span style="font-size:22px;font-weight:700;">${esc(song.title)}</span>
+      ${keys ? `<span style="font-size:15px;font-weight:700;color:#4f46e5;">${esc(keys)}</span>` : ""}
+    </div>`
+  );
+  if (item.note) {
+    parts.push(
+      `<div style="margin:8px 0 0 38px;font-size:14px;color:#374151;">📝 ${esc(item.note)}</div>`
+    );
+  }
+  if (yt) {
+    parts.push(
+      `<a id="yt" href="${esc(yt)}" style="display:inline-block;margin:8px 0 0 38px;font-size:13px;color:#dc2626;text-decoration:underline;word-break:break-all;">▶ ${esc(yt)}</a>`
+    );
+  }
+  for (const url of sheetUrls) {
+    parts.push(
+      `<div style="margin:12px 0 0 38px;"><img src="${url}" style="max-width:640px;width:100%;border:1px solid #e5e7eb;border-radius:6px;display:block;" /></div>`
+    );
+  }
+
+  el.innerHTML = parts.join("");
+  return { el, yt: el.querySelector<HTMLAnchorElement>("#yt") };
+}
+
 /**
- * Render the conti (titles, keys, memos, sheet images, YouTube links) to a PDF
- * and open the native share sheet with the file. Falls back to a download.
+ * Render the conti to a Letter-size PDF — one song per page, sheet images
+ * scaled to fit, YouTube links kept clickable — then share or download it.
  */
 export async function shareContiPdf(
   name: string,
@@ -24,100 +82,75 @@ export async function shareContiPdf(
     import("html2canvas"),
   ]);
 
-  // resolve sheet images up front (IndexedDB -> data URLs)
-  const sheetsById = new Map<string, string[]>();
-  await Promise.all(
-    items.map(async (it) => {
-      if (!it.sheets?.length) return;
-      const urls = (await Promise.all(it.sheets.map((aid) => loadSheet(aid)))).filter(
+  // resolve to (song, item, sheet image urls), skipping missing songs
+  const entries: { song: Song; item: ContiItem; urls: string[] }[] = [];
+  for (const item of items) {
+    const song = songById.get(item.id);
+    if (!song) continue;
+    let urls: string[] = [];
+    if (item.sheets?.length) {
+      urls = (await Promise.all(item.sheets.map((aid) => loadSheet(aid)))).filter(
         (u): u is string => !!u
       );
-      if (urls.length) sheetsById.set(it.id, urls);
-    })
-  );
-
-  // build an off-screen A4-width document
-  const root = document.createElement("div");
-  root.style.cssText =
-    "position:fixed;left:-99999px;top:0;width:794px;background:#ffffff;color:#111827;" +
-    "font-family:'Pretendard',-apple-system,sans-serif;padding:48px 44px;box-sizing:border-box;";
-
-  const parts: string[] = [];
-  parts.push(
-    `<div style="border-bottom:2px solid #4f46e5;padding-bottom:12px;margin-bottom:20px;">
-      <div style="font-size:13px;color:#6b7280;letter-spacing:1px;">WORSHIP LEADER · 콘티</div>
-      <div style="font-size:26px;font-weight:800;margin-top:4px;">${esc(name)}</div>
-      <div style="font-size:13px;color:#6b7280;margin-top:4px;">${items.length}곡</div>
-    </div>`
-  );
-
-  items.forEach((it, i) => {
-    const song = songById.get(it.id);
-    if (!song) return;
-    const keys = it.key ? it.key : song.keys.join(" / ");
-    const yt = it.youtube?.trim();
-    const imgs = sheetsById.get(it.id) ?? [];
-    parts.push(`<div style="margin-bottom:26px;page-break-inside:avoid;">`);
-    parts.push(
-      `<div style="display:flex;align-items:baseline;gap:10px;">
-        <span style="font-size:20px;font-weight:800;color:#c7d2fe;min-width:26px;">${i + 1}</span>
-        <span style="font-size:20px;font-weight:700;">${esc(song.title)}</span>
-        ${keys ? `<span style="font-size:14px;font-weight:700;color:#4f46e5;">${esc(keys)}</span>` : ""}
-      </div>`
-    );
-    if (it.note) {
-      parts.push(
-        `<div style="margin:6px 0 0 36px;font-size:14px;color:#374151;">📝 ${esc(it.note)}</div>`
-      );
     }
-    if (yt) {
-      parts.push(
-        `<div style="margin:6px 0 0 36px;font-size:13px;color:#dc2626;word-break:break-all;">▶ ${esc(yt)}</div>`
-      );
-    }
-    for (const url of imgs) {
-      parts.push(
-        `<div style="margin:10px 0 0 36px;"><img src="${url}" style="max-width:680px;width:100%;border:1px solid #e5e7eb;border-radius:6px;display:block;" /></div>`
-      );
-    }
-    parts.push(`</div>`);
-  });
+    entries.push({ song, item, urls });
+  }
+  if (!entries.length) return "failed";
 
-  root.innerHTML = parts.join("");
-  document.body.appendChild(root);
+  const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
 
   try {
-    // make sure every <img> has decoded before rasterizing
-    const imgEls = Array.from(root.querySelectorAll("img"));
-    await Promise.all(
-      imgEls.map(
-        (img) =>
-          img.decode?.().catch(() => undefined) ??
-          new Promise<void>((res) => {
-            if (img.complete) return res();
-            img.onload = () => res();
-            img.onerror = () => res();
-          })
-      )
-    );
+    for (let i = 0; i < entries.length; i++) {
+      const { song, item, urls } = entries[i];
+      const { el, yt } = buildSongEl(name, i, entries.length, song, item, urls);
+      document.body.appendChild(el);
+      try {
+        // ensure sheet images are decoded before rasterizing
+        const imgEls = Array.from(el.querySelectorAll("img"));
+        await Promise.all(
+          imgEls.map(
+            (img) =>
+              img.decode?.().catch(() => undefined) ??
+              new Promise<void>((res) => {
+                if (img.complete) return res();
+                img.onload = () => res();
+                img.onerror = () => res();
+              })
+          )
+        );
 
-    const canvas = await html2canvas(root, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = (canvas.height * imgW) / canvas.width;
-    const imgData = canvas.toDataURL("image/jpeg", 0.9);
+        const rootRect = el.getBoundingClientRect();
+        const cssW = rootRect.width;
+        const cssH = rootRect.height;
+        const ytRect = yt ? yt.getBoundingClientRect() : null;
 
-    let heightLeft = imgH;
-    let position = 0;
-    pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-    heightLeft -= pageH;
-    while (heightLeft > 0) {
-      position -= pageH;
-      pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-      heightLeft -= pageH;
+        const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        const aspect = canvas.height / canvas.width;
+
+        // fit within the content box (contain)
+        let imgW = CONTENT_W;
+        let imgH = imgW * aspect;
+        if (imgH > CONTENT_H) {
+          imgH = CONTENT_H;
+          imgW = imgH / aspect;
+        }
+        const x = (PAGE_W - imgW) / 2;
+        const y = MARGIN;
+
+        if (i > 0) pdf.addPage();
+        pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", x, y, imgW, imgH);
+
+        // overlay a clickable link annotation over the YouTube line
+        if (yt && ytRect && cssW > 0 && cssH > 0) {
+          const lx = x + ((ytRect.left - rootRect.left) / cssW) * imgW;
+          const ly = y + ((ytRect.top - rootRect.top) / cssH) * imgH;
+          const lw = (ytRect.width / cssW) * imgW;
+          const lh = (ytRect.height / cssH) * imgH;
+          pdf.link(lx, ly, lw, lh, { url: yt.href });
+        }
+      } finally {
+        document.body.removeChild(el);
+      }
     }
 
     const blob = pdf.output("blob");
@@ -142,7 +175,5 @@ export async function shareContiPdf(
     return "downloaded";
   } catch {
     return "failed";
-  } finally {
-    document.body.removeChild(root);
   }
 }
