@@ -43,7 +43,6 @@ export default function Conti() {
   );
 
   const playlistUrl = useMemo(() => youtubePlaylistUrl(conti.map((c) => c.youtube)), [conti]);
-  const ytCount = useMemo(() => conti.filter((c) => c.youtube).length, [conti]);
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -310,19 +309,41 @@ export default function Conti() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             공유 · 기록
           </p>
-          {playlistUrl && (
-            <a
-              href={playlistUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red-600 py-2.5 text-sm font-semibold text-white active:bg-red-700"
+          {/* row 1: playlist + download */}
+          <div className="flex gap-2">
+            {playlistUrl && (
+              <a
+                href={playlistUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-600 py-2.5 text-sm font-semibold text-white active:bg-red-700"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
+                </svg>
+                플래이리스트
+              </a>
+            )}
+            <button
+              disabled={pdfBusy}
+              onClick={async () => {
+                setPdfBusy(true);
+                flash("PDF를 만드는 중…");
+                try {
+                  const r = await shareContiPdf(active.name, conti, songById, "download");
+                  if (r === "downloaded") flash("PDF를 다운로드했어요");
+                  else if (r === "failed") flash("PDF 생성에 실패했어요");
+                  else setToast(null);
+                } finally {
+                  setPdfBusy(false);
+                }
+              }}
+              className="flex-1 rounded-lg border border-indigo-200 py-2.5 text-sm font-semibold text-indigo-600 active:bg-indigo-50 disabled:opacity-60 dark:border-indigo-500/40 dark:text-indigo-300"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
-              </svg>
-              유튜브 플레이리스트 재생 ({ytCount}곡)
-            </a>
-          )}
+              다운로드
+            </button>
+          </div>
+          {/* row 2: share + record + clear */}
           <div className="flex gap-2">
             <button
               disabled={pdfBusy}
@@ -341,24 +362,6 @@ export default function Conti() {
               className="flex-1 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white active:bg-indigo-700 disabled:opacity-60"
             >
               {pdfBusy ? "만드는 중…" : "콘티 공유"}
-            </button>
-            <button
-              disabled={pdfBusy}
-              onClick={async () => {
-                setPdfBusy(true);
-                flash("PDF를 만드는 중…");
-                try {
-                  const r = await shareContiPdf(active.name, conti, songById, "download");
-                  if (r === "downloaded") flash("PDF를 다운로드했어요");
-                  else if (r === "failed") flash("PDF 생성에 실패했어요");
-                  else setToast(null);
-                } finally {
-                  setPdfBusy(false);
-                }
-              }}
-              className="flex-1 rounded-lg border border-indigo-200 py-2.5 text-sm font-semibold text-indigo-600 active:bg-indigo-50 disabled:opacity-60 dark:border-indigo-500/40 dark:text-indigo-300"
-            >
-              다운로드
             </button>
             <button
               onClick={() => { markUsed(conti.map((c) => c.id)); flash("오늘 사용으로 기록됐어요"); }}
