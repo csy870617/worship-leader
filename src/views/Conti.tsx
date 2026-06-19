@@ -639,8 +639,8 @@ const TEXT_SIZES: { label: string; value: number }[] = [
   { label: "크게", value: 0.07 },
 ];
 const TEXT_PRESET_ROWS = [
-  ["Intro", "V", "V1", "V2", "C", "C1", "C2"],
-  ["PC", "B", "Inter", "Tag", "Out"],
+  ["Int", "V", "V1", "V2", "PC", "C", "C1", "C2"],
+  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
 ];
 
 function SheetLightbox({
