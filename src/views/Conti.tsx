@@ -671,16 +671,32 @@ function SheetLightbox({
 
   const go = (d: number) => setIndex((i) => (i + d + ids.length) % ids.length);
 
-  // back button (mobile) / browser back closes the viewer instead of leaving the page
+  // close immediately shows the conti screen; the pushed history entry lets the
+  // mobile back button close the viewer too (instead of leaving the page).
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const closedRef = useRef(false);
+  const pushedRef = useRef(false);
+  const close = () => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    onCloseRef.current();
+    if (pushedRef.current) {
+      pushedRef.current = false;
+      window.history.back(); // clean up our entry without re-triggering close
+    }
+  };
   useEffect(() => {
     window.history.pushState({ wlSheet: true }, "");
-    const onPop = () => onCloseRef.current();
+    pushedRef.current = true;
+    const onPop = () => {
+      pushedRef.current = false;
+      close();
+    };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const close = () => window.history.back();
 
   useEffect(() => {
     let alive = true;
