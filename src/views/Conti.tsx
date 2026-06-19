@@ -6,7 +6,13 @@ import { useHistory, daysSince } from "../lib/useHistory";
 import { bestRelation } from "../lib/keys";
 import { contiToText, copyText, decodeConti, shareConti } from "../lib/share";
 import { shareContiPdf } from "../lib/contiPdf";
-import { deleteSheet, fileToSheetDataUrl, getSheet, putSheet } from "../lib/attachments";
+import {
+  fetchSheetInteractive,
+  loadSheet,
+  removeSheetEverywhere,
+  saveSheetFromFile,
+} from "../lib/attachments";
+import { driveConfigured, driveEnabled } from "../lib/drive";
 import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
@@ -282,6 +288,7 @@ export default function Conti() {
               {open.has(r.id) && (
                 <ContiAttachPanel
                   songId={r.id}
+                  songTitle={r.song.title}
                   youtubeUrl={r.youtube}
                   sheetIds={r.sheets ?? []}
                   onYoutube={(u) => setYoutube(r.id, u)}
@@ -374,6 +381,7 @@ export default function Conti() {
 
 function ContiAttachPanel({
   songId,
+  songTitle,
   youtubeUrl,
   sheetIds,
   onYoutube,
@@ -382,6 +390,7 @@ function ContiAttachPanel({
   flash,
 }: {
   songId: string;
+  songTitle: string;
   youtubeUrl?: string;
   sheetIds: string[];
   onYoutube: (url: string | null) => void;
@@ -390,6 +399,7 @@ function ContiAttachPanel({
   flash: (m: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const synced = driveEnabled();
 
   const onFiles = async (files: FileList | null) => {
     if (!files || !files.length) return;
@@ -397,11 +407,10 @@ function ContiAttachPanel({
     try {
       for (const file of Array.from(files)) {
         if (!file.type.startsWith("image/")) continue;
-        const dataUrl = await fileToSheetDataUrl(file);
-        const aid = await putSheet(dataUrl);
+        const aid = await saveSheetFromFile(file, songTitle);
         onAddSheet(aid);
       }
-      flash("악보를 첨부했어요");
+      flash(synced ? "악보를 드라이브에 저장했어요" : "악보를 첨부했어요");
     } catch {
       flash("악보 첨부에 실패했어요");
     } finally {
@@ -454,7 +463,7 @@ function ContiAttachPanel({
                 aid={aid}
                 onRemove={() => {
                   onRemoveSheet(aid);
-                  deleteSheet(aid);
+                  removeSheetEverywhere(aid);
                 }}
               />
             ))}
@@ -483,7 +492,11 @@ function ContiAttachPanel({
           />
         </label>
         <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-          이미지(사진·캡처)로 첨부돼요. 악보는 이 기기에만 저장됩니다.
+          {synced
+            ? "이미지(사진·캡처)로 첨부돼요. 내 구글 드라이브에 저장돼 다른 기기에서도 보여요."
+            : driveConfigured()
+            ? "이미지(사진·캡처)로 첨부돼요. 로그인하면 구글 드라이브로 동기화됩니다."
+            : "이미지(사진·캡처)로 첨부돼요. 악보는 이 기기에만 저장됩니다."}
         </p>
       </div>
     </div>
@@ -492,19 +505,52 @@ function ContiAttachPanel({
 
 function SheetThumb({ aid, onRemove }: { aid: string; onRemove: () => void }) {
   const [url, setUrl] = useState<string | null>(null);
+  const [state, setState] = useState<"loading" | "ready" | "needsSync">("loading");
+
   useEffect(() => {
     let alive = true;
-    getSheet(aid).then((u) => alive && setUrl(u ?? null));
+    loadSheet(aid).then((u) => {
+      if (!alive) return;
+      if (u) {
+        setUrl(u);
+        setState("ready");
+      } else {
+        setState(driveEnabled() ? "needsSync" : "loading");
+      }
+    });
     return () => {
       alive = false;
     };
   }, [aid]);
+
+  const sync = async () => {
+    setState("loading");
+    const u = await fetchSheetInteractive(aid);
+    if (u) {
+      setUrl(u);
+      setState("ready");
+    } else {
+      setState("needsSync");
+    }
+  };
+
   return (
     <div className="relative h-20 w-16 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
-      {url ? (
+      {state === "ready" && url ? (
         <a href={url} target="_blank" rel="noreferrer">
           <img src={url} alt="악보" className="h-full w-full object-cover" />
         </a>
+      ) : state === "needsSync" ? (
+        <button
+          onClick={sync}
+          className="flex h-full w-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400"
+          title="구글 드라이브에서 불러오기"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v9m0 0 3.75-3.75M12 13.5 8.25 9.75M4.5 16.5v1.875A1.125 1.125 0 0 0 5.625 19.5h12.75a1.125 1.125 0 0 0 1.125-1.125V16.5" />
+          </svg>
+          불러오기
+        </button>
       ) : (
         <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">…</div>
       )}

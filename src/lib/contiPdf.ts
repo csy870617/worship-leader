@@ -1,6 +1,6 @@
 import type { Song } from "../types";
 import type { ContiItem } from "./useConti";
-import { getSheet } from "./attachments";
+import { loadSheet } from "./attachments";
 
 const esc = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
@@ -28,7 +28,7 @@ export async function shareContiPdf(
   await Promise.all(
     items.map(async (it) => {
       if (!it.sheets?.length) return;
-      const urls = (await Promise.all(it.sheets.map((aid) => getSheet(aid)))).filter(
+      const urls = (await Promise.all(it.sheets.map((aid) => loadSheet(aid)))).filter(
         (u): u is string => !!u
       );
       if (urls.length) sheetsById.set(it.id, urls);
