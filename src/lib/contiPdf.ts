@@ -39,7 +39,7 @@ function buildInfoEl(
   // whole-conti playlist link, top-right (only passed for the very first page)
   if (playlistUrl) {
     parts.push(
-      `<div style="text-align:right;margin-bottom:6px;"><a data-pdf-link href="${esc(playlistUrl)}" style="display:inline-block;padding:8px 14px;border-radius:8px;background:#dc2626;color:#ffffff;font-size:13px;font-weight:700;text-decoration:none;">플레이리스트</a></div>`
+      `<div style="text-align:right;margin-bottom:6px;"><a data-pdf-link href="${esc(playlistUrl)}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:8px;background:#dc2626;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z"/></svg>플레이리스트</a></div>`
     );
   }
   parts.push(
