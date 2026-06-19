@@ -2,12 +2,13 @@ import { useEffect, useRef } from "react";
 
 interface ChipRowProps {
   options: { value: string; label: string; count?: number }[];
-  active: string | null;
-  onSelect: (value: string | null) => void;
+  active: string[];
+  onToggle: (value: string) => void;
+  onClear: () => void;
   allLabel?: string;
 }
 
-export default function ChipRow({ options, active, onSelect, allLabel = "전체" }: ChipRowProps) {
+export default function ChipRow({ options, active, onToggle, onClear, allLabel = "전체" }: ChipRowProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   // let a vertical mouse wheel scroll the chip row horizontally (desktop)
@@ -30,13 +31,13 @@ export default function ChipRow({ options, active, onSelect, allLabel = "전체"
 
   return (
     <div ref={ref} className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 py-3">
-      <Chip label={allLabel} selected={active === null} onClick={() => onSelect(null)} />
+      <Chip label={allLabel} selected={active.length === 0} onClick={onClear} />
       {options.map((o) => (
         <Chip
           key={o.value}
           label={o.count != null ? `${o.label} ${o.count}` : o.label}
-          selected={active === o.value}
-          onClick={() => onSelect(o.value)}
+          selected={active.includes(o.value)}
+          onClick={() => onToggle(o.value)}
         />
       ))}
     </div>

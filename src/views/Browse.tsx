@@ -22,9 +22,10 @@ export default function Browse() {
   const [params, setParams] = useSearchParams();
   const axis = (params.get("axis") as Axis) || "key";
   const sort = params.get("sort") || "title";
-  const selKey = params.get("key");
-  const selTheme = params.get("theme");
-  const selTempo = params.get("tempo");
+  const list = (name: string) => (params.get(name) ?? "").split(",").filter(Boolean);
+  const selKeys = list("key");
+  const selThemes = list("theme");
+  const selTempos = list("tempo");
   const { history } = useHistory();
   const { songs, hiddenCount } = useSongs();
 
@@ -40,12 +41,12 @@ export default function Browse() {
     return data.tempos.map((t) => ({ value: t, label: TEMPO_LABEL[t] }));
   }, [axis]);
 
-  // intersection of all active axis filters
-  const list = useMemo(() => {
+  // OR within each axis, AND across axes
+  const filtered = useMemo(() => {
     let arr: Song[] = songs;
-    if (selKey) arr = arr.filter((s) => s.keys.includes(selKey));
-    if (selTempo) arr = arr.filter((s) => s.tempos.includes(selTempo as Song["tempos"][number]));
-    if (selTheme) arr = arr.filter((s) => s.themes.includes(selTheme));
+    if (selKeys.length) arr = arr.filter((s) => s.keys.some((k) => selKeys.includes(k)));
+    if (selTempos.length) arr = arr.filter((s) => s.tempos.some((t) => selTempos.includes(t)));
+    if (selThemes.length) arr = arr.filter((s) => s.themes.some((t) => selThemes.includes(t)));
     arr = [...arr];
     if (sort === "recent") {
       arr.sort((a, b) => {
@@ -58,7 +59,7 @@ export default function Browse() {
       arr.sort(sortKo);
     }
     return arr;
-  }, [songs, selKey, selTempo, selTheme, sort, history]);
+  }, [songs, params, sort, history]);
 
   const patch = (next: Record<string, string | null>) => {
     const p = new URLSearchParams(params);
@@ -69,13 +70,22 @@ export default function Browse() {
     setParams(p, { replace: true });
   };
 
-  // active-filter summary pills
-  const activeFilters: { axis: Axis; label: string }[] = [];
-  if (selKey) activeFilters.push({ axis: "key", label: selKey });
-  if (selTempo) activeFilters.push({ axis: "tempo", label: TEMPO_LABEL[selTempo as keyof typeof TEMPO_LABEL] ?? selTempo });
-  if (selTheme) activeFilters.push({ axis: "theme", label: selTheme });
+  // toggle one value inside an axis (multi-select)
+  const toggleVal = (name: string, value: string) => {
+    const cur = list(name);
+    const next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
+    patch({ [name]: next.length ? next.join(",") : null });
+  };
 
-  const activeValue = axis === "key" ? selKey : axis === "theme" ? selTheme : selTempo;
+  // active-filter summary pills (one per selected value)
+  const pills: { axis: Axis; value: string; label: string }[] = [];
+  selKeys.forEach((v) => pills.push({ axis: "key", value: v, label: v }));
+  selTempos.forEach((v) =>
+    pills.push({ axis: "tempo", value: v, label: TEMPO_LABEL[v as keyof typeof TEMPO_LABEL] ?? v })
+  );
+  selThemes.forEach((v) => pills.push({ axis: "theme", value: v, label: v }));
+
+  const activeValues = axis === "key" ? selKeys : axis === "theme" ? selThemes : selTempos;
 
   return (
     <div>
@@ -111,17 +121,18 @@ export default function Browse() {
 
         <ChipRow
           options={options}
-          active={activeValue}
-          onSelect={(v) => patch({ [PARAM[axis]]: v })}
+          active={activeValues}
+          onToggle={(v) => toggleVal(PARAM[axis], v)}
+          onClear={() => patch({ [PARAM[axis]]: null })}
         />
 
-        {/* combined (intersection) filter summary */}
-        {activeFilters.length > 0 && (
+        {/* combined filter summary (one removable pill per selected value) */}
+        {pills.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 pb-2">
-            {activeFilters.map((f) => (
+            {pills.map((f) => (
               <button
-                key={f.axis}
-                onClick={() => patch({ [PARAM[f.axis]]: null })}
+                key={`${f.axis}:${f.value}`}
+                onClick={() => toggleVal(PARAM[f.axis], f.value)}
                 className="inline-flex items-center gap-1 rounded-full bg-indigo-600 py-0.5 pl-2.5 pr-1.5 text-xs font-semibold text-white"
               >
                 {f.label}
@@ -130,7 +141,7 @@ export default function Browse() {
                 </svg>
               </button>
             ))}
-            {activeFilters.length > 1 && (
+            {pills.length > 1 && (
               <button
                 onClick={() => patch({ key: null, theme: null, tempo: null })}
                 className="text-xs font-medium text-slate-400 underline dark:text-slate-500"
@@ -144,7 +155,7 @@ export default function Browse() {
 
       <div className="flex items-center justify-between px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
         <span>
-          {activeFilters.length ? activeFilters.map((f) => f.label).join(" · ") : "전체"} · {list.length}곡
+          {pills.length ? pills.map((f) => f.label).join(" · ") : "전체"} · {filtered.length}곡
         </span>
         {hiddenCount > 0 && (
           <Link to="/hidden" className="font-medium text-indigo-500 dark:text-indigo-400">
@@ -152,7 +163,7 @@ export default function Browse() {
           </Link>
         )}
       </div>
-      <SongList songs={list} />
+      <SongList songs={filtered} />
     </div>
   );
 }
