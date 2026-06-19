@@ -178,7 +178,6 @@ export default function Conti() {
           const used = lastUsed(r.id);
           const recentlyUsed = used && daysSince(used) <= 28;
           const sheetCount = r.sheets?.length ?? 0;
-          const hasAttach = sheetCount > 0 || !!r.youtube;
           return (
             <li key={r.id}>
               {rel && (
@@ -202,12 +201,46 @@ export default function Conti() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <Link
-                      to={`/song/${r.song.id}`}
-                      className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-100"
+                    <button
+                      onClick={() => toggleOpen(r.id)}
+                      aria-expanded={open.has(r.id)}
+                      className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
                     >
-                      {r.song.title}
-                    </Link>
+                      <svg
+                        className={
+                          "h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform " +
+                          (open.has(r.id) ? "rotate-180" : "")
+                        }
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                      </svg>
+                      <span className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-100">
+                        {r.song.title}
+                      </span>
+                      {!open.has(r.id) && (r.note || r.youtube || sheetCount > 0) && (
+                        <span className="flex shrink-0 items-center gap-1 text-slate-400 dark:text-slate-500">
+                          {r.note && (
+                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+                            </svg>
+                          )}
+                          {r.youtube && (
+                            <svg className="h-3.5 w-3.5 text-red-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                              <path d="M21.6 7.2a2.4 2.4 0 0 0-1.7-1.7C18.4 5.1 12 5.1 12 5.1s-6.4 0-7.9.4A2.4 2.4 0 0 0 2.4 7.2 25 25 0 0 0 2 12a25 25 0 0 0 .4 4.8 2.4 2.4 0 0 0 1.7 1.7c1.5.4 7.9.4 7.9.4s6.4 0 7.9-.4a2.4 2.4 0 0 0 1.7-1.7A25 25 0 0 0 22 12a25 25 0 0 0-.4-4.8ZM10 15V9l5 3-5 3Z" />
+                            </svg>
+                          )}
+                          {sheetCount > 0 && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold">
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 1.5 1.5 3-3m-3.75-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                              </svg>
+                              {sheetCount}
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </button>
                     <span className="flex shrink-0 items-center gap-1">
                       {r.song.keys.length > 1
                         ? r.song.keys.map((k) => (
@@ -231,14 +264,8 @@ export default function Conti() {
                         : r.song.keys.map((k) => <KeyBadge key={k} k={k} />)}
                     </span>
                   </div>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    <input
-                      value={r.note ?? ""}
-                      onChange={(e) => setNote(r.id, e.target.value)}
-                      placeholder="메모 추가"
-                      className="-mx-1 min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
-                    />
-                    {recentlyUsed && (
+                  {recentlyUsed && (
+                    <div className="mt-1">
                       <button
                         onClick={() => clearUsed([r.id])}
                         title="사용 기록 삭제"
@@ -249,29 +276,9 @@ export default function Conti() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                       </button>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() => toggleOpen(r.id)}
-                  aria-label="악보·유튜브 첨부"
-                  aria-expanded={open.has(r.id)}
-                  className={
-                    "relative shrink-0 rounded-full p-1 " +
-                    (hasAttach
-                      ? "text-indigo-600 dark:text-indigo-400"
-                      : "text-slate-300 hover:text-slate-500 dark:text-slate-600")
-                  }
-                >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
-                  </svg>
-                  {sheetCount > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 rounded-full bg-indigo-600 px-1 text-[9px] font-bold leading-3 text-white">
-                      {sheetCount}
-                    </span>
+                    </div>
                   )}
-                </button>
+                </div>
                 <div className="flex shrink-0 flex-col text-slate-400">
                   <button onClick={() => move(r.id, -1)} disabled={i === 0} aria-label="위로" className="p-0.5 disabled:opacity-25">
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
@@ -289,8 +296,10 @@ export default function Conti() {
                 <ContiAttachPanel
                   songId={r.id}
                   songTitle={r.song.title}
+                  note={r.note}
                   youtubeUrl={r.youtube}
                   sheetIds={r.sheets ?? []}
+                  onNote={(v) => setNote(r.id, v)}
                   onYoutube={(u) => setYoutube(r.id, u)}
                   onAddSheet={(aid) => addSheet(r.id, aid)}
                   onRemoveSheet={(aid) => removeSheet(r.id, aid)}
@@ -382,8 +391,10 @@ export default function Conti() {
 function ContiAttachPanel({
   songId,
   songTitle,
+  note,
   youtubeUrl,
   sheetIds,
+  onNote,
   onYoutube,
   onAddSheet,
   onRemoveSheet,
@@ -391,8 +402,10 @@ function ContiAttachPanel({
 }: {
   songId: string;
   songTitle: string;
+  note?: string;
   youtubeUrl?: string;
   sheetIds: string[];
+  onNote: (v: string) => void;
   onYoutube: (url: string | null) => void;
   onAddSheet: (aid: string) => void;
   onRemoveSheet: (aid: string) => void;
@@ -421,6 +434,23 @@ function ContiAttachPanel({
 
   return (
     <div className="mt-1 ml-7 space-y-3 rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+      {/* memo */}
+      <div>
+        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          메모
+        </label>
+        <textarea
+          defaultValue={note ?? ""}
+          onBlur={(e) => {
+            const v = e.target.value;
+            if (v !== (note ?? "")) onNote(v);
+          }}
+          rows={2}
+          placeholder="메모 추가 (예: 1절만, 키 올림, 간주 생략 …)"
+          className="w-full resize-y rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        />
+      </div>
+
       {/* YouTube link */}
       <div>
         <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
