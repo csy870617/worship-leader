@@ -12,7 +12,7 @@ function safeName(name: string) {
 // Letter size in mm
 const PAGE_W = 215.9;
 const PAGE_H = 279.4;
-const MARGIN = 12.7; // 0.5"
+const MARGIN = 10; // mm on all sides
 const CONTENT_W = PAGE_W - 2 * MARGIN;
 const CONTENT_H = PAGE_H - 2 * MARGIN;
 const PX_W = 794; // off-screen render width
