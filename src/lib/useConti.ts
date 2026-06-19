@@ -9,6 +9,7 @@ export interface ContiItem {
   key?: string; // chosen key when the song has several
   youtube?: string; // custom YouTube URL
   sheets?: string[]; // sheet-music attachment ids (stored in IndexedDB)
+  sheetNotes?: Record<string, string>; // memo per sheet, keyed by attachment id
 }
 export interface Conti {
   id: string;
@@ -34,6 +35,13 @@ function sanitizeItems(arr: unknown): ContiItem[] {
           if (Array.isArray(x.sheets)) {
             const s = x.sheets.filter((v: any) => typeof v === "string" && v);
             if (s.length) it.sheets = s;
+          }
+          if (x.sheetNotes && typeof x.sheetNotes === "object" && !Array.isArray(x.sheetNotes)) {
+            const n: Record<string, string> = {};
+            for (const [k, v] of Object.entries(x.sheetNotes)) {
+              if (typeof v === "string" && v) n[k] = v;
+            }
+            if (Object.keys(n).length) it.sheetNotes = n;
           }
           return it;
         })
@@ -186,8 +194,28 @@ export function useConti() {
         items.map((i) => {
           if (i.id !== id) return i;
           const sheets = (i.sheets ?? []).filter((x) => x !== aid);
-          const { sheets: _omit, ...rest } = i;
-          return sheets.length ? { ...rest, sheets } : rest;
+          const { sheets: _omit, sheetNotes: _n, ...rest } = i;
+          const notes = { ...(i.sheetNotes ?? {}) };
+          delete notes[aid];
+          const next: ContiItem = { ...rest };
+          if (sheets.length) next.sheets = sheets;
+          if (Object.keys(notes).length) next.sheetNotes = notes;
+          return next;
+        })
+      ),
+    []
+  );
+  const setSheetNote = useCallback(
+    (id: string, aid: string, note: string) =>
+      mutateActive((items) =>
+        items.map((i) => {
+          if (i.id !== id) return i;
+          const notes = { ...(i.sheetNotes ?? {}) };
+          const v = note.trim();
+          if (v) notes[aid] = v;
+          else delete notes[aid];
+          const { sheetNotes: _omit, ...rest } = i;
+          return Object.keys(notes).length ? { ...rest, sheetNotes: notes } : rest;
         })
       ),
     []
@@ -232,6 +260,7 @@ export function useConti() {
     setYoutube,
     addSheet,
     removeSheet,
+    setSheetNote,
     clear,
     replace,
     createConti,

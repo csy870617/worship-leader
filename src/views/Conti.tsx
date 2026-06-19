@@ -17,7 +17,7 @@ import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
   const {
-    conti, remove, move, setNote, setKey, setYoutube, addSheet, removeSheet, clear, replace,
+    conti, remove, move, setNote, setKey, setYoutube, addSheet, removeSheet, setSheetNote, clear, replace,
     contis, activeId, active, createConti, renameConti, deleteConti, setActive,
   } = useConti();
   const { songById } = useSongs();
@@ -292,9 +292,11 @@ export default function Conti() {
                   songTitle={r.song.title}
                   youtubeUrl={r.youtube}
                   sheetIds={r.sheets ?? []}
+                  sheetNotes={r.sheetNotes ?? {}}
                   onYoutube={(u) => setYoutube(r.id, u)}
                   onAddSheet={(aid) => addSheet(r.id, aid)}
                   onRemoveSheet={(aid) => removeSheet(r.id, aid)}
+                  onSheetNote={(aid, v) => setSheetNote(r.id, aid, v)}
                   flash={flash}
                 />
               )}
@@ -393,18 +395,22 @@ function ContiAttachPanel({
   songTitle,
   youtubeUrl,
   sheetIds,
+  sheetNotes,
   onYoutube,
   onAddSheet,
   onRemoveSheet,
+  onSheetNote,
   flash,
 }: {
   songId: string;
   songTitle: string;
   youtubeUrl?: string;
   sheetIds: string[];
+  sheetNotes: Record<string, string>;
   onYoutube: (url: string | null) => void;
   onAddSheet: (aid: string) => void;
   onRemoveSheet: (aid: string) => void;
+  onSheetNote: (aid: string, note: string) => void;
   flash: (m: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -481,7 +487,13 @@ function ContiAttachPanel({
           </div>
         )}
         {viewer !== null && (
-          <SheetLightbox ids={sheetIds} start={viewer} onClose={() => setViewer(null)} />
+          <SheetLightbox
+            ids={sheetIds}
+            start={viewer}
+            notes={sheetNotes}
+            onNote={onSheetNote}
+            onClose={() => setViewer(null)}
+          />
         )}
         <label
           className={
@@ -585,10 +597,14 @@ function SheetThumb({
 function SheetLightbox({
   ids,
   start,
+  notes,
+  onNote,
   onClose,
 }: {
   ids: string[];
   start: number;
+  notes: Record<string, string>;
+  onNote: (aid: string, note: string) => void;
   onClose: () => void;
 }) {
   const [index, setIndex] = useState(start);
@@ -624,7 +640,7 @@ function SheetLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 px-4 pt-4 pb-28"
       onClick={onClose}
     >
       <button
@@ -676,11 +692,23 @@ function SheetLightbox({
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </button>
-          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+          <span className="absolute bottom-24 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
             {index + 1} / {ids.length}
           </span>
         </>
       )}
+
+      {/* per-sheet memo */}
+      <div className="absolute inset-x-0 bottom-0 p-3" onClick={(e) => e.stopPropagation()}>
+        <textarea
+          key={ids[index]}
+          defaultValue={notes[ids[index]] ?? ""}
+          onBlur={(e) => onNote(ids[index], e.target.value)}
+          rows={2}
+          placeholder="이 악보에 메모 추가"
+          className="mx-auto block w-full max-w-xl resize-none rounded-lg border border-white/20 bg-black/50 px-3 py-2 text-sm text-white outline-none backdrop-blur placeholder:text-white/50"
+        />
+      </div>
     </div>
   );
 }
