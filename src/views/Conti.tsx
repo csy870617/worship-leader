@@ -12,7 +12,7 @@ import {
   removeSheetEverywhere,
   saveSheetFromFile,
 } from "../lib/attachments";
-import { driveConfigured, driveEnabled } from "../lib/drive";
+import { driveEnabled } from "../lib/drive";
 import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
@@ -399,6 +399,7 @@ function ContiAttachPanel({
   flash: (m: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [viewer, setViewer] = useState<number | null>(null);
   const synced = driveEnabled();
 
   const onFiles = async (files: FileList | null) => {
@@ -457,10 +458,11 @@ function ContiAttachPanel({
         </label>
         {sheetIds.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
-            {sheetIds.map((aid) => (
+            {sheetIds.map((aid, idx) => (
               <SheetThumb
                 key={aid}
                 aid={aid}
+                onOpen={() => setViewer(idx)}
                 onRemove={() => {
                   onRemoveSheet(aid);
                   removeSheetEverywhere(aid);
@@ -468,6 +470,9 @@ function ContiAttachPanel({
               />
             ))}
           </div>
+        )}
+        {viewer !== null && (
+          <SheetLightbox ids={sheetIds} start={viewer} onClose={() => setViewer(null)} />
         )}
         <label
           className={
@@ -491,19 +496,20 @@ function ContiAttachPanel({
             }}
           />
         </label>
-        <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-          {synced
-            ? "이미지(사진·캡처)로 첨부돼요. 내 구글 드라이브에 저장돼 다른 기기에서도 보여요."
-            : driveConfigured()
-            ? "이미지(사진·캡처)로 첨부돼요. 로그인하면 구글 드라이브로 동기화됩니다."
-            : "이미지(사진·캡처)로 첨부돼요. 악보는 이 기기에만 저장됩니다."}
-        </p>
       </div>
     </div>
   );
 }
 
-function SheetThumb({ aid, onRemove }: { aid: string; onRemove: () => void }) {
+function SheetThumb({
+  aid,
+  onOpen,
+  onRemove,
+}: {
+  aid: string;
+  onOpen: () => void;
+  onRemove: () => void;
+}) {
   const [url, setUrl] = useState<string | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "needsSync">("loading");
 
@@ -537,9 +543,9 @@ function SheetThumb({ aid, onRemove }: { aid: string; onRemove: () => void }) {
   return (
     <div className="relative h-20 w-16 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
       {state === "ready" && url ? (
-        <a href={url} target="_blank" rel="noreferrer">
+        <button onClick={onOpen} className="block h-full w-full" title="크게 보기">
           <img src={url} alt="악보" className="h-full w-full object-cover" />
-        </a>
+        </button>
       ) : state === "needsSync" ? (
         <button
           onClick={sync}
@@ -563,6 +569,109 @@ function SheetThumb({ aid, onRemove }: { aid: string; onRemove: () => void }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
         </svg>
       </button>
+    </div>
+  );
+}
+
+function SheetLightbox({
+  ids,
+  start,
+  onClose,
+}: {
+  ids: string[];
+  start: number;
+  onClose: () => void;
+}) {
+  const [index, setIndex] = useState(start);
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const many = ids.length > 1;
+
+  const go = (d: number) => setIndex((i) => (i + d + ids.length) % ids.length);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    setUrl(null);
+    loadSheet(ids[index]).then((u) => {
+      if (!alive) return;
+      setUrl(u ?? null);
+      setLoading(false);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [ids, index]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowRight" && many) go(1);
+      else if (e.key === "ArrowLeft" && many) go(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [many, ids.length]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        aria-label="닫기"
+        className="absolute right-3 top-3 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
+      >
+        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {loading ? (
+        <span className="text-sm text-white/70">불러오는 중…</span>
+      ) : url ? (
+        <img
+          src={url}
+          alt="악보"
+          onClick={(e) => e.stopPropagation()}
+          className="max-h-full max-w-full rounded-lg object-contain"
+        />
+      ) : (
+        <span className="text-sm text-white/70">악보를 불러올 수 없어요</span>
+      )}
+
+      {many && (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              go(-1);
+            }}
+            aria-label="이전"
+            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
+          >
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              go(1);
+            }}
+            aria-label="다음"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
+          >
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+            {index + 1} / {ids.length}
+          </span>
+        </>
+      )}
     </div>
   );
 }
