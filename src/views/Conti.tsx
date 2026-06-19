@@ -655,6 +655,7 @@ function SheetLightbox({
   const [annos, setAnnos] = useState<SheetText[]>([]);
   const [sel, setSel] = useState<number | null>(null);
   const [placing, setPlacing] = useState(false);
+  const [pendingText, setPendingText] = useState<string | null>(null);
   const [color, setColor] = useState(TEXT_COLORS[0]);
   const [size, setSize] = useState(TEXT_SIZES[1].value);
   const [boxW, setBoxW] = useState(0);
@@ -666,12 +667,24 @@ function SheetLightbox({
 
   const go = (d: number) => setIndex((i) => (i + d + ids.length) % ids.length);
 
+  // back button (mobile) / browser back closes the viewer instead of leaving the page
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  useEffect(() => {
+    window.history.pushState({ wlSheet: true }, "");
+    const onPop = () => onCloseRef.current();
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  const close = () => window.history.back();
+
   useEffect(() => {
     let alive = true;
     setLoading(true);
     setUrl(null);
     setSel(null);
     setPlacing(false);
+    setPendingText(null);
     const init = texts[ids[index]] ?? [];
     setAnnos(init);
     annosRef.current = init;
@@ -698,7 +711,7 @@ function SheetLightbox({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") close();
       else if (e.key === "ArrowRight" && many) go(1);
       else if (e.key === "ArrowLeft" && many) go(-1);
     };
@@ -729,11 +742,11 @@ function SheetLightbox({
     onTexts(currentId, next);
   };
 
+  // arm a preset: the next tap on the sheet drops this text at that spot
   const addPreset = (label: string) => {
-    const next = [...annosRef.current, { x: 0.5, y: 0.5, text: label, color, size }];
-    commit(next);
-    setSel(next.length - 1);
-    setPlacing(false);
+    setSel(null);
+    setPendingText(label);
+    setPlacing(true);
   };
 
   const onBoxClick = (e: React.MouseEvent) => {
@@ -747,10 +760,11 @@ function SheetLightbox({
     const rect = el.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-    const text = prompt("텍스트 입력");
+    const text = pendingText ?? prompt("텍스트 입력");
     setPlacing(false);
+    setPendingText(null);
     if (text && text.trim()) {
-      const next = [...annos, { x, y, text: text.trim(), color, size }];
+      const next = [...annosRef.current, { x, y, text: text.trim(), color, size }];
       commit(next);
       setSel(next.length - 1);
     }
@@ -784,10 +798,10 @@ function SheetLightbox({
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/90 p-4"
-      onClick={onClose}
+      onClick={close}
     >
       <button
-        onClick={onClose}
+        onClick={close}
         aria-label="닫기"
         className="fixed right-3 top-3 z-10 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
       >
@@ -889,10 +903,10 @@ function SheetLightbox({
       >
         <div className="flex items-center justify-center gap-2">
           <button
-            onClick={() => { setSel(null); setPlacing((p) => !p); }}
+            onClick={() => { setSel(null); setPendingText(null); setPlacing((p) => !p); }}
             className={
               "rounded-full px-3 py-1.5 text-sm font-semibold " +
-              (placing ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
+              (placing && !pendingText ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
             }
           >
             {placing ? "위치를 탭하세요" : "＋ 텍스트"}
@@ -943,7 +957,10 @@ function SheetLightbox({
             <button
               key={p}
               onClick={() => addPreset(p)}
-              className="rounded-md bg-white/15 px-2.5 py-1 text-xs font-bold text-white active:bg-white/30"
+              className={
+                "rounded-md px-2.5 py-1 text-xs font-bold text-white active:bg-white/30 " +
+                (pendingText === p ? "bg-indigo-600" : "bg-white/15")
+              }
             >
               {p}
             </button>
