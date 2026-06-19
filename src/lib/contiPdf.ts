@@ -13,16 +13,16 @@ function safeName(name: string) {
 // Letter size in mm
 const PAGE_W = 215.9;
 const PAGE_H = 279.4;
-const MARGIN = 10; // mm on all sides
+const MARGIN = 5; // mm on all sides — keep margins minimal
 const CONTENT_W = PAGE_W - 2 * MARGIN;
 const CONTENT_H = PAGE_H - 2 * MARGIN;
 const PX_W = 794; // off-screen render width
 
 const BASE_STYLE =
   `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;` +
-  "font-family:'Pretendard',-apple-system,sans-serif;padding:40px 44px;box-sizing:border-box;";
+  "font-family:'Pretendard',-apple-system,sans-serif;padding:14px 18px;box-sizing:border-box;";
 
-/** Info page: number, title, key, memo, YouTube link, and (optionally) the first sheet. */
+/** Info page: number, title, key, memo, and (optionally) the first sheet. */
 function buildInfoEl(
   index: number,
   song: Song,
@@ -34,13 +34,12 @@ function buildInfoEl(
   el.style.cssText = BASE_STYLE;
 
   const keys = item.key ? item.key : song.keys.join(" / ");
-  const yt = item.youtube?.trim();
   const parts: string[] = [];
 
-  // whole-conti playlist link (only passed for the very first page)
+  // whole-conti playlist link, top-right (only passed for the very first page)
   if (playlistUrl) {
     parts.push(
-      `<a data-pdf-link href="${esc(playlistUrl)}" style="display:inline-block;margin:0 0 16px 0;padding:9px 14px;border-radius:8px;background:#dc2626;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;">▶ 전체 재생목록 재생</a>`
+      `<div style="text-align:right;margin-bottom:6px;"><a data-pdf-link href="${esc(playlistUrl)}" style="display:inline-block;padding:8px 14px;border-radius:8px;background:#dc2626;color:#ffffff;font-size:13px;font-weight:700;text-decoration:none;">플레이리스트</a></div>`
     );
   }
   parts.push(
@@ -55,14 +54,9 @@ function buildInfoEl(
       `<div style="margin:8px 0 0 38px;font-size:14px;color:#374151;">${esc(item.note)}</div>`
     );
   }
-  if (yt) {
-    parts.push(
-      `<a data-pdf-link href="${esc(yt)}" style="display:inline-block;margin:10px 0 0 38px;padding:9px 14px;border-radius:8px;background:#fee2e2;color:#b91c1c;font-size:14px;font-weight:700;text-decoration:none;word-break:break-all;max-width:600px;">▶ 유튜브로 보기</a>`
-    );
-  }
   if (firstSheet) {
     parts.push(
-      `<div style="margin:14px 0 0 38px;"><img src="${firstSheet}" style="max-width:640px;width:100%;display:block;" /></div>`
+      `<div style="margin:12px 0 0 0;"><img src="${firstSheet}" style="width:100%;display:block;" /></div>`
     );
   }
 
@@ -70,10 +64,11 @@ function buildInfoEl(
   return el;
 }
 
-/** A page that holds a single sheet image. */
+/** A page that holds a single sheet image, edge to edge. */
 function buildSheetEl(url: string): HTMLDivElement {
   const el = document.createElement("div");
-  el.style.cssText = BASE_STYLE;
+  el.style.cssText =
+    `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;padding:0;box-sizing:border-box;`;
   el.innerHTML = `<img src="${url}" style="width:100%;display:block;" />`;
   return el;
 }
