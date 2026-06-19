@@ -26,6 +26,7 @@ export default function Conti() {
   const [toast, setToast] = useState<string | null>(null);
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const toggleOpen = (id: string) =>
     setOpen((s) => {
@@ -372,7 +373,7 @@ export default function Conti() {
               콘티 사용
             </button>
             <button
-              onClick={() => { if (confirm("이 콘티의 곡을 모두 비울까요?")) clear(); }}
+              onClick={() => setConfirmClear(true)}
               className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-rose-500 dark:border-slate-700"
             >
               비우기
@@ -384,6 +385,39 @@ export default function Conti() {
       {toast && (
         <div className="fixed inset-x-0 bottom-24 z-30 mx-auto w-fit rounded-full bg-slate-900 px-4 py-2 text-sm text-white shadow-lg dark:bg-slate-200 dark:text-slate-900">
           {toast}
+        </div>
+      )}
+
+      {confirmClear && (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-6"
+          onClick={() => setConfirmClear(false)}
+        >
+          <div
+            className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
+              콘티를 비우시겠습니까?
+            </p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              이 콘티의 곡이 모두 사라져요.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setConfirmClear(false)}
+                className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => { clear(); setConfirmClear(false); flash("콘티를 비웠어요"); }}
+                className="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-semibold text-white active:bg-rose-700"
+              >
+                비우기
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
