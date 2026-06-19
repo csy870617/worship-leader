@@ -18,6 +18,11 @@ const AXES: { value: Axis; label: string }[] = [
 // which URL param holds each axis's selected value
 const PARAM: Record<Axis, string> = { key: "key", theme: "theme", tempo: "tempo" };
 
+// rank a song by its lowest key using the chip order (C, D, Eb, …)
+const KEY_ORDER = new Map(data.keys.map((k, i) => [k, i]));
+const keyRank = (s: Song) =>
+  s.keys.length ? Math.min(...s.keys.map((k) => KEY_ORDER.get(k) ?? 99)) : 99;
+
 export default function Browse() {
   const [params, setParams] = useSearchParams();
   const axis = (params.get("axis") as Axis) || "key";
@@ -55,6 +60,8 @@ export default function Browse() {
         if (da === db) return sortKo(a, b);
         return db.localeCompare(da);
       });
+    } else if (sort === "key") {
+      arr.sort((a, b) => keyRank(a) - keyRank(b) || sortKo(a, b));
     } else {
       arr.sort(sortKo);
     }
@@ -114,6 +121,7 @@ export default function Browse() {
             aria-label="정렬"
             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           >
+            <option value="key">코드순</option>
             <option value="title">가나다순</option>
             <option value="recent">최근 사용순</option>
           </select>
