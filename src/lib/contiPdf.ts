@@ -51,7 +51,7 @@ function buildInfoEl(
   );
   if (item.note) {
     parts.push(
-      `<div style="margin:8px 0 0 38px;font-size:14px;color:#374151;">${esc(item.note)}</div>`
+      `<div style="margin:8px 0 0 38px;font-size:17px;color:#374151;">${esc(item.note)}</div>`
     );
   }
   if (firstSheet) {
