@@ -84,6 +84,40 @@ export async function shareConti(
   return (await copyText(url)) ? "copied" : "failed";
 }
 
+/** Extract an 11-char YouTube video id from a URL (youtu.be / watch / embed / shorts). */
+export function youtubeId(url: string): string | null {
+  try {
+    const u = new URL(url.trim());
+    const host = u.hostname.replace(/^www\./, "");
+    if (host === "youtu.be") {
+      const id = u.pathname.slice(1).split("/")[0];
+      return /^[\w-]{11}$/.test(id) ? id : null;
+    }
+    if (host.endsWith("youtube.com") || host.endsWith("youtube-nocookie.com")) {
+      if (u.pathname === "/watch") {
+        const v = u.searchParams.get("v") ?? "";
+        return /^[\w-]{11}$/.test(v) ? v : null;
+      }
+      const m = u.pathname.match(/^\/(?:embed|shorts|live|v)\/([\w-]{11})/);
+      if (m) return m[1];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** Build a YouTube playlist URL that plays the given links in order (max 50). */
+export function youtubePlaylistUrl(urls: (string | undefined)[]): string | null {
+  const ids: string[] = [];
+  for (const u of urls) {
+    const id = u ? youtubeId(u) : null;
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+  if (!ids.length) return null;
+  return `https://www.youtube.com/watch_videos?video_ids=${ids.slice(0, 50).join(",")}`;
+}
+
 /** Copy text to clipboard with a legacy fallback. */
 export async function copyText(text: string): Promise<boolean> {
   try {

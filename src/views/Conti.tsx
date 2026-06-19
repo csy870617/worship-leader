@@ -4,7 +4,7 @@ import { useSongs } from "../lib/catalog";
 import { useConti } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { bestRelation } from "../lib/keys";
-import { decodeConti } from "../lib/share";
+import { decodeConti, youtubePlaylistUrl } from "../lib/share";
 import { shareContiPdf } from "../lib/contiPdf";
 import {
   fetchSheetInteractive,
@@ -41,6 +41,9 @@ export default function Conti() {
     () => conti.map((it) => ({ ...it, song: songById.get(it.id)! })).filter((r) => r.song),
     [conti]
   );
+
+  const playlistUrl = useMemo(() => youtubePlaylistUrl(conti.map((c) => c.youtube)), [conti]);
+  const ytCount = useMemo(() => conti.filter((c) => c.youtube).length, [conti]);
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -307,6 +310,19 @@ export default function Conti() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             공유 · 기록
           </p>
+          {playlistUrl && (
+            <a
+              href={playlistUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red-600 py-2.5 text-sm font-semibold text-white active:bg-red-700"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
+              </svg>
+              유튜브 플레이리스트 재생 ({ytCount}곡)
+            </a>
+          )}
           <div className="flex gap-2">
             <button
               disabled={pdfBusy}
