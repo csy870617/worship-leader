@@ -199,13 +199,14 @@ export async function shareContiPdf(
     const file = new File([blob], `${safeName(name)}.pdf`, { type: "application/pdf" });
 
     if (mode === "share" && navigator.canShare?.({ files: [file] })) {
+      const data: ShareData = { files: [file], title: name };
+      // include the playlist link too, but only if the platform accepts the combo
+      if (playlistUrl) {
+        const withText: ShareData = { ...data, text: `${name} 유튜브 재생목록\n${playlistUrl}` };
+        if (navigator.canShare?.(withText)) data.text = withText.text;
+      }
       try {
-        await navigator.share({
-          files: [file],
-          title: name,
-          // include the playlist link alongside the PDF
-          ...(playlistUrl ? { text: `${name} 유튜브 재생목록\n${playlistUrl}` } : {}),
-        });
+        await navigator.share(data);
         return "shared";
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return "shared";

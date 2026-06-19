@@ -8,7 +8,7 @@
 // so deletions made on one device propagate to others (no union-resurrection).
 // First-ever login on a device unions (to preserve pre-login local data); an
 // account switch takes the cloud as truth (no cross-account contamination).
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db, onAuth } from "./firebase";
 import type { Song } from "../types";
@@ -134,8 +134,36 @@ function markDirty() {
 let applyingRemote = false;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
 let currentUser: User | null = null;
+let unsubscribeDoc: (() => void) | null = null;
 
 const userRef = (uid: string) => doc(db!, "users", uid);
+
+// strip undefined / non-plain values so Firestore never rejects the whole write
+function clean<T>(v: T): T {
+  return JSON.parse(JSON.stringify(v));
+}
+
+// live-apply remote changes pushed from another device
+function startLiveListener(uid: string) {
+  unsubscribeDoc?.();
+  unsubscribeDoc = onSnapshot(
+    userRef(uid),
+    (snap) => {
+      if (!currentUser || currentUser.uid !== uid) return;
+      if (snap.metadata.hasPendingWrites) return; // our own un-acked write echoing back
+      if (!snap.exists()) return;
+      const remote = snap.data() as CloudDoc;
+      const meta = getMeta();
+      if (!meta || meta.uid !== uid) return;
+      // accept newer remote only when we have no un-pushed local edits
+      if (remote.updatedAt > meta.at && !meta.dirty) {
+        applyDoc(remote);
+        saveMeta(uid, remote.updatedAt, false);
+      }
+    },
+    (e) => console.warn("[sync] live listener error", e)
+  );
+}
 
 function applyDoc(d: Partial<CloudDoc> | LocalSnapshot) {
   applyingRemote = true;
@@ -152,7 +180,7 @@ function applyDoc(d: Partial<CloudDoc> | LocalSnapshot) {
 async function pushNow() {
   if (!db || !currentUser) return;
   const uid = currentUser.uid;
-  const payload: CloudDoc = { ...snapshotLocal(), updatedAt: Date.now() };
+  const payload: CloudDoc = clean({ ...snapshotLocal(), updatedAt: Date.now() });
   try {
     await setDoc(userRef(uid), payload); // full replace → deletions propagate
     if (currentUser?.uid === uid) saveMeta(uid, payload.updatedAt, false);
@@ -197,22 +225,16 @@ async function onLogin(user: User) {
 
     if (!remote) {
       await pushNow(); // seed the cloud from local
-      return;
-    }
-    if (!meta) {
+    } else if (!meta) {
       // first sync ever on this device → union so pre-login local survives
       applyDoc(mergeUnion(snapshotLocal(), remote));
       await pushNow();
-      return;
-    }
-    if (meta.uid !== user.uid) {
+    } else if (meta.uid !== user.uid) {
       // different account on this device → take cloud as truth
       applyDoc(remote);
       saveMeta(user.uid, remote.updatedAt, false);
-      return;
-    }
-    // same user returning → document-level last-write-wins
-    if (remote.updatedAt > meta.at) {
+    } else if (remote.updatedAt > meta.at) {
+      // same user returning → document-level last-write-wins
       if (meta.dirty) {
         // both sides changed → union (avoids data loss in this rare conflict)
         applyDoc(mergeUnion(snapshotLocal(), remote));
@@ -227,6 +249,8 @@ async function onLogin(user: User) {
     } else {
       saveMeta(user.uid, remote.updatedAt, false); // already in sync
     }
+    // keep pulling changes other devices make while this one stays open
+    if (currentUser?.uid === user.uid) startLiveListener(user.uid);
   } catch (e) {
     console.warn("[sync] initial sync failed", e);
     applyingRemote = false;
@@ -235,6 +259,8 @@ async function onLogin(user: User) {
 
 function onLogout() {
   currentUser = null;
+  unsubscribeDoc?.();
+  unsubscribeDoc = null;
   if (pushTimer) {
     clearTimeout(pushTimer);
     pushTimer = null;
