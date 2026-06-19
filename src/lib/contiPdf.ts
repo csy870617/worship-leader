@@ -49,7 +49,7 @@ function buildInfoEl(
   }
   if (yt) {
     parts.push(
-      `<a id="yt" href="${esc(yt)}" style="display:inline-block;margin:8px 0 0 38px;font-size:13px;color:#dc2626;text-decoration:underline;word-break:break-all;">${esc(yt)}</a>`
+      `<a id="yt" href="${esc(yt)}" style="display:inline-block;margin:10px 0 0 38px;padding:9px 14px;border-radius:8px;background:#fee2e2;color:#b91c1c;font-size:14px;font-weight:700;text-decoration:none;word-break:break-all;max-width:600px;">▶ 유튜브로 보기</a>`
     );
   }
   if (firstSheet) {
@@ -147,10 +147,12 @@ export async function shareContiPdf(
       pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", x, y, imgW, imgH);
 
       if (yt && ytRect && cssW > 0 && cssH > 0) {
-        const lx = x + ((ytRect.left - rootRect.left) / cssW) * imgW;
-        const ly = y + ((ytRect.top - rootRect.top) / cssH) * imgH;
-        const lw = (ytRect.width / cssW) * imgW;
-        const lh = (ytRect.height / cssH) * imgH;
+        // pad the hit area so it's easy to tap in any PDF viewer
+        const pad = 2; // mm
+        const lx = x + ((ytRect.left - rootRect.left) / cssW) * imgW - pad;
+        const ly = y + ((ytRect.top - rootRect.top) / cssH) * imgH - pad;
+        const lw = (ytRect.width / cssW) * imgW + pad * 2;
+        const lh = (ytRect.height / cssH) * imgH + pad * 2;
         pdf.link(lx, ly, lw, lh, { url: yt.href });
       }
     } finally {
