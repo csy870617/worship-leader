@@ -99,10 +99,16 @@ export async function shareContiPdf(
   songById: Map<string, Song>,
   mode: "share" | "download" = "share"
 ): Promise<"shared" | "downloaded" | "failed"> {
-  const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
-    import("jspdf"),
-    import("html2canvas"),
-  ]);
+  let jsPDF: typeof import("jspdf").default;
+  let html2canvas: typeof import("html2canvas").default;
+  try {
+    const [m1, m2] = await Promise.all([import("jspdf"), import("html2canvas")]);
+    jsPDF = m1.default;
+    html2canvas = m2.default;
+  } catch (e) {
+    console.warn("[pdf] library load failed", e);
+    return "failed";
+  }
 
   // resolve to (song, item, sheet images with memos), skipping missing songs
   const entries: { song: Song; item: ContiItem; sheets: SheetImg[] }[] = [];

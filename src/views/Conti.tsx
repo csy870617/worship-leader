@@ -337,6 +337,8 @@ export default function Conti() {
                   if (r === "downloaded") flash("PDF를 다운로드했어요");
                   else if (r === "failed") flash("PDF 생성에 실패했어요");
                   else setToast(null);
+                } catch {
+                  flash("PDF 생성에 실패했어요");
                 } finally {
                   setPdfBusy(false);
                 }
@@ -358,6 +360,8 @@ export default function Conti() {
                   if (r === "downloaded") flash("PDF를 저장했어요");
                   else if (r === "failed") flash("PDF 생성에 실패했어요");
                   else setToast(null);
+                } catch {
+                  flash("PDF 생성에 실패했어요");
                 } finally {
                   setPdfBusy(false);
                 }
