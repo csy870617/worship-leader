@@ -783,19 +783,20 @@ function SheetLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 px-4 pt-4 pb-44"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/90 p-4"
       onClick={onClose}
     >
       <button
         onClick={onClose}
         aria-label="닫기"
-        className="absolute right-3 top-3 z-10 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
+        className="fixed right-3 top-3 z-10 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
       >
         <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
         </svg>
       </button>
 
+      <div className="my-auto flex flex-col items-center gap-3">
       {loading ? (
         <span className="text-sm text-white/70">불러오는 중…</span>
       ) : url ? (
@@ -804,7 +805,29 @@ function SheetLightbox({
           onClick={onBoxClick}
           className={"relative inline-block " + (placing ? "cursor-crosshair" : "")}
         >
-          <img src={url} alt="악보" onLoad={measure} className="block max-h-[58vh] max-w-full rounded-lg" />
+          <img src={url} alt="악보" onLoad={measure} className="block max-h-[62vh] max-w-full rounded-lg" />
+          {many && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); go(-1); }}
+                aria-label="이전"
+                className="absolute left-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white active:bg-black/60"
+              >
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); go(1); }}
+                aria-label="다음"
+                className="absolute right-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white active:bg-black/60"
+              >
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                </svg>
+              </button>
+            </>
+          )}
           {annos.map((a, i) => (
             <span
               key={i}
@@ -858,32 +881,10 @@ function SheetLightbox({
         <span className="text-sm text-white/70">악보를 불러올 수 없어요</span>
       )}
 
-      {many && (
-        <>
-          <button
-            onClick={(e) => { e.stopPropagation(); go(-1); }}
-            aria-label="이전"
-            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
-          >
-            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-            </svg>
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); go(1); }}
-            aria-label="다음"
-            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white active:bg-white/25"
-          >
-            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-            </svg>
-          </button>
-        </>
-      )}
-
-      {/* annotation toolbar */}
+      {/* annotation toolbar — directly under the sheet */}
+      {url && (
       <div
-        className="absolute inset-x-0 bottom-0 space-y-2 bg-black/60 p-3 backdrop-blur"
+        className="w-full max-w-2xl space-y-2 rounded-xl bg-black/60 p-3 backdrop-blur"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-center gap-2">
@@ -948,6 +949,8 @@ function SheetLightbox({
             </button>
           ))}
         </div>
+      </div>
+      )}
       </div>
     </div>
   );
