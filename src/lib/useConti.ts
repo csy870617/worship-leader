@@ -7,6 +7,8 @@ export interface ContiItem {
   id: string;
   note?: string;
   key?: string; // chosen key when the song has several
+  youtube?: string; // custom YouTube URL
+  sheets?: string[]; // sheet-music attachment ids (stored in IndexedDB)
 }
 export interface Conti {
   id: string;
@@ -28,6 +30,11 @@ function sanitizeItems(arr: unknown): ContiItem[] {
           const it: ContiItem = { id: x.id };
           if (x.note) it.note = String(x.note);
           if (typeof x.key === "string" && x.key) it.key = x.key;
+          if (typeof x.youtube === "string" && x.youtube) it.youtube = x.youtube;
+          if (Array.isArray(x.sheets)) {
+            const s = x.sheets.filter((v: any) => typeof v === "string" && v);
+            if (s.length) it.sheets = s;
+          }
           return it;
         })
     : [];
@@ -154,6 +161,37 @@ export function useConti() {
       ),
     []
   );
+  const setYoutube = useCallback(
+    (id: string, url: string | null) =>
+      mutateActive((items) =>
+        items.map((i) => {
+          if (i.id !== id) return i;
+          const { youtube: _omit, ...rest } = i;
+          const u = url?.trim();
+          return u ? { ...rest, youtube: u } : rest;
+        })
+      ),
+    []
+  );
+  const addSheet = useCallback(
+    (id: string, aid: string) =>
+      mutateActive((items) =>
+        items.map((i) => (i.id === id ? { ...i, sheets: [...(i.sheets ?? []), aid] } : i))
+      ),
+    []
+  );
+  const removeSheet = useCallback(
+    (id: string, aid: string) =>
+      mutateActive((items) =>
+        items.map((i) => {
+          if (i.id !== id) return i;
+          const sheets = (i.sheets ?? []).filter((x) => x !== aid);
+          const { sheets: _omit, ...rest } = i;
+          return sheets.length ? { ...rest, sheets } : rest;
+        })
+      ),
+    []
+  );
   const clear = useCallback(() => mutateActive(() => []), []);
   const replace = useCallback((items: ContiItem[]) => mutateActive(() => items.slice()), []);
 
@@ -191,6 +229,9 @@ export function useConti() {
     move,
     setNote,
     setKey,
+    setYoutube,
+    addSheet,
+    removeSheet,
     clear,
     replace,
     createConti,

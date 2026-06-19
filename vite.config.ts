@@ -36,7 +36,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,woff,woff2}"],
+        // keep the heavy PDF libs out of the upfront precache; they load on demand
+        globIgnores: ["**/{jspdf,html2canvas,purify}*.js"],
         navigateFallback: "index.html",
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
     }),
   ],

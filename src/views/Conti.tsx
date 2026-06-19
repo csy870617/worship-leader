@@ -5,17 +5,28 @@ import { useConti } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { bestRelation } from "../lib/keys";
 import { contiToText, copyText, decodeConti, shareConti } from "../lib/share";
+import { shareContiPdf } from "../lib/contiPdf";
+import { deleteSheet, fileToSheetDataUrl, getSheet, putSheet } from "../lib/attachments";
 import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
   const {
-    conti, remove, move, setNote, setKey, clear, replace,
+    conti, remove, move, setNote, setKey, setYoutube, addSheet, removeSheet, clear, replace,
     contis, activeId, active, createConti, renameConti, deleteConti, setActive,
   } = useConti();
   const { songById } = useSongs();
   const { markUsed, lastUsed, clearUsed } = useHistory();
   const [params, setParams] = useSearchParams();
   const [toast, setToast] = useState<string | null>(null);
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  const toggleOpen = (id: string) =>
+    setOpen((s) => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
 
   const shared = params.get("d");
   const sharedItems = useMemo(() => (shared ? decodeConti(shared) : null), [shared]);
@@ -160,6 +171,8 @@ export default function Conti() {
           const rel = prevKeys ? bestRelation(prevKeys, curKeys) : null;
           const used = lastUsed(r.id);
           const recentlyUsed = used && daysSince(used) <= 28;
+          const sheetCount = r.sheets?.length ?? 0;
+          const hasAttach = sheetCount > 0 || !!r.youtube;
           return (
             <li key={r.id}>
               {rel && (
@@ -233,6 +246,26 @@ export default function Conti() {
                     )}
                   </div>
                 </div>
+                <button
+                  onClick={() => toggleOpen(r.id)}
+                  aria-label="악보·유튜브 첨부"
+                  aria-expanded={open.has(r.id)}
+                  className={
+                    "relative shrink-0 rounded-full p-1 " +
+                    (hasAttach
+                      ? "text-indigo-600 dark:text-indigo-400"
+                      : "text-slate-300 hover:text-slate-500 dark:text-slate-600")
+                  }
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                  </svg>
+                  {sheetCount > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 rounded-full bg-indigo-600 px-1 text-[9px] font-bold leading-3 text-white">
+                      {sheetCount}
+                    </span>
+                  )}
+                </button>
                 <div className="flex shrink-0 flex-col text-slate-400">
                   <button onClick={() => move(r.id, -1)} disabled={i === 0} aria-label="위로" className="p-0.5 disabled:opacity-25">
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
@@ -245,6 +278,18 @@ export default function Conti() {
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                 </button>
               </div>
+
+              {open.has(r.id) && (
+                <ContiAttachPanel
+                  songId={r.id}
+                  youtubeUrl={r.youtube}
+                  sheetIds={r.sheets ?? []}
+                  onYoutube={(u) => setYoutube(r.id, u)}
+                  onAddSheet={(aid) => addSheet(r.id, aid)}
+                  onRemoveSheet={(aid) => removeSheet(r.id, aid)}
+                  flash={flash}
+                />
+              )}
             </li>
           );
         })}
@@ -256,6 +301,27 @@ export default function Conti() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             공유 · 기록
           </p>
+          <button
+            disabled={pdfBusy}
+            onClick={async () => {
+              setPdfBusy(true);
+              flash("PDF를 만드는 중…");
+              try {
+                const r = await shareContiPdf(active.name, conti, songById);
+                if (r === "downloaded") flash("PDF를 저장했어요");
+                else if (r === "failed") flash("PDF 생성에 실패했어요");
+                else setToast(null);
+              } finally {
+                setPdfBusy(false);
+              }
+            }}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white active:bg-indigo-700 disabled:opacity-60"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            {pdfBusy ? "PDF 만드는 중…" : "PDF로 공유 (악보·메모·링크 포함)"}
+          </button>
           <div className="flex gap-2">
             <button
               onClick={async () => {
@@ -263,7 +329,7 @@ export default function Conti() {
                 if (r === "copied") flash("공유 링크가 복사됐어요");
                 else if (r === "failed") flash("공유에 실패했어요");
               }}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white active:bg-indigo-700"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-100 py-2.5 text-sm font-semibold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
@@ -302,6 +368,155 @@ export default function Conti() {
           {toast}
         </div>
       )}
+    </div>
+  );
+}
+
+function ContiAttachPanel({
+  songId,
+  youtubeUrl,
+  sheetIds,
+  onYoutube,
+  onAddSheet,
+  onRemoveSheet,
+  flash,
+}: {
+  songId: string;
+  youtubeUrl?: string;
+  sheetIds: string[];
+  onYoutube: (url: string | null) => void;
+  onAddSheet: (aid: string) => void;
+  onRemoveSheet: (aid: string) => void;
+  flash: (m: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  const onFiles = async (files: FileList | null) => {
+    if (!files || !files.length) return;
+    setBusy(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) continue;
+        const dataUrl = await fileToSheetDataUrl(file);
+        const aid = await putSheet(dataUrl);
+        onAddSheet(aid);
+      }
+      flash("악보를 첨부했어요");
+    } catch {
+      flash("악보 첨부에 실패했어요");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-1 ml-7 space-y-3 rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+      {/* YouTube link */}
+      <div>
+        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          유튜브 링크
+        </label>
+        <div className="flex items-center gap-1.5">
+          <input
+            type="url"
+            inputMode="url"
+            defaultValue={youtubeUrl ?? ""}
+            onBlur={(e) => {
+              const v = e.target.value.trim();
+              if (v !== (youtubeUrl ?? "")) onYoutube(v || null);
+            }}
+            placeholder="https://youtu.be/..."
+            className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          />
+          {youtubeUrl && (
+            <a
+              href={youtubeUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 dark:bg-red-500/15 dark:text-red-400"
+            >
+              열기
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* sheet music */}
+      <div>
+        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          악보
+        </label>
+        {sheetIds.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {sheetIds.map((aid) => (
+              <SheetThumb
+                key={aid}
+                aid={aid}
+                onRemove={() => {
+                  onRemoveSheet(aid);
+                  deleteSheet(aid);
+                }}
+              />
+            ))}
+          </div>
+        )}
+        <label
+          className={
+            "inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300 " +
+            (busy ? "pointer-events-none opacity-60" : "")
+          }
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          {busy ? "추가 중…" : "악보 추가"}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            data-song={songId}
+            onChange={(e) => {
+              onFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+          이미지(사진·캡처)로 첨부돼요. 악보는 이 기기에만 저장됩니다.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SheetThumb({ aid, onRemove }: { aid: string; onRemove: () => void }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    getSheet(aid).then((u) => alive && setUrl(u ?? null));
+    return () => {
+      alive = false;
+    };
+  }, [aid]);
+  return (
+    <div className="relative h-20 w-16 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+      {url ? (
+        <a href={url} target="_blank" rel="noreferrer">
+          <img src={url} alt="악보" className="h-full w-full object-cover" />
+        </a>
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">…</div>
+      )}
+      <button
+        onClick={onRemove}
+        aria-label="악보 삭제"
+        className="absolute right-0.5 top-0.5 rounded-full bg-slate-900/70 p-0.5 text-white"
+      >
+        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
   );
 }
