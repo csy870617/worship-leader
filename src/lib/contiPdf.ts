@@ -19,9 +19,7 @@ const PX_W = 794; // off-screen render width
 
 /** Build the off-screen DOM for a single song page; returns its root + yt anchor. */
 function buildSongEl(
-  conti: string,
   index: number,
-  total: number,
   song: Song,
   item: ContiItem,
   sheetUrls: string[]
@@ -36,11 +34,6 @@ function buildSongEl(
   const parts: string[] = [];
 
   parts.push(
-    `<div style="display:flex;justify-content:space-between;border-bottom:1.5px solid #4f46e5;padding-bottom:8px;margin-bottom:18px;font-size:12px;color:#6b7280;letter-spacing:1px;">
-      <span>${esc(conti)}</span><span>${index + 1} / ${total}</span>
-    </div>`
-  );
-  parts.push(
     `<div style="display:flex;align-items:baseline;gap:10px;">
       <span style="font-size:22px;font-weight:800;color:#c7d2fe;min-width:28px;">${index + 1}</span>
       <span style="font-size:22px;font-weight:700;">${esc(song.title)}</span>
@@ -49,17 +42,17 @@ function buildSongEl(
   );
   if (item.note) {
     parts.push(
-      `<div style="margin:8px 0 0 38px;font-size:14px;color:#374151;">📝 ${esc(item.note)}</div>`
+      `<div style="margin:8px 0 0 38px;font-size:14px;color:#374151;">${esc(item.note)}</div>`
     );
   }
   if (yt) {
     parts.push(
-      `<a id="yt" href="${esc(yt)}" style="display:inline-block;margin:8px 0 0 38px;font-size:13px;color:#dc2626;text-decoration:underline;word-break:break-all;">▶ ${esc(yt)}</a>`
+      `<a id="yt" href="${esc(yt)}" style="display:inline-block;margin:8px 0 0 38px;font-size:13px;color:#dc2626;text-decoration:underline;word-break:break-all;">${esc(yt)}</a>`
     );
   }
   for (const url of sheetUrls) {
     parts.push(
-      `<div style="margin:12px 0 0 38px;"><img src="${url}" style="max-width:640px;width:100%;border:1px solid #e5e7eb;border-radius:6px;display:block;" /></div>`
+      `<div style="margin:12px 0 0 38px;"><img src="${url}" style="max-width:640px;width:100%;display:block;" /></div>`
     );
   }
 
@@ -102,7 +95,7 @@ export async function shareContiPdf(
   try {
     for (let i = 0; i < entries.length; i++) {
       const { song, item, urls } = entries[i];
-      const { el, yt } = buildSongEl(name, i, entries.length, song, item, urls);
+      const { el, yt } = buildSongEl(i, song, item, urls);
       document.body.appendChild(el);
       try {
         // ensure sheet images are decoded before rasterizing
