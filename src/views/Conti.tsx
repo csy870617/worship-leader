@@ -4,7 +4,7 @@ import { useSongs } from "../lib/catalog";
 import { useConti } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { bestRelation } from "../lib/keys";
-import { contiToText, copyText, decodeConti, shareConti } from "../lib/share";
+import { decodeConti } from "../lib/share";
 import { shareContiPdf } from "../lib/contiPdf";
 import {
   fetchSheetInteractive,
@@ -316,61 +316,34 @@ export default function Conti() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             공유 · 기록
           </p>
-          <button
-            disabled={pdfBusy}
-            onClick={async () => {
-              setPdfBusy(true);
-              flash("PDF를 만드는 중…");
-              try {
-                const r = await shareContiPdf(active.name, conti, songById);
-                if (r === "downloaded") flash("PDF를 저장했어요");
-                else if (r === "failed") flash("PDF 생성에 실패했어요");
-                else setToast(null);
-              } finally {
-                setPdfBusy(false);
-              }
-            }}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white active:bg-indigo-700 disabled:opacity-60"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-            </svg>
-            {pdfBusy ? "PDF 만드는 중…" : "PDF로 공유 (악보·메모·링크 포함)"}
-          </button>
           <div className="flex gap-2">
             <button
+              disabled={pdfBusy}
               onClick={async () => {
-                const r = await shareConti(conti, active.name);
-                if (r === "copied") flash("공유 링크가 복사됐어요");
-                else if (r === "failed") flash("공유에 실패했어요");
+                setPdfBusy(true);
+                flash("PDF를 만드는 중…");
+                try {
+                  const r = await shareContiPdf(active.name, conti, songById);
+                  if (r === "downloaded") flash("PDF를 저장했어요");
+                  else if (r === "failed") flash("PDF 생성에 실패했어요");
+                  else setToast(null);
+                } finally {
+                  setPdfBusy(false);
+                }
               }}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-100 py-2.5 text-sm font-semibold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              className="flex-1 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white active:bg-indigo-700 disabled:opacity-60"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
-              </svg>
-              링크 공유
+              {pdfBusy ? "만드는 중…" : "콘티 공유"}
             </button>
-            <button
-              onClick={async () => flash((await copyText(contiToText(conti))) ? "텍스트가 복사됐어요" : "복사 실패")}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-100 py-2.5 text-sm font-semibold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18" />
-              </svg>
-              텍스트 복사
-            </button>
-          </div>
-          <div className="flex gap-2">
             <button
               onClick={() => { markUsed(conti.map((c) => c.id)); flash("오늘 사용으로 기록됐어요"); }}
               className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
             >
-              예배에 사용함
+              콘티 사용
             </button>
             <button
               onClick={() => { if (confirm("이 콘티의 곡을 모두 비울까요?")) clear(); }}
-              className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-semibold text-rose-500 dark:border-slate-700"
+              className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-rose-500 dark:border-slate-700"
             >
               비우기
             </button>
