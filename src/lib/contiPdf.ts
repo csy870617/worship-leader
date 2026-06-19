@@ -16,7 +16,8 @@ function safeName(name: string) {
 export async function shareContiPdf(
   name: string,
   items: ContiItem[],
-  songById: Map<string, Song>
+  songById: Map<string, Song>,
+  mode: "share" | "download" = "share"
 ): Promise<"shared" | "downloaded" | "failed"> {
   const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
     import("jspdf"),
@@ -122,7 +123,7 @@ export async function shareContiPdf(
     const blob = pdf.output("blob");
     const file = new File([blob], `${safeName(name)}.pdf`, { type: "application/pdf" });
 
-    if (navigator.canShare?.({ files: [file] })) {
+    if (mode === "share" && navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: name });
         return "shared";
