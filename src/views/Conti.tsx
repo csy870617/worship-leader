@@ -638,7 +638,10 @@ const TEXT_SIZES: { label: string; value: number }[] = [
   { label: "보통", value: 0.045 },
   { label: "크게", value: 0.07 },
 ];
-const TEXT_PRESETS = ["Intro", "V1", "V2", "V3", "PC", "C", "B", "Inter", "Tag", "Out"];
+const TEXT_PRESET_ROWS = [
+  ["Intro", "V", "V1", "V2", "C", "C1", "C2"],
+  ["PC", "B", "Inter", "Tag", "Out"],
+];
 
 function SheetLightbox({
   ids,
@@ -972,18 +975,22 @@ function SheetLightbox({
           </div>
         </div>
         {/* quick-insert presets */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5">
-          {TEXT_PRESETS.map((p) => (
-            <button
-              key={p}
-              onClick={() => addPreset(p)}
-              className={
-                "rounded-md px-2.5 py-1 text-xs font-bold text-white active:bg-white/30 " +
-                (pendingText === p ? "bg-indigo-600" : "bg-white/15")
-              }
-            >
-              {p}
-            </button>
+        <div className="space-y-1.5">
+          {TEXT_PRESET_ROWS.map((row, ri) => (
+            <div key={ri} className="flex flex-wrap items-center justify-center gap-1.5">
+              {row.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => addPreset(p)}
+                  className={
+                    "rounded-md px-2.5 py-1 text-xs font-bold text-white active:bg-white/30 " +
+                    (pendingText === p ? "bg-indigo-600" : "bg-white/15")
+                  }
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           ))}
         </div>
       </div>
