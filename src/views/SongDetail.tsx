@@ -5,6 +5,7 @@ import { TEMPO_LABEL } from "../types";
 import { KeyBadge, TempoBadge, LastUsedBadge } from "../components/Badges";
 import FavoriteButton from "../components/FavoriteButton";
 import AddToContiButton from "../components/AddToContiButton";
+import SongAttachEditor from "../components/SongAttach";
 import { useHistory } from "../lib/useHistory";
 import { useFavorites } from "../lib/useFavorites";
 import { useConti } from "../lib/useConti";
@@ -188,6 +189,18 @@ export default function SongDetail() {
           </Field>
         )}
       </div>
+
+      <section className="mt-6">
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          메모 · 유튜브 · 악보
+        </h2>
+        <SongAttachEditor
+          songId={song.id}
+          songTitle={song.title}
+          withMemo
+          className="space-y-3 rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
+        />
+      </section>
 
       {related.length > 0 && (
         <section className="mt-8">
