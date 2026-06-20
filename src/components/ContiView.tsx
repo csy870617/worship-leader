@@ -153,6 +153,7 @@ export default function ContiView({
         <div className="relative flex-1 overflow-hidden">
           <div
             className="h-full overflow-y-auto px-4 py-6"
+            style={{ touchAction: "pan-y" }}
             onPointerDown={(e) => {
               if (e.pointerType !== "touch") return;
               swipeRef.current = { x: e.clientX, y: e.clientY };
@@ -165,11 +166,14 @@ export default function ContiView({
               const dy = e.clientY - s.y;
               if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
             }}
+            onPointerCancel={() => {
+              swipeRef.current = null;
+            }}
           >
             <div className="mx-auto max-w-3xl">
               {cur &&
                 (cur.kind === "info" ? (
-                  <SongBlock item={cur.item} song={cur.song} n={cur.n} attach={attach} />
+                  <SongBlock item={cur.item} song={cur.song} n={cur.n} attach={attach} firstSheetOnly />
                 ) : (
                   <div>
                     <div className="mb-2 flex items-baseline gap-2">
@@ -220,14 +224,18 @@ function SongBlock({
   song,
   n,
   attach,
+  firstSheetOnly = false,
 }: {
   item: ContiItem;
   song: Song;
   n: number;
   attach: ReturnType<typeof useSongAttach>;
+  firstSheetOnly?: boolean;
 }) {
   const a = attach[item.id];
   const keys = item.key ? item.key : song.keys.join(" / ");
+  const sheets = a?.sheets ?? [];
+  const shown = firstSheetOnly ? sheets.slice(0, 1) : sheets;
   return (
     <section>
       <div className="flex items-baseline gap-2">
@@ -238,11 +246,7 @@ function SongBlock({
       {a?.note && (
         <p className="ml-7 mt-1 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">{a.note}</p>
       )}
-      {(a?.sheets ?? []).slice(0, 1).map((aid) => (
-        <SheetFigure key={aid} aid={aid} texts={a?.sheetTexts?.[aid] ?? []} />
-      ))}
-      {/* scroll mode shows all sheets; the first is above, render the rest here */}
-      {(a?.sheets ?? []).slice(1).map((aid) => (
+      {shown.map((aid) => (
         <SheetFigure key={aid} aid={aid} texts={a?.sheetTexts?.[aid] ?? []} />
       ))}
     </section>
