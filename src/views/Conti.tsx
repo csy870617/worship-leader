@@ -12,8 +12,11 @@ import SongAttachEditor from "../components/SongAttach";
 // block page scrolling while a row is being dragged (added/removed on demand)
 const preventScroll = (e: TouchEvent) => e.preventDefault();
 
-// quick-insert chips for the song memo
-const MEMO_PRESETS = ["Int", "V", "V1", "V2", "PC", "C", "C1", "C2", "B", "Itl4", "Itl8", "Tag", "Out", "Rit"];
+// quick-insert chips for the song memo (two rows, like the sheet presets)
+const MEMO_PRESET_ROWS = [
+  ["Int", "V", "V1", "V2", "PC", "C", "C1", "C2"],
+  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
+];
 
 export default function Conti() {
   const {
@@ -415,17 +418,21 @@ export default function Conti() {
       {rows.length > 0 && (
         <div className="mt-4 border-t border-slate-100 px-3 pt-3 dark:border-slate-800">
           <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            메모 빠른 입력
+            빠른 메모 입력
           </p>
-          <div className="flex flex-wrap gap-1.5">
-            {MEMO_PRESETS.map((p) => (
-              <button
-                key={p}
-                onPointerDown={(e) => { e.preventDefault(); insertPreset(p); }}
-                className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-              >
-                {p}
-              </button>
+          <div className="space-y-1.5">
+            {MEMO_PRESET_ROWS.map((row, ri) => (
+              <div key={ri} className="flex flex-wrap gap-1.5">
+                {row.map((p) => (
+                  <button
+                    key={p}
+                    onPointerDown={(e) => { e.preventDefault(); insertPreset(p); }}
+                    className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
             ))}
           </div>
         </div>
