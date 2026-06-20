@@ -140,7 +140,7 @@ export default function SongDetail() {
         )}
       </div>
 
-      <div className="mt-5 space-y-5">
+      <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
         <Field label="코드">
           {song.keys.length ? (
             <div className="flex flex-wrap gap-1.5">
