@@ -4,7 +4,7 @@ import { useSongs } from "../lib/catalog";
 import { useConti, type ContiItem } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl } from "../lib/share";
-import { buildContiPdf, downloadContiFile, shareContiFile } from "../lib/contiPdf";
+import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
 import { setSongNote, useSongAttach } from "../lib/songAttach";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
@@ -502,15 +502,15 @@ export default function Conti() {
                   flash("PDF 생성에 실패했어요");
                   return;
                 }
-                const r = await shareContiFile(built.file, active.name);
-                if (r === "shared") setToast(null);
-                else if (r === "unsupported") {
-                  downloadContiFile(built.file);
-                  flash("이 브라우저는 공유를 지원하지 않아 다운로드했어요");
-                } else {
-                  // gesture expired during generation → offer a fresh-tap share
+                // Mobile Web Share must fire right after a tap, but generation
+                // takes too long → always hand off to a fresh-gesture "지금 공유"
+                // tap when file sharing is supported.
+                if (navigator.canShare?.({ files: [built.file] })) {
                   setShareReady(built.file);
                   flash("준비됐어요 · ‘지금 공유’를 누르세요");
+                } else {
+                  downloadContiFile(built.file);
+                  flash("이 브라우저는 공유를 지원하지 않아 다운로드했어요");
                 }
               }}
               className="flex-1 rounded-lg border border-indigo-200 py-2.5 text-sm font-semibold text-indigo-600 active:bg-indigo-50 disabled:opacity-60 dark:border-indigo-500/40 dark:text-indigo-300"
@@ -537,14 +537,22 @@ export default function Conti() {
         <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center px-4">
           <button
             onClick={async () => {
-              const r = await shareContiFile(shareReady, active.name);
-              if (r === "shared") {
+              const file = shareReady;
+              try {
+                // share the file only, directly in this fresh-gesture handler
+                await navigator.share({ files: [file] });
                 setShareReady(null);
                 setToast(null);
-              } else {
-                downloadContiFile(shareReady);
+              } catch (e) {
+                const name = (e as { name?: string })?.name || "오류";
+                if (name === "AbortError") {
+                  setShareReady(null);
+                  setToast(null);
+                  return;
+                }
+                downloadContiFile(file);
                 setShareReady(null);
-                flash("공유가 안 돼 다운로드했어요");
+                flash(`공유 실패(${name}) · 다운로드함`);
               }
             }}
             className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
