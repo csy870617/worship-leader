@@ -1,23 +1,21 @@
 import { useMemo } from "react";
 import { useFavorites } from "../lib/useFavorites";
-import { sortKo } from "../data";
 import { useSongs } from "../lib/catalog";
-import SongList from "../components/SongList";
+import FilteredSongList from "../components/FilteredSongList";
 
 export default function Favorites() {
   const { favorites } = useFavorites();
   const { songById } = useSongs();
 
-  const list = useMemo(
+  const songs = useMemo(
     () =>
       [...favorites]
         .map((id) => songById.get(id))
-        .filter((s): s is NonNullable<typeof s> => Boolean(s))
-        .sort(sortKo),
+        .filter((s): s is NonNullable<typeof s> => Boolean(s)),
     [favorites, songById]
   );
 
-  if (list.length === 0) {
+  if (songs.length === 0) {
     return (
       <div className="px-6 py-20 text-center">
         <svg
@@ -41,12 +39,5 @@ export default function Favorites() {
     );
   }
 
-  return (
-    <div>
-      <div className="px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
-        즐겨찾기 · {list.length}곡
-      </div>
-      <SongList songs={list} />
-    </div>
-  );
+  return <FilteredSongList songs={songs} countLabel="즐겨찾기" />;
 }
