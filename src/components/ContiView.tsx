@@ -24,7 +24,7 @@ export default function ContiView({
 }) {
   const attach = useSongAttach();
   const playlistUrl = youtubePlaylistUrl(items.map((c) => attach[c.id]?.youtube));
-  const [mode, setMode] = useState<"scroll" | "page">("scroll");
+  const [mode, setMode] = useState<"scroll" | "page">("page");
   const [page, setPage] = useState(0);
   const swipeRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -163,7 +163,7 @@ export default function ContiView({
               if (!s) return;
               const dx = e.clientX - s.x;
               const dy = e.clientY - s.y;
-              if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1);
+              if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
             }}
           >
             <div className="mx-auto max-w-3xl">
