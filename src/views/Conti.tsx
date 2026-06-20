@@ -563,9 +563,11 @@ export default function Conti() {
         <div className="fixed inset-x-0 bottom-24 z-30 flex flex-col items-center gap-2 px-4">
           {shareErr && (
             <div className="max-w-xs rounded-lg bg-rose-600 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-white shadow">
-              앱에서는 PDF 공유가 막혀 있어요 ({shareErr}).
+              앱에서는 PDF 공유가 막혀 있어요.
               <br />
-              <b>텍스트로 공유</b>(악보 제외)하거나, <b>다운로드</b> 후 파일에서 공유하세요.
+              텍스트로 공유(악보 제외)하거나,
+              <br />
+              다운로드 후 파일에서 공유하세요.
             </div>
           )}
           <div className="flex items-center gap-2">
