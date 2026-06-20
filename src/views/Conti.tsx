@@ -15,15 +15,19 @@ import { driveEnabled } from "../lib/drive";
 import {
   addSongSheet,
   removeSongSheet,
+  setSongNote,
   setSongSheetTexts,
   setSongYoutube,
   useSongAttach,
 } from "../lib/songAttach";
 import { KeyBadge } from "../components/Badges";
 
+// block page scrolling while a row is being dragged (added/removed on demand)
+const preventScroll = (e: TouchEvent) => e.preventDefault();
+
 export default function Conti() {
   const {
-    conti, remove, move, setNote, setKey, clear, replace,
+    conti, remove, setKey, clear, replace,
     contis, activeId, active, createConti, renameConti, deleteConti, setActive,
   } = useConti();
   const attach = useSongAttach();
@@ -34,6 +38,94 @@ export default function Conti() {
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [pdfBusy, setPdfBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+
+  // ---- drag-to-reorder + long-press/right-click delete ----
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const dragIdRef = useRef<string | null>(null);
+  const movedRef = useRef(false);
+  const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mouseStart = useRef<{ id: string; x: number; y: number } | null>(null);
+  const listRef = useRef<HTMLOListElement>(null);
+
+  useEffect(() => () => window.removeEventListener("touchmove", preventScroll), []);
+
+  const reorderTo = (id: string, to: number) => {
+    const items = conti.slice();
+    const from = items.findIndex((it) => it.id === id);
+    if (from < 0 || to < 0 || to >= items.length || from === to) return;
+    const [it] = items.splice(from, 1);
+    items.splice(to, 0, it);
+    replace(items);
+  };
+  const indexFromY = (y: number) => {
+    const list = listRef.current;
+    if (!list) return -1;
+    const lis = Array.from(list.children) as HTMLElement[];
+    for (let i = 0; i < lis.length; i++) {
+      const rect = lis[i].getBoundingClientRect();
+      if (y < rect.top + rect.height / 2) return i;
+    }
+    return lis.length - 1;
+  };
+  const cancelLP = () => {
+    if (lpTimer.current) {
+      clearTimeout(lpTimer.current);
+      lpTimer.current = null;
+    }
+  };
+  const beginDrag = (id: string) => {
+    dragIdRef.current = id;
+    setDragId(id);
+    movedRef.current = false;
+    window.addEventListener("touchmove", preventScroll, { passive: false });
+  };
+  const endDrag = () => {
+    dragIdRef.current = null;
+    setDragId(null);
+    window.removeEventListener("touchmove", preventScroll);
+  };
+  const onRowPointerDown = (e: React.PointerEvent, id: string) => {
+    const t = e.target as HTMLElement;
+    if (t.closest("button, input, a, textarea, [data-no-drag]")) return;
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    if (e.pointerType === "mouse") {
+      if (e.button !== 0) return;
+      mouseStart.current = { id, x: e.clientX, y: e.clientY };
+    } else {
+      lpTimer.current = setTimeout(() => beginDrag(id), 300);
+    }
+  };
+  const onRowPointerMove = (e: React.PointerEvent) => {
+    if (!dragIdRef.current) {
+      if (mouseStart.current) {
+        const m = mouseStart.current;
+        if (Math.hypot(e.clientX - m.x, e.clientY - m.y) > 5) beginDrag(m.id);
+      } else if (lpTimer.current) {
+        cancelLP(); // moved before the long-press → it's a scroll, not a drag
+      }
+      return;
+    }
+    movedRef.current = true;
+    const to = indexFromY(e.clientY);
+    if (to >= 0) reorderTo(dragIdRef.current, to);
+  };
+  const onRowPointerUp = (e: React.PointerEvent, id: string) => {
+    cancelLP();
+    const wasDragging = !!dragIdRef.current;
+    const wasMoved = movedRef.current;
+    mouseStart.current = null;
+    if (wasDragging) {
+      endDrag();
+      // long-press with no movement = delete intent (touch)
+      if (!wasMoved && e.pointerType !== "mouse") setConfirmRemove(id);
+    }
+  };
+  const onRowPointerCancel = () => {
+    cancelLP();
+    mouseStart.current = null;
+    if (dragIdRef.current) endDrag();
+  };
 
   const toggleOpen = (id: string) =>
     setOpen((s) => {
@@ -181,7 +273,7 @@ export default function Conti() {
       )}
 
       {/* ordered list */}
-      <ol className="space-y-1.5 px-3 pt-3">
+      <ol ref={listRef} className="space-y-1.5 px-3 pt-3">
         {rows.map((r, i) => {
           const used = lastUsed(r.id);
           const recentlyUsed = used && daysSince(used) <= 28;
@@ -190,9 +282,22 @@ export default function Conti() {
           const sheetCount = att?.sheets?.length ?? 0;
           return (
             <li key={r.id}>
-              <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/50">
-                <span className="w-5 shrink-0 text-center text-sm font-bold text-slate-300 dark:text-slate-600">
-                  {i + 1}
+              <div
+                onPointerDown={(e) => onRowPointerDown(e, r.id)}
+                onPointerMove={onRowPointerMove}
+                onPointerUp={(e) => onRowPointerUp(e, r.id)}
+                onPointerCancel={onRowPointerCancel}
+                onContextMenu={(e) => { e.preventDefault(); setConfirmRemove(r.id); }}
+                className={
+                  "flex select-none items-center gap-2 rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/50 " +
+                  (dragId === r.id ? "opacity-70 ring-2 ring-indigo-400 shadow-lg" : "")
+                }
+              >
+                <span className="flex w-6 shrink-0 cursor-grab touch-none flex-col items-center text-slate-300 dark:text-slate-600" title="끌어서 순서 변경 · 길게 눌러 삭제">
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <circle cx="8" cy="6" r="1.4" /><circle cx="16" cy="6" r="1.4" /><circle cx="8" cy="12" r="1.4" /><circle cx="16" cy="12" r="1.4" /><circle cx="8" cy="18" r="1.4" /><circle cx="16" cy="18" r="1.4" />
+                  </svg>
+                  <span className="text-[11px] font-bold leading-none">{i + 1}</span>
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -247,8 +352,8 @@ export default function Conti() {
                   </div>
                   <div className="mt-0.5 flex items-center gap-2">
                     <input
-                      value={r.note ?? ""}
-                      onChange={(e) => setNote(r.id, e.target.value)}
+                      value={att?.note ?? ""}
+                      onChange={(e) => setSongNote(r.id, e.target.value)}
                       placeholder="메모 추가"
                       className="-mx-1 min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
                     />
@@ -266,17 +371,6 @@ export default function Conti() {
                     )}
                   </div>
                 </div>
-                <div className="flex shrink-0 flex-col text-slate-400">
-                  <button onClick={() => move(r.id, -1)} disabled={i === 0} aria-label="위로" className="p-0.5 disabled:opacity-25">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
-                  </button>
-                  <button onClick={() => move(r.id, 1)} disabled={i === rows.length - 1} aria-label="아래로" className="p-0.5 disabled:opacity-25">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
-                  </button>
-                </div>
-                <button onClick={() => remove(r.id)} aria-label="빼기" className="shrink-0 rounded-full p-1 text-slate-300 hover:text-rose-500 dark:text-slate-600">
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-                </button>
               </div>
 
               {open.has(r.id) && (
@@ -381,6 +475,37 @@ export default function Conti() {
       {toast && (
         <div className="fixed inset-x-0 bottom-24 z-30 mx-auto w-fit rounded-full bg-slate-900 px-4 py-2 text-sm text-white shadow-lg dark:bg-slate-200 dark:text-slate-900">
           {toast}
+        </div>
+      )}
+
+      {confirmRemove && (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-6"
+          onClick={() => setConfirmRemove(null)}
+        >
+          <div
+            className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
+              {songById.get(confirmRemove)?.title}
+            </p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">이 곡을 콘티에서 뺄까요?</p>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setConfirmRemove(null)}
+                className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => { remove(confirmRemove); setConfirmRemove(null); }}
+                className="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-semibold text-white active:bg-rose-700"
+              >
+                빼기
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

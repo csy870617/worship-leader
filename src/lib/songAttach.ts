@@ -7,6 +7,7 @@ import type { SheetText } from "./useConti";
 import { getContiState, setContiState } from "./useConti";
 
 export interface SongAttach {
+  note?: string;
   youtube?: string;
   sheets?: string[]; // attachment ids (Drive fileId or local id)
   sheetTexts?: Record<string, SheetText[]>; // text annotations per sheet
@@ -17,6 +18,7 @@ const LS = "wl.songAttach";
 function sanitizeAttach(a: any): SongAttach | null {
   if (!a || typeof a !== "object") return null;
   const out: SongAttach = {};
+  if (typeof a.note === "string" && a.note.trim()) out.note = a.note;
   if (typeof a.youtube === "string" && a.youtube) out.youtube = a.youtube;
   if (Array.isArray(a.sheets)) {
     const s = a.sheets.filter((x: any) => typeof x === "string" && x);
@@ -95,6 +97,9 @@ function update(id: string, fn: (a: SongAttach) => SongAttach) {
   emit();
 }
 
+export function setSongNote(id: string, note: string) {
+  update(id, (a) => ({ ...a, note: note.trim() ? note : undefined }));
+}
 export function setSongYoutube(id: string, url: string | null) {
   update(id, (a) => ({ ...a, youtube: url?.trim() || undefined }));
 }
@@ -125,16 +130,17 @@ export function migrateFromContis() {
   const contis = s.contis.map((c) => ({
     ...c,
     items: c.items.map((it: any) => {
-      if (it.youtube || it.sheets || it.sheetTexts) {
+      if (it.note || it.youtube || it.sheets || it.sheetTexts) {
         changed = true;
         const cur = store[it.id] ?? {};
         const clean = sanitizeAttach({
+          note: cur.note ?? it.note,
           youtube: cur.youtube ?? it.youtube,
           sheets: cur.sheets ?? it.sheets,
           sheetTexts: cur.sheetTexts ?? it.sheetTexts,
         });
         if (clean) store[it.id] = clean;
-        const { youtube, sheets, sheetTexts, ...rest } = it;
+        const { note, youtube, sheets, sheetTexts, ...rest } = it;
         return rest;
       }
       return it;

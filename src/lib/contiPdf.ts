@@ -52,6 +52,7 @@ function buildInfoEl(
   el.style.cssText = BASE_STYLE;
 
   const keys = item.key ? item.key : song.keys.join(" / ");
+  const note = getSongAttach(item.id)?.note;
   const parts: string[] = [];
 
   // whole-conti playlist link, top-right (only passed for the very first page)
@@ -67,9 +68,9 @@ function buildInfoEl(
       ${keys ? `<span style="font-size:15px;font-weight:700;color:#4f46e5;">${esc(keys)}</span>` : ""}
     </div>`
   );
-  if (item.note) {
+  if (note) {
     parts.push(
-      `<div style="margin:8px 0 0 38px;font-size:17px;color:#374151;">${esc(item.note)}</div>`
+      `<div style="margin:8px 0 0 38px;font-size:17px;color:#374151;">${esc(note)}</div>`
     );
   }
   if (firstSheet) {
