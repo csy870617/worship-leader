@@ -538,8 +538,10 @@ export default function Conti() {
       {shareReady && (
         <div className="fixed inset-x-0 bottom-24 z-30 flex flex-col items-center gap-2 px-4">
           {shareErr && (
-            <div className="max-w-full rounded-lg bg-rose-600 px-3 py-2 text-center text-xs font-semibold text-white shadow">
-              공유 실패: {shareErr}
+            <div className="max-w-xs rounded-lg bg-rose-600 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-white shadow">
+              공유가 차단됐어요 ({shareErr}).
+              <br />
+              홈 화면 앱 대신 <b>크롬 브라우저 탭</b>에서 열어 다시 시도하거나, <b>다운로드</b>로 받아 직접 공유하세요.
             </div>
           )}
           <div className="flex items-center gap-2">
