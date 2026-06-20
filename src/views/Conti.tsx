@@ -12,6 +12,9 @@ import SongAttachEditor from "../components/SongAttach";
 // block page scrolling while a row is being dragged (added/removed on demand)
 const preventScroll = (e: TouchEvent) => e.preventDefault();
 
+// quick-insert chips for the song memo
+const MEMO_PRESETS = ["Int", "V", "V1", "V2", "PC", "C", "C1", "C2", "B", "Itl4", "Itl8", "Tag", "Out", "Rit"];
+
 export default function Conti() {
   const {
     conti, remove, setKey, clear, replace,
@@ -35,6 +38,32 @@ export default function Conti() {
   const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mouseStart = useRef<{ id: string; x: number; y: number } | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
+
+  // remember the focused memo input so preset chips can insert at its cursor
+  const memoElRef = useRef<HTMLInputElement | null>(null);
+  const memoSongRef = useRef<string | null>(null);
+  const insertPreset = (text: string) => {
+    const el = memoElRef.current;
+    const songId = memoSongRef.current;
+    if (!el || !songId) {
+      flash("먼저 메모를 누른 뒤 사용하세요");
+      return;
+    }
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? start;
+    const cur = el.value;
+    const next = cur.slice(0, start) + text + cur.slice(end);
+    setSongNote(songId, next);
+    const pos = start + text.length;
+    requestAnimationFrame(() => {
+      el.focus();
+      try {
+        el.setSelectionRange(pos, pos);
+      } catch {
+        /* ignore */
+      }
+    });
+  };
 
   useEffect(() => () => window.removeEventListener("touchmove", preventScroll), []);
 
@@ -342,6 +371,8 @@ export default function Conti() {
                     <input
                       value={att?.note ?? ""}
                       onChange={(e) => setSongNote(r.id, e.target.value)}
+                      onFocus={(e) => { memoElRef.current = e.currentTarget; memoSongRef.current = r.id; }}
+                      onBlur={() => { memoElRef.current = null; memoSongRef.current = null; }}
                       placeholder="메모 추가"
                       className="-mx-1 min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
                     />
@@ -368,6 +399,26 @@ export default function Conti() {
           );
         })}
       </ol>
+
+      {/* memo quick-insert presets (insert at the focused memo's cursor) */}
+      {rows.length > 0 && (
+        <div className="mt-4 border-t border-slate-100 px-3 pt-3 dark:border-slate-800">
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            메모 빠른 입력
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {MEMO_PRESETS.map((p) => (
+              <button
+                key={p}
+                onPointerDown={(e) => { e.preventDefault(); insertPreset(p); }}
+                className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* footer: share & record */}
       {rows.length > 0 && (
