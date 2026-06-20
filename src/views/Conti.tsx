@@ -25,7 +25,7 @@ export default function Conti() {
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [pdfBusy, setPdfBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
-  const [shareReady, setShareReady] = useState<{ file: File; text?: string } | null>(null);
+  const [shareReady, setShareReady] = useState<File | null>(null);
 
   // ---- drag-to-reorder + long-press/right-click delete ----
   const [dragId, setDragId] = useState<string | null>(null);
@@ -433,17 +433,14 @@ export default function Conti() {
                   flash("PDF 생성에 실패했어요");
                   return;
                 }
-                const text = built.playlistUrl
-                  ? `${active.name} 유튜브 재생목록\n${built.playlistUrl}`
-                  : undefined;
-                const r = await shareContiFile(built.file, active.name, text);
+                const r = await shareContiFile(built.file, active.name);
                 if (r === "shared") setToast(null);
                 else if (r === "unsupported") {
                   downloadContiFile(built.file);
                   flash("이 브라우저는 공유를 지원하지 않아 다운로드했어요");
                 } else {
                   // gesture expired during generation → offer a fresh-tap share
-                  setShareReady({ file: built.file, text });
+                  setShareReady(built.file);
                   flash("준비됐어요 · ‘지금 공유’를 누르세요");
                 }
               }}
@@ -471,27 +468,15 @@ export default function Conti() {
         <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center px-4">
           <button
             onClick={async () => {
-              const { file, text } = shareReady;
-              try {
-                if (navigator.canShare?.({ files: [file] })) {
-                  const data: ShareData = { files: [file], title: active.name };
-                  if (text && navigator.canShare?.({ ...data, text })) data.text = text;
-                  await navigator.share(data);
-                  setShareReady(null);
-                  setToast(null);
-                  return;
-                }
-              } catch (e) {
-                if (e instanceof DOMException && e.name === "AbortError") {
-                  setShareReady(null);
-                  setToast(null);
-                  return;
-                }
+              const r = await shareContiFile(shareReady, active.name);
+              if (r === "shared") {
+                setShareReady(null);
+                setToast(null);
+              } else {
+                downloadContiFile(shareReady);
+                setShareReady(null);
+                flash("공유가 안 돼 다운로드했어요");
               }
-              // unsupported or blocked → at least save the file
-              downloadContiFile(file);
-              setShareReady(null);
-              flash("공유가 안 돼 다운로드했어요");
             }}
             className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
           >

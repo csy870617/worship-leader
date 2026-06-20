@@ -217,17 +217,17 @@ export async function buildContiPdf(
 /** Open the native share sheet with a generated PDF. Call within a user gesture. */
 export async function shareContiFile(
   file: File,
-  title: string,
-  text?: string
+  title: string
 ): Promise<"shared" | "unsupported" | "failed"> {
   if (!navigator.canShare?.({ files: [file] })) return "unsupported";
-  const data: ShareData = { files: [file], title };
-  if (text && navigator.canShare?.({ ...data, text })) data.text = text;
   try {
-    await navigator.share(data);
+    // share the file only — combining files + text/url makes some Android
+    // share targets reject the whole share
+    await navigator.share({ files: [file], title });
     return "shared";
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") return "shared";
+    console.warn("[pdf] share failed", e);
     return "failed";
   }
 }
