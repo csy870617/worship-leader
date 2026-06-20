@@ -4,7 +4,7 @@ import { useSongs } from "../lib/catalog";
 import { useConti } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl } from "../lib/share";
-import { shareContiPdf } from "../lib/contiPdf";
+import { buildContiPdf, downloadContiFile, shareContiFile } from "../lib/contiPdf";
 import { setSongNote, useSongAttach } from "../lib/songAttach";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
@@ -25,6 +25,7 @@ export default function Conti() {
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [pdfBusy, setPdfBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [shareReady, setShareReady] = useState<{ file: File; text?: string } | null>(null);
 
   // ---- drag-to-reorder + long-press/right-click delete ----
   const [dragId, setDragId] = useState<string | null>(null);
@@ -395,10 +396,12 @@ export default function Conti() {
                 setPdfBusy(true);
                 flash("PDF를 만드는 중…");
                 try {
-                  const r = await shareContiPdf(active.name, conti, songById, "download");
-                  if (r === "downloaded") flash("PDF를 다운로드했어요");
-                  else if (r === "failed") flash("PDF 생성에 실패했어요");
-                  else setToast(null);
+                  const built = await buildContiPdf(active.name, conti, songById);
+                  if (!built) flash("PDF 생성에 실패했어요");
+                  else {
+                    downloadContiFile(built.file);
+                    flash("PDF를 다운로드했어요");
+                  }
                 } catch {
                   flash("PDF 생성에 실패했어요");
                 } finally {
@@ -415,17 +418,33 @@ export default function Conti() {
             <button
               disabled={pdfBusy}
               onClick={async () => {
+                setShareReady(null);
                 setPdfBusy(true);
                 flash("PDF를 만드는 중…");
+                let built;
                 try {
-                  const r = await shareContiPdf(active.name, conti, songById);
-                  if (r === "downloaded") flash("PDF를 저장했어요");
-                  else if (r === "failed") flash("PDF 생성에 실패했어요");
-                  else setToast(null);
+                  built = await buildContiPdf(active.name, conti, songById);
                 } catch {
-                  flash("PDF 생성에 실패했어요");
+                  built = null;
                 } finally {
                   setPdfBusy(false);
+                }
+                if (!built) {
+                  flash("PDF 생성에 실패했어요");
+                  return;
+                }
+                const text = built.playlistUrl
+                  ? `${active.name} 유튜브 재생목록\n${built.playlistUrl}`
+                  : undefined;
+                const r = await shareContiFile(built.file, active.name, text);
+                if (r === "shared") setToast(null);
+                else if (r === "unsupported") {
+                  downloadContiFile(built.file);
+                  flash("이 브라우저는 공유를 지원하지 않아 다운로드했어요");
+                } else {
+                  // gesture expired during generation → offer a fresh-tap share
+                  setShareReady({ file: built.file, text });
+                  flash("준비됐어요 · ‘지금 공유’를 누르세요");
                 }
               }}
               className="flex-1 rounded-lg border border-indigo-200 py-2.5 text-sm font-semibold text-indigo-600 active:bg-indigo-50 disabled:opacity-60 dark:border-indigo-500/40 dark:text-indigo-300"
@@ -448,7 +467,31 @@ export default function Conti() {
         </div>
       )}
 
-      {toast && (
+      {shareReady && (
+        <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center px-4">
+          <button
+            onClick={async () => {
+              const r = await shareContiFile(shareReady.file, active.name, shareReady.text);
+              if (r === "shared") {
+                setShareReady(null);
+                setToast(null);
+              } else if (r === "unsupported") {
+                downloadContiFile(shareReady.file);
+                setShareReady(null);
+                flash("이 브라우저는 공유를 지원하지 않아 다운로드했어요");
+              }
+            }}
+            className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+            </svg>
+            지금 공유
+          </button>
+        </div>
+      )}
+
+      {toast && !shareReady && (
         <div className="fixed inset-x-0 bottom-24 z-30 mx-auto w-fit rounded-full bg-slate-900 px-4 py-2 text-sm text-white shadow-lg dark:bg-slate-200 dark:text-slate-900">
           {toast}
         </div>

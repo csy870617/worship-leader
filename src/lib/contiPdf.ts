@@ -92,15 +92,16 @@ function buildSheetEl(sheet: SheetImg): HTMLDivElement {
 }
 
 /**
- * Render the conti to a Letter-size PDF — one song per page, sheet images
- * scaled to fit, YouTube links kept clickable — then share or download it.
+ * Render the conti to a Letter-size PDF (one song per page, sheet images
+ * scaled to fit, links kept clickable). Returns the file + playlist link, or
+ * null on failure. Sharing/downloading is handled separately so the share can
+ * fire within a fresh user gesture (mobile Web Share needs that).
  */
-export async function shareContiPdf(
+export async function buildContiPdf(
   name: string,
   items: ContiItem[],
-  songById: Map<string, Song>,
-  mode: "share" | "download" = "share"
-): Promise<"shared" | "downloaded" | "failed"> {
+  songById: Map<string, Song>
+): Promise<{ file: File; playlistUrl?: string } | null> {
   let jsPDF: typeof import("jspdf").default;
   let html2canvas: typeof import("html2canvas").default;
   try {
@@ -109,7 +110,7 @@ export async function shareContiPdf(
     html2canvas = m2.default;
   } catch (e) {
     console.warn("[pdf] library load failed", e);
-    return "failed";
+    return null;
   }
 
   // resolve to (song, item, sheet images), reading attachments from the song store
@@ -128,7 +129,7 @@ export async function shareContiPdf(
     }
     entries.push({ song, item, sheets });
   }
-  if (!entries.length) return "failed";
+  if (!entries.length) return null;
 
   const playlistUrl =
     youtubePlaylistUrl(items.map((it) => getSongAttach(it.id)?.youtube)) ?? undefined;
@@ -207,31 +208,36 @@ export async function shareContiPdf(
 
     const blob = pdf.output("blob");
     const file = new File([blob], `${safeName(name)}.pdf`, { type: "application/pdf" });
-
-    if (mode === "share" && navigator.canShare?.({ files: [file] })) {
-      const data: ShareData = { files: [file], title: name };
-      // include the playlist link too, but only if the platform accepts the combo
-      if (playlistUrl) {
-        const withText: ShareData = { ...data, text: `${name} 유튜브 재생목록\n${playlistUrl}` };
-        if (navigator.canShare?.(withText)) data.text = withText.text;
-      }
-      try {
-        await navigator.share(data);
-        return "shared";
-      } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") return "shared";
-        // otherwise fall through to download
-      }
-    }
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    return "downloaded";
+    return { file, playlistUrl };
   } catch {
+    return null;
+  }
+}
+
+/** Open the native share sheet with a generated PDF. Call within a user gesture. */
+export async function shareContiFile(
+  file: File,
+  title: string,
+  text?: string
+): Promise<"shared" | "unsupported" | "failed"> {
+  if (!navigator.canShare?.({ files: [file] })) return "unsupported";
+  const data: ShareData = { files: [file], title };
+  if (text && navigator.canShare?.({ ...data, text })) data.text = text;
+  try {
+    await navigator.share(data);
+    return "shared";
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") return "shared";
     return "failed";
   }
+}
+
+/** Download a generated PDF file. */
+export function downloadContiFile(file: File) {
+  const url = URL.createObjectURL(file);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
