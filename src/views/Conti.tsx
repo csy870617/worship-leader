@@ -34,9 +34,7 @@ export default function Conti() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const dragIdRef = useRef<string | null>(null);
-  const movedRef = useRef(false);
   const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mouseStart = useRef<{ id: string; x: number; y: number } | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
 
   // remember the focused memo input so preset chips can insert at its cursor
@@ -94,7 +92,6 @@ export default function Conti() {
   const beginDrag = (id: string) => {
     dragIdRef.current = id;
     setDragId(id);
-    movedRef.current = false;
     window.addEventListener("touchmove", preventScroll, { passive: false });
   };
   const endDrag = () => {
@@ -102,47 +99,31 @@ export default function Conti() {
     setDragId(null);
     window.removeEventListener("touchmove", preventScroll);
   };
-  const onRowPointerDown = (e: React.PointerEvent, id: string) => {
-    const t = e.target as HTMLElement;
-    if (t.closest("button, input, a, textarea, [data-no-drag]")) return;
+  // drag handle (grip) — starts the reorder immediately, works on touch
+  const onHandleDown = (e: React.PointerEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.pointerType === "mouse" && e.button !== 0) return;
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-    if (e.pointerType === "mouse") {
-      if (e.button !== 0) return;
-      mouseStart.current = { id, x: e.clientX, y: e.clientY };
-    } else {
-      lpTimer.current = setTimeout(() => beginDrag(id), 300);
-    }
+    beginDrag(id);
   };
-  const onRowPointerMove = (e: React.PointerEvent) => {
-    if (!dragIdRef.current) {
-      if (mouseStart.current) {
-        const m = mouseStart.current;
-        if (Math.hypot(e.clientX - m.x, e.clientY - m.y) > 5) beginDrag(m.id);
-      } else if (lpTimer.current) {
-        cancelLP(); // moved before the long-press → it's a scroll, not a drag
-      }
-      return;
-    }
-    movedRef.current = true;
+  const onHandleMove = (e: React.PointerEvent) => {
+    if (!dragIdRef.current) return;
     const to = indexFromY(e.clientY);
     if (to >= 0) reorderTo(dragIdRef.current, to);
   };
-  const onRowPointerUp = (e: React.PointerEvent, id: string) => {
-    cancelLP();
-    const wasDragging = !!dragIdRef.current;
-    const wasMoved = movedRef.current;
-    mouseStart.current = null;
-    if (wasDragging) {
-      endDrag();
-      // long-press with no movement = delete intent (touch)
-      if (!wasMoved && e.pointerType !== "mouse") setConfirmRemove(id);
-    }
-  };
-  const onRowPointerCancel = () => {
-    cancelLP();
-    mouseStart.current = null;
+  const onHandleUp = (e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
     if (dragIdRef.current) endDrag();
   };
+  // long-press (touch) on the row body = delete intent
+  const onRowPointerDown = (e: React.PointerEvent, id: string) => {
+    if (e.pointerType === "mouse") return; // mouse uses right-click
+    const t = e.target as HTMLElement;
+    if (t.closest("button, input, a, textarea, [data-drag-handle]")) return;
+    lpTimer.current = setTimeout(() => setConfirmRemove(id), 500);
+  };
+  const onRowPointerEnd = () => cancelLP();
 
   const toggleOpen = (id: string) =>
     setOpen((s) => {
@@ -301,20 +282,29 @@ export default function Conti() {
             <li key={r.id}>
               <div
                 onPointerDown={(e) => onRowPointerDown(e, r.id)}
-                onPointerMove={onRowPointerMove}
-                onPointerUp={(e) => onRowPointerUp(e, r.id)}
-                onPointerCancel={onRowPointerCancel}
+                onPointerMove={onRowPointerEnd}
+                onPointerUp={onRowPointerEnd}
+                onPointerCancel={onRowPointerEnd}
                 onContextMenu={(e) => { e.preventDefault(); setConfirmRemove(r.id); }}
                 className={
                   "flex select-none items-center gap-2 rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/50 " +
                   (dragId === r.id ? "opacity-70 ring-2 ring-indigo-400 shadow-lg" : "")
                 }
               >
-                <span className="flex w-6 shrink-0 cursor-grab touch-none flex-col items-center text-slate-300 dark:text-slate-600" title="끌어서 순서 변경 · 길게 눌러 삭제">
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                    <circle cx="8" cy="6" r="1.4" /><circle cx="16" cy="6" r="1.4" /><circle cx="8" cy="12" r="1.4" /><circle cx="16" cy="12" r="1.4" /><circle cx="8" cy="18" r="1.4" /><circle cx="16" cy="18" r="1.4" />
+                <span
+                  data-drag-handle
+                  onPointerDown={(e) => onHandleDown(e, r.id)}
+                  onPointerMove={onHandleMove}
+                  onPointerUp={onHandleUp}
+                  onPointerCancel={onHandleUp}
+                  style={{ touchAction: "none" }}
+                  className="-my-2 flex w-8 shrink-0 cursor-grab touch-none flex-col items-center justify-center self-stretch text-slate-300 active:cursor-grabbing dark:text-slate-600"
+                  title="끌어서 순서 변경"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <circle cx="8" cy="6" r="1.5" /><circle cx="16" cy="6" r="1.5" /><circle cx="8" cy="12" r="1.5" /><circle cx="16" cy="12" r="1.5" /><circle cx="8" cy="18" r="1.5" /><circle cx="16" cy="18" r="1.5" />
                   </svg>
-                  <span className="text-[11px] font-bold leading-none">{i + 1}</span>
+                  <span className="mt-0.5 text-[11px] font-bold leading-none">{i + 1}</span>
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
