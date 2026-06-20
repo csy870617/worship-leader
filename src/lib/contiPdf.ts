@@ -1,6 +1,7 @@
 import type { Song } from "../types";
 import type { ContiItem, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
+import { getSongAttach } from "./songAttach";
 import { youtubePlaylistUrl } from "./share";
 
 const esc = (s: string) =>
@@ -110,24 +111,26 @@ export async function shareContiPdf(
     return "failed";
   }
 
-  // resolve to (song, item, sheet images with memos), skipping missing songs
+  // resolve to (song, item, sheet images), reading attachments from the song store
   const entries: { song: Song; item: ContiItem; sheets: SheetImg[] }[] = [];
   for (const item of items) {
     const song = songById.get(item.id);
     if (!song) continue;
+    const att = getSongAttach(item.id);
     const sheets: SheetImg[] = [];
-    if (item.sheets?.length) {
-      const urls = await Promise.all(item.sheets.map((aid) => loadSheet(aid)));
-      item.sheets.forEach((aid, idx) => {
+    if (att?.sheets?.length) {
+      const urls = await Promise.all(att.sheets.map((aid) => loadSheet(aid)));
+      att.sheets.forEach((aid, idx) => {
         const u = urls[idx];
-        if (u) sheets.push({ url: u, texts: item.sheetTexts?.[aid] });
+        if (u) sheets.push({ url: u, texts: att.sheetTexts?.[aid] });
       });
     }
     entries.push({ song, item, sheets });
   }
   if (!entries.length) return "failed";
 
-  const playlistUrl = youtubePlaylistUrl(items.map((it) => it.youtube)) ?? undefined;
+  const playlistUrl =
+    youtubePlaylistUrl(items.map((it) => getSongAttach(it.id)?.youtube)) ?? undefined;
 
   const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
   let pageAdded = false;

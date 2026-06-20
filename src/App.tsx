@@ -4,6 +4,7 @@ import { useTheme } from "./lib/useTheme";
 import { useConti } from "./lib/useConti";
 import { useSongs } from "./lib/catalog";
 import { getLastBrowse } from "./lib/browseState";
+import { migrateFromContis } from "./lib/songAttach";
 import { initSync } from "./lib/sync";
 import AuthButton from "./components/AuthButton";
 import Browse from "./views/Browse";
@@ -28,8 +29,13 @@ export default function App() {
   const { conti } = useConti();
   const { songs } = useSongs();
 
-  // start cloud sync once (no-op unless Firebase env is configured)
-  useEffect(() => initSync(), []);
+  // start cloud sync, then migrate any legacy per-conti attachments onto songs
+  // (after sync is listening so the migration is marked for upload)
+  useEffect(() => {
+    const cleanup = initSync();
+    migrateFromContis();
+    return cleanup;
+  }, []);
 
   // detail / edit get a full-bleed screen on mobile (their own back button)
   const hideMobileChrome =

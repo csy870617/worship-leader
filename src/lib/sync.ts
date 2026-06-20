@@ -38,6 +38,12 @@ import {
   setHistoryMap,
   subscribeHistory,
 } from "./useHistory";
+import {
+  getSongAttachStore,
+  setSongAttachStore,
+  subscribeSongAttach,
+  type SongAttach,
+} from "./songAttach";
 
 interface CloudDoc {
   userSongs: Song[];
@@ -47,6 +53,7 @@ interface CloudDoc {
   history: Record<string, string>;
   hidden: string[];
   overrides: Record<string, Partial<Song>>;
+  songAttach: Record<string, SongAttach>;
   updatedAt: number;
 }
 type LocalSnapshot = Omit<CloudDoc, "updatedAt">;
@@ -73,6 +80,7 @@ function snapshotLocal(): LocalSnapshot {
     history: getHistoryMap(),
     hidden: getHiddenIds(),
     overrides: getOverrides(),
+    songAttach: getSongAttachStore(),
   };
 }
 
@@ -93,6 +101,8 @@ function mergeUnion(local: LocalSnapshot, remote: Partial<CloudDoc>): LocalSnaps
 
   // overrides: union by song id (local wins on conflict)
   const overrides = { ...(remote.overrides ?? {}), ...local.overrides };
+  // song attachments: union by song id (local wins on conflict)
+  const songAttach = { ...(remote.songAttach ?? {}), ...local.songAttach };
 
   // contis: union by id (local wins); prefer local active selection
   const lc = readContis(local);
@@ -103,7 +113,7 @@ function mergeUnion(local: LocalSnapshot, remote: Partial<CloudDoc>): LocalSnaps
   const contis = [...cById.values()];
   const activeContiId = lc.activeContiId || rc.activeContiId || contis[0]?.id || "";
 
-  return { userSongs: [...byId.values()], favorites, contis, activeContiId, history, hidden, overrides };
+  return { userSongs: [...byId.values()], favorites, contis, activeContiId, history, hidden, overrides, songAttach };
 }
 
 // ---- sync meta (per device) ----
@@ -174,6 +184,7 @@ function applyDoc(d: Partial<CloudDoc> | LocalSnapshot) {
   setHistoryMap(d.history ?? {});
   setHiddenIds(d.hidden ?? []);
   setOverrides(d.overrides ?? {});
+  setSongAttachStore(d.songAttach ?? {});
   applyingRemote = false;
 }
 
@@ -277,6 +288,7 @@ export function initSync() {
   subscribeFavorites(onLocalChange);
   subscribeConti(onLocalChange);
   subscribeHistory(onLocalChange);
+  subscribeSongAttach(onLocalChange);
 
   // flush pending changes promptly when the app is hidden/closed so a quick
   // edit-then-close doesn't wait until the next login to reach the cloud

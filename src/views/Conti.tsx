@@ -12,13 +12,21 @@ import {
   saveSheetFromFile,
 } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
+import {
+  addSongSheet,
+  removeSongSheet,
+  setSongSheetTexts,
+  setSongYoutube,
+  useSongAttach,
+} from "../lib/songAttach";
 import { KeyBadge } from "../components/Badges";
 
 export default function Conti() {
   const {
-    conti, remove, move, setNote, setKey, setYoutube, addSheet, removeSheet, setSheetTexts, clear, replace,
+    conti, remove, move, setNote, setKey, clear, replace,
     contis, activeId, active, createConti, renameConti, deleteConti, setActive,
   } = useConti();
+  const attach = useSongAttach();
   const { songById } = useSongs();
   const { markUsed, lastUsed, clearUsed } = useHistory();
   const [params, setParams] = useSearchParams();
@@ -42,7 +50,10 @@ export default function Conti() {
     [conti]
   );
 
-  const playlistUrl = useMemo(() => youtubePlaylistUrl(conti.map((c) => c.youtube)), [conti]);
+  const playlistUrl = useMemo(
+    () => youtubePlaylistUrl(conti.map((c) => attach[c.id]?.youtube)),
+    [conti, attach]
+  );
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -174,7 +185,9 @@ export default function Conti() {
         {rows.map((r, i) => {
           const used = lastUsed(r.id);
           const recentlyUsed = used && daysSince(used) <= 28;
-          const sheetCount = r.sheets?.length ?? 0;
+          const att = attach[r.id];
+          const youtube = att?.youtube;
+          const sheetCount = att?.sheets?.length ?? 0;
           return (
             <li key={r.id}>
               <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/50">
@@ -191,9 +204,9 @@ export default function Conti() {
                       <span className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-100">
                         {r.song.title}
                       </span>
-                      {!open.has(r.id) && (r.youtube || sheetCount > 0) && (
+                      {!open.has(r.id) && (youtube || sheetCount > 0) && (
                         <span className="flex shrink-0 items-center gap-1 text-slate-400 dark:text-slate-500">
-                          {r.youtube && (
+                          {youtube && (
                             <svg className="h-3.5 w-3.5 text-red-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                               <path d="M21.6 7.2a2.4 2.4 0 0 0-1.7-1.7C18.4 5.1 12 5.1 12 5.1s-6.4 0-7.9.4A2.4 2.4 0 0 0 2.4 7.2 25 25 0 0 0 2 12a25 25 0 0 0 .4 4.8 2.4 2.4 0 0 0 1.7 1.7c1.5.4 7.9.4 7.9.4s6.4 0 7.9-.4a2.4 2.4 0 0 0 1.7-1.7A25 25 0 0 0 22 12a25 25 0 0 0-.4-4.8ZM10 15V9l5 3-5 3Z" />
                             </svg>
@@ -270,13 +283,13 @@ export default function Conti() {
                 <ContiAttachPanel
                   songId={r.id}
                   songTitle={r.song.title}
-                  youtubeUrl={r.youtube}
-                  sheetIds={r.sheets ?? []}
-                  sheetTexts={r.sheetTexts ?? {}}
-                  onYoutube={(u) => setYoutube(r.id, u)}
-                  onAddSheet={(aid) => addSheet(r.id, aid)}
-                  onRemoveSheet={(aid) => removeSheet(r.id, aid)}
-                  onSheetTexts={(aid, list) => setSheetTexts(r.id, aid, list)}
+                  youtubeUrl={youtube}
+                  sheetIds={att?.sheets ?? []}
+                  sheetTexts={att?.sheetTexts ?? {}}
+                  onYoutube={(u) => setSongYoutube(r.id, u)}
+                  onAddSheet={(aid) => addSongSheet(r.id, aid)}
+                  onRemoveSheet={(aid) => removeSongSheet(r.id, aid)}
+                  onSheetTexts={(aid, list) => setSongSheetTexts(r.id, aid, list)}
                   flash={flash}
                 />
               )}
