@@ -47,19 +47,24 @@ export default function SongAttachEditor({
 
   const [busy, setBusy] = useState(false);
   const [viewer, setViewer] = useState<number | null>(null);
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
 
-  const onFiles = async (files: FileList | null) => {
-    if (!files || !files.length) return;
-    setBusy(true);
-    try {
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) continue;
-        const aid = await saveSheetFromFile(file, songTitle);
+  const onFiles = (files: FileList | null) => {
+    if (!files) return;
+    const imgs = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (imgs.length) setCropQueue((q) => [...q, ...imgs]);
+  };
+  const onCropDone = async (cropped: File | null) => {
+    if (cropped) {
+      setBusy(true);
+      try {
+        const aid = await saveSheetFromFile(cropped, songTitle);
         addSongSheet(songId, aid);
+      } finally {
+        setBusy(false);
       }
-    } finally {
-      setBusy(false);
     }
+    setCropQueue((q) => q.slice(1));
   };
 
   return (
@@ -160,6 +165,114 @@ export default function SongAttachEditor({
             }}
           />
         </label>
+      </div>
+
+      {cropQueue.length > 0 && <CropModal file={cropQueue[0]} onDone={onCropDone} />}
+    </div>
+  );
+}
+
+function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null) => void }) {
+  const [src, setSrc] = useState("");
+  const imgRef = useRef<HTMLImageElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const startRef = useRef<{ x: number; y: number } | null>(null);
+  const [rect, setRect] = useState({ x: 0.05, y: 0.05, w: 0.9, h: 0.9 });
+  const [working, setWorking] = useState(false);
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const rel = (clientX: number, clientY: number) => {
+    const b = boxRef.current!;
+    const r = b.getBoundingClientRect();
+    return {
+      x: Math.min(1, Math.max(0, (clientX - r.left) / r.width)),
+      y: Math.min(1, Math.max(0, (clientY - r.top) / r.height)),
+    };
+  };
+
+  const onDown = (e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    const p = rel(e.clientX, e.clientY);
+    startRef.current = p;
+    setRect({ x: p.x, y: p.y, w: 0, h: 0 });
+  };
+  const onMove = (e: React.PointerEvent) => {
+    if (!startRef.current) return;
+    const s = startRef.current;
+    const p = rel(e.clientX, e.clientY);
+    setRect({ x: Math.min(s.x, p.x), y: Math.min(s.y, p.y), w: Math.abs(p.x - s.x), h: Math.abs(p.y - s.y) });
+  };
+  const onUp = () => {
+    startRef.current = null;
+  };
+
+  const apply = async () => {
+    const img = imgRef.current;
+    if (!img) return onDone(null);
+    setWorking(true);
+    let { x, y, w, h } = rect;
+    if (w < 0.02 || h < 0.02) {
+      x = 0; y = 0; w = 1; h = 1; // too small → use whole image
+    }
+    const nw = img.naturalWidth;
+    const nh = img.naturalHeight;
+    const cw = Math.max(1, Math.round(w * nw));
+    const ch = Math.max(1, Math.round(h * nh));
+    const canvas = document.createElement("canvas");
+    canvas.width = cw;
+    canvas.height = ch;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, cw, ch);
+    ctx.drawImage(img, Math.round(x * nw), Math.round(y * nh), cw, ch, 0, 0, cw, ch);
+    const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.92));
+    setWorking(false);
+    onDone(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col bg-black/90 p-4">
+      <p className="mb-2 text-center text-sm text-white/80">사용할 영역을 드래그하세요</p>
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <div
+          ref={boxRef}
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          className="relative inline-block touch-none select-none"
+        >
+          {src && <img ref={imgRef} src={src} alt="악보" draggable={false} className="block max-h-[68vh] max-w-full" />}
+          <div
+            className="pointer-events-none absolute border-2 border-indigo-400 bg-indigo-400/10"
+            style={{ left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.w * 100}%`, height: `${rect.h * 100}%` }}
+          />
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-center gap-2">
+        <button
+          onClick={() => onDone(null)}
+          className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white"
+        >
+          취소
+        </button>
+        <button
+          onClick={() => setRect({ x: 0, y: 0, w: 1, h: 1 })}
+          className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white"
+        >
+          전체
+        </button>
+        <button
+          onClick={apply}
+          disabled={working}
+          className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-bold text-white disabled:opacity-60"
+        >
+          {working ? "처리 중…" : "이 영역 사용"}
+        </button>
       </div>
     </div>
   );
