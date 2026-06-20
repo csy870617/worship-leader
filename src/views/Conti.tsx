@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useSongs } from "../lib/catalog";
 import { useConti, type ContiItem } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
-import { decodeConti, youtubePlaylistUrl } from "../lib/share";
+import { decodeConti, youtubePlaylistUrl, copyText } from "../lib/share";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
 import { setSongNote, useSongAttach } from "../lib/songAttach";
 import { KeyBadge } from "../components/Badges";
@@ -178,6 +178,30 @@ export default function Conti() {
     const p = new URLSearchParams(params);
     p.delete("d");
     setParams(p, { replace: true });
+  };
+
+  // plain-text setlist (works with Web Share text/url, which PWAs allow)
+  const buildShareText = () => {
+    const lines = conti.map((c, i) => {
+      const s = songById.get(c.id);
+      if (!s) return `${i + 1}.`;
+      const key = c.key ? ` (${c.key})` : s.keys.length ? ` (${s.keys.join("/")})` : "";
+      const note = attach[c.id]?.note ? ` — ${attach[c.id]!.note}` : "";
+      return `${i + 1}. ${s.title}${key}${note}`;
+    });
+    let text = `🎵 ${active.name} (${conti.length}곡)\n${lines.join("\n")}`;
+    if (playlistUrl) text += `\n\n▶ 유튜브 재생목록: ${playlistUrl}`;
+    return text;
+  };
+  const shareText = async () => {
+    const text = buildShareText();
+    try {
+      await navigator.share({ title: active.name, text });
+    } catch (e) {
+      if ((e as { name?: string })?.name === "AbortError") return;
+      const ok = await copyText(text);
+      flash(ok ? "텍스트를 복사했어요" : "공유에 실패했어요");
+    }
   };
 
   // shared-link import banner
@@ -539,33 +563,45 @@ export default function Conti() {
         <div className="fixed inset-x-0 bottom-24 z-30 flex flex-col items-center gap-2 px-4">
           {shareErr && (
             <div className="max-w-xs rounded-lg bg-rose-600 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-white shadow">
-              공유가 차단됐어요 ({shareErr}).
+              앱에서는 PDF 공유가 막혀 있어요 ({shareErr}).
               <br />
-              홈 화면 앱 대신 <b>크롬 브라우저 탭</b>에서 열어 다시 시도하거나, <b>다운로드</b>로 받아 직접 공유하세요.
+              <b>텍스트로 공유</b>(악보 제외)하거나, <b>다운로드</b> 후 파일에서 공유하세요.
             </div>
           )}
           <div className="flex items-center gap-2">
-            <button
-              onClick={async () => {
-                const file = shareReady;
-                try {
-                  await navigator.share({ files: [file] });
-                  setShareReady(null);
-                  setShareErr(null);
-                  setToast(null);
-                } catch (e) {
-                  const name = (e as { name?: string })?.name || "오류";
-                  if (name === "AbortError") return; // user dismissed the sheet
-                  setShareErr(name);
-                }
-              }}
-              className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
-              </svg>
-              지금 공유
-            </button>
+            {shareErr ? (
+              <button
+                onClick={async () => { await shareText(); setShareReady(null); setShareErr(null); }}
+                className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                </svg>
+                텍스트로 공유
+              </button>
+            ) : (
+              <button
+                onClick={async () => {
+                  const file = shareReady;
+                  try {
+                    await navigator.share({ files: [file] });
+                    setShareReady(null);
+                    setShareErr(null);
+                    setToast(null);
+                  } catch (e) {
+                    const name = (e as { name?: string })?.name || "오류";
+                    if (name === "AbortError") return; // user dismissed the sheet
+                    setShareErr(name);
+                  }
+                }}
+                className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                </svg>
+                지금 공유
+              </button>
+            )}
             <button
               onClick={() => {
                 downloadContiFile(shareReady);
