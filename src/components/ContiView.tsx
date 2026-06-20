@@ -152,7 +152,7 @@ export default function ContiView({
       ) : (
         <div className="relative flex-1 overflow-hidden">
           <div
-            className="h-full overflow-y-auto px-4 py-6"
+            className="flex h-full justify-center px-3 py-3"
             style={{ touchAction: "pan-y" }}
             onPointerDown={(e) => {
               if (e.pointerType !== "touch") return;
@@ -170,18 +170,42 @@ export default function ContiView({
               swipeRef.current = null;
             }}
           >
-            <div className="mx-auto max-w-3xl">
+            <div className="flex h-full w-full max-w-3xl flex-col">
               {cur &&
                 (cur.kind === "info" ? (
-                  <SongBlock item={cur.item} song={cur.song} n={cur.n} attach={attach} firstSheetOnly />
+                  <>
+                    <div className="shrink-0">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xl font-extrabold text-indigo-300 dark:text-indigo-400/70">{cur.n}</span>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">{cur.song.title}</h2>
+                        {(cur.item.key || cur.song.keys.length > 0) && (
+                          <span className="text-sm font-bold text-indigo-600 dark:text-indigo-300">
+                            {cur.item.key ? cur.item.key : cur.song.keys.join(" / ")}
+                          </span>
+                        )}
+                      </div>
+                      {attach[cur.item.id]?.note && (
+                        <p className="ml-7 mt-1 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">
+                          {attach[cur.item.id]!.note}
+                        </p>
+                      )}
+                    </div>
+                    {cur.aid && (
+                      <div className="mt-3 min-h-0 flex-1">
+                        <SheetFigure key={cur.aid} aid={cur.aid} texts={attach[cur.item.id]?.sheetTexts?.[cur.aid] ?? []} fit />
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div>
-                    <div className="mb-2 flex items-baseline gap-2">
+                  <>
+                    <div className="mb-1 flex shrink-0 items-baseline gap-2">
                       <span className="text-sm font-bold text-indigo-300 dark:text-indigo-400/70">{cur.n}</span>
                       <span className="truncate text-sm font-semibold text-slate-500 dark:text-slate-400">{cur.song.title}</span>
                     </div>
-                    <SheetFigure aid={cur.aid} texts={attach[cur.item.id]?.sheetTexts?.[cur.aid] ?? []} bare />
-                  </div>
+                    <div className="min-h-0 flex-1">
+                      <SheetFigure key={cur.aid} aid={cur.aid} texts={attach[cur.item.id]?.sheetTexts?.[cur.aid] ?? []} fit />
+                    </div>
+                  </>
                 ))}
             </div>
           </div>
@@ -253,12 +277,13 @@ function SongBlock({
   );
 }
 
-function SheetFigure({ aid, texts, bare = false }: { aid: string; texts: SheetText[]; bare?: boolean }) {
+function SheetFigure({ aid, texts, fit = false }: { aid: string; texts: SheetText[]; fit?: boolean }) {
   const [url, setUrl] = useState<string | null>(null);
   const [needsSync, setNeedsSync] = useState(false);
   const [w, setW] = useState(0);
+  const [box, setBox] = useState<{ l: number; t: number; w: number; h: number } | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
-  const wrap = bare ? "relative mt-1" : "relative ml-7 mt-3";
+  const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -273,12 +298,21 @@ function SheetFigure({ aid, texts, bare = false }: { aid: string; texts: SheetTe
   }, [aid]);
 
   const measure = () => {
-    if (imgRef.current) setW(imgRef.current.clientWidth);
+    const img = imgRef.current;
+    if (!img) return;
+    if (fit && wrapRef.current) {
+      const ir = img.getBoundingClientRect();
+      const cr = wrapRef.current.getBoundingClientRect();
+      setBox({ l: ir.left - cr.left, t: ir.top - cr.top, w: ir.width, h: ir.height });
+    } else {
+      setW(img.clientWidth);
+    }
   };
   useEffect(() => {
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   const sync = async () => {
@@ -289,9 +323,47 @@ function SheetFigure({ aid, texts, bare = false }: { aid: string; texts: SheetTe
     }
   };
 
+  const overlay = (width: number) =>
+    texts.map((t, i) => (
+      <span
+        key={i}
+        style={{
+          position: "absolute",
+          left: `${t.x * 100}%`,
+          top: `${t.y * 100}%`,
+          transform: "translate(-50%, -50%)",
+          color: t.color,
+          fontSize: width ? t.size * width : 16,
+          fontWeight: 700,
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {t.text}
+      </span>
+    ));
+
+  if (url && fit) {
+    return (
+      <div ref={wrapRef} className="relative flex h-full w-full items-center justify-center">
+        <img
+          ref={imgRef}
+          src={url}
+          alt="악보"
+          onLoad={measure}
+          className="max-h-full max-w-full rounded-lg border border-slate-200 dark:border-slate-700"
+        />
+        {box && (
+          <div className="pointer-events-none absolute" style={{ left: box.l, top: box.t, width: box.w, height: box.h }}>
+            {overlay(box.w)}
+          </div>
+        )}
+      </div>
+    );
+  }
   if (url) {
     return (
-      <div className={wrap}>
+      <div className="relative ml-7 mt-3">
         <img
           ref={imgRef}
           src={url}
@@ -299,36 +371,25 @@ function SheetFigure({ aid, texts, bare = false }: { aid: string; texts: SheetTe
           onLoad={measure}
           className="block w-full rounded-lg border border-slate-200 dark:border-slate-700"
         />
-        {texts.map((t, i) => (
-          <span
-            key={i}
-            style={{
-              position: "absolute",
-              left: `${t.x * 100}%`,
-              top: `${t.y * 100}%`,
-              transform: "translate(-50%, -50%)",
-              color: t.color,
-              fontSize: w ? t.size * w : 16,
-              fontWeight: 700,
-              lineHeight: 1,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t.text}
-          </span>
-        ))}
+        {overlay(w)}
       </div>
     );
   }
   if (needsSync) {
     return (
-      <button
-        onClick={sync}
-        className={(bare ? "mt-1" : "ml-7 mt-3") + " rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-indigo-600 dark:bg-slate-800 dark:text-indigo-400"}
-      >
-        악보 불러오기
-      </button>
+      <div className={fit ? "flex h-full items-center justify-center" : ""}>
+        <button
+          onClick={sync}
+          className={(fit ? "" : "ml-7 mt-3 ") + "rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-indigo-600 dark:bg-slate-800 dark:text-indigo-400"}
+        >
+          악보 불러오기
+        </button>
+      </div>
     );
   }
-  return <div className={(bare ? "mt-1" : "ml-7 mt-3") + " h-24 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800"} />;
+  return (
+    <div
+      className={(fit ? "h-full" : "ml-7 mt-3 h-24") + " animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800"}
+    />
+  );
 }
