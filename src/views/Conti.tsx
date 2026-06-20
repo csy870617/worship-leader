@@ -471,15 +471,27 @@ export default function Conti() {
         <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center px-4">
           <button
             onClick={async () => {
-              const r = await shareContiFile(shareReady.file, active.name, shareReady.text);
-              if (r === "shared") {
-                setShareReady(null);
-                setToast(null);
-              } else if (r === "unsupported") {
-                downloadContiFile(shareReady.file);
-                setShareReady(null);
-                flash("이 브라우저는 공유를 지원하지 않아 다운로드했어요");
+              const { file, text } = shareReady;
+              try {
+                if (navigator.canShare?.({ files: [file] })) {
+                  const data: ShareData = { files: [file], title: active.name };
+                  if (text && navigator.canShare?.({ ...data, text })) data.text = text;
+                  await navigator.share(data);
+                  setShareReady(null);
+                  setToast(null);
+                  return;
+                }
+              } catch (e) {
+                if (e instanceof DOMException && e.name === "AbortError") {
+                  setShareReady(null);
+                  setToast(null);
+                  return;
+                }
               }
+              // unsupported or blocked → at least save the file
+              downloadContiFile(file);
+              setShareReady(null);
+              flash("공유가 안 돼 다운로드했어요");
             }}
             className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
           >
