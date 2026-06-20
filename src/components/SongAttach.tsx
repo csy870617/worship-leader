@@ -459,8 +459,10 @@ function SheetLightbox({
     return () => {
       alive = false;
     };
+    // depend on the current sheet id (not the array identity) so committing a
+    // text edit doesn't reload the image and steal the in-flight tap
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ids, index]);
+  }, [currentId]);
 
   const measure = () => {
     const el = boxRef.current;
