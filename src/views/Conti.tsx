@@ -559,7 +559,7 @@ export default function Conti() {
               onClick={() => { markUsed(conti.map((c) => c.id)); flash("오늘 사용으로 기록됐어요"); }}
               className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
             >
-              콘티 사용
+              사용 완료
             </button>
             <button
               onClick={() => setConfirmClear(true)}
