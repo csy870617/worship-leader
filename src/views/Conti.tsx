@@ -32,6 +32,7 @@ export default function Conti() {
   const [pdfBusy, setPdfBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [shareReady, setShareReady] = useState<File | null>(null);
+  const [shareErr, setShareErr] = useState<string | null>(null);
 
   // ---- drag-to-reorder + long-press/right-click delete ----
   const [dragId, setDragId] = useState<string | null>(null);
@@ -488,6 +489,7 @@ export default function Conti() {
               disabled={pdfBusy}
               onClick={async () => {
                 setShareReady(null);
+                setShareErr(null);
                 setPdfBusy(true);
                 flash("PDF를 만드는 중…");
                 let built;
@@ -534,34 +536,45 @@ export default function Conti() {
       )}
 
       {shareReady && (
-        <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center px-4">
-          <button
-            onClick={async () => {
-              const file = shareReady;
-              try {
-                // share the file only, directly in this fresh-gesture handler
-                await navigator.share({ files: [file] });
-                setShareReady(null);
-                setToast(null);
-              } catch (e) {
-                const name = (e as { name?: string })?.name || "오류";
-                if (name === "AbortError") {
+        <div className="fixed inset-x-0 bottom-24 z-30 flex flex-col items-center gap-2 px-4">
+          {shareErr && (
+            <div className="max-w-full rounded-lg bg-rose-600 px-3 py-2 text-center text-xs font-semibold text-white shadow">
+              공유 실패: {shareErr}
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={async () => {
+                const file = shareReady;
+                try {
+                  await navigator.share({ files: [file] });
                   setShareReady(null);
+                  setShareErr(null);
                   setToast(null);
-                  return;
+                } catch (e) {
+                  const name = (e as { name?: string })?.name || "오류";
+                  if (name === "AbortError") return; // user dismissed the sheet
+                  setShareErr(name);
                 }
-                downloadContiFile(file);
+              }}
+              className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+              </svg>
+              지금 공유
+            </button>
+            <button
+              onClick={() => {
+                downloadContiFile(shareReady);
                 setShareReady(null);
-                flash(`공유 실패(${name}) · 다운로드함`);
-              }
-            }}
-            className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
-            </svg>
-            지금 공유
-          </button>
+                setShareErr(null);
+              }}
+              className="rounded-full bg-slate-200 px-4 py-3 text-sm font-bold text-slate-700 active:bg-slate-300 dark:bg-slate-700 dark:text-slate-200"
+            >
+              다운로드
+            </button>
+          </div>
         </div>
       )}
 
