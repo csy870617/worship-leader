@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetText } from "../lib/useConti";
 import { useSongAttach } from "../lib/songAttach";
@@ -28,17 +28,24 @@ export default function ContiView({
   const [page, setPage] = useState(0);
   const swipeRef = useRef<{ x: number; y: number } | null>(null);
 
-  const rows = items
-    .map((it) => ({ item: it, song: songById.get(it.id) }))
-    .filter((r): r is { item: ContiItem; song: Song } => Boolean(r.song));
+  const rows = useMemo(
+    () =>
+      items
+        .map((it) => ({ item: it, song: songById.get(it.id) }))
+        .filter((r): r is { item: ContiItem; song: Song } => Boolean(r.song)),
+    [items, songById]
+  );
 
   // flatten to PDF-like pages: info(+first sheet), then one page per extra sheet
-  const pages: Page[] = [];
-  rows.forEach(({ item, song }, i) => {
-    const sheets = attach[item.id]?.sheets ?? [];
-    pages.push({ kind: "info", item, song, aid: sheets[0], n: i + 1 });
-    for (let k = 1; k < sheets.length; k++) pages.push({ kind: "sheet", item, song, aid: sheets[k], n: i + 1 });
-  });
+  const pages = useMemo(() => {
+    const p: Page[] = [];
+    rows.forEach(({ item, song }, i) => {
+      const sheets = attach[item.id]?.sheets ?? [];
+      p.push({ kind: "info", item, song, aid: sheets[0], n: i + 1 });
+      for (let k = 1; k < sheets.length; k++) p.push({ kind: "sheet", item, song, aid: sheets[k], n: i + 1 });
+    });
+    return p;
+  }, [rows, attach]);
   const total = pages.length;
 
   // ---- close on mobile back / Esc ----
@@ -310,8 +317,21 @@ function SheetFigure({ aid, texts, fit = false }: { aid: string; texts: SheetTex
   };
   useEffect(() => {
     measure();
+    // re-measure after layout settles (flex / fold / address-bar changes)
+    const raf = requestAnimationFrame(measure);
+    let ro: ResizeObserver | undefined;
+    if (fit && wrapRef.current && "ResizeObserver" in window) {
+      ro = new ResizeObserver(() => measure());
+      ro.observe(wrapRef.current);
+    }
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
@@ -351,7 +371,7 @@ function SheetFigure({ aid, texts, fit = false }: { aid: string; texts: SheetTex
           src={url}
           alt="악보"
           onLoad={measure}
-          className="max-h-full max-w-full rounded-lg border border-slate-200 dark:border-slate-700"
+          className="block max-h-full max-w-full rounded-lg border border-slate-200 dark:border-slate-700"
         />
         {box && (
           <div className="pointer-events-none absolute" style={{ left: box.l, top: box.t, width: box.w, height: box.h }}>

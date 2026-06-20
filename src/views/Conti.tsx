@@ -202,7 +202,7 @@ export default function Conti() {
     } catch (e) {
       if ((e as { name?: string })?.name === "AbortError") return;
       const ok = await copyText(text);
-      flash(ok ? "텍스트를 복사했어요" : "공유에 실패했어요");
+      flash(ok ? "공유 대신 텍스트를 복사했어요" : "공유에 실패했어요");
     }
   };
 
