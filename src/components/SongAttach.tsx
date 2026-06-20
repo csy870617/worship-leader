@@ -144,9 +144,11 @@ export default function SongAttachEditor({
             onClose={() => setViewer(null)}
           />
         )}
-        <label
+        {/* the real <input> is overlaid (opacity 0) so the tap lands on it
+            directly — the most reliable way to open the gallery picker */}
+        <div
           className={
-            "inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300 " +
+            "relative inline-flex items-center gap-1.5 overflow-hidden rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300 " +
             (busy ? "pointer-events-none opacity-60" : "")
           }
         >
@@ -154,27 +156,18 @@ export default function SongAttachEditor({
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           {busy ? "추가 중…" : "악보 추가"}
-          {/* sr-only (not display:none) so Android opens the photo/gallery picker */}
           <input
             type="file"
             accept="image/*"
             multiple
+            aria-label="악보 사진 선택"
             onChange={(e) => {
               onFiles(e.target.files);
               e.target.value = "";
             }}
-            style={{
-              position: "absolute",
-              width: 1,
-              height: 1,
-              padding: 0,
-              margin: -1,
-              overflow: "hidden",
-              clip: "rect(0 0 0 0)",
-              border: 0,
-            }}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
-        </label>
+        </div>
       </div>
 
       {cropQueue.length > 0 && <CropModal file={cropQueue[0]} onDone={onCropDone} />}
