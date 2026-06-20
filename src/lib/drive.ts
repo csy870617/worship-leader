@@ -149,18 +149,26 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-export async function uploadSheet(dataUrl: string, name: string): Promise<string> {
+async function uploadToFolder(dataUrl: string, name: string, folder: string): Promise<Response> {
   const t = await getToken(true);
-  const folder = await ensureFolder();
   const blob = dataUrlToBlob(dataUrl);
   const metadata = { name, parents: [folder] };
   const form = new FormData();
   form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
   form.append("file", blob);
-  const r = await fetch(
+  return fetch(
     "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",
     { method: "POST", headers: { Authorization: `Bearer ${t}` }, body: form }
   );
+}
+
+export async function uploadSheet(dataUrl: string, name: string): Promise<string> {
+  let r = await uploadToFolder(dataUrl, name, await ensureFolder());
+  if (!r.ok) {
+    // the cached folder may have been removed/trashed — recreate and retry once
+    localStorage.removeItem(folderKey());
+    r = await uploadToFolder(dataUrl, name, await ensureFolder());
+  }
   if (!r.ok) throw new Error("드라이브 업로드 실패");
   return (await r.json()).id as string;
 }

@@ -46,6 +46,7 @@ export default function SongAttachEditor({
   const sheetTexts = a?.sheetTexts ?? {};
 
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
   const [viewer, setViewer] = useState<number | null>(null);
   const [cropQueue, setCropQueue] = useState<File[]>([]);
 
@@ -55,11 +56,15 @@ export default function SongAttachEditor({
     if (imgs.length) setCropQueue((q) => [...q, ...imgs]);
   };
   const onCropDone = async (cropped: File | null) => {
+    // always advance the queue, even if a save fails, so the crop view can't get stuck
     if (cropped) {
       setBusy(true);
+      setErr(null);
       try {
         const aid = await saveSheetFromFile(cropped, songTitle);
         addSongSheet(songId, aid);
+      } catch {
+        setErr("악보 저장에 실패했어요");
       } finally {
         setBusy(false);
       }
@@ -94,7 +99,7 @@ export default function SongAttachEditor({
             type="url"
             inputMode="url"
             defaultValue={youtubeUrl ?? ""}
-            key={youtubeUrl ?? ""}
+            key={songId}
             onBlur={(e) => {
               const v = e.target.value.trim();
               if (v !== (youtubeUrl ?? "")) setSongYoutube(songId, v || null);
@@ -168,6 +173,7 @@ export default function SongAttachEditor({
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </div>
+        {err && <p className="mt-1 text-[11px] font-medium text-rose-500">{err}</p>}
       </div>
 
       {cropQueue.length > 0 && <CropModal file={cropQueue[0]} onDone={onCropDone} />}
@@ -188,6 +194,32 @@ function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null
     setSrc(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+
+  // mobile back button cancels the crop instead of leaving the page
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+  const closedRef = useRef(false);
+  const pushedRef = useRef(false);
+  const finish = (result: File | null) => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    onDoneRef.current(result);
+    if (pushedRef.current) {
+      pushedRef.current = false;
+      window.history.back();
+    }
+  };
+  useEffect(() => {
+    window.history.pushState({ wlCrop: true }, "");
+    pushedRef.current = true;
+    const onPop = () => {
+      pushedRef.current = false;
+      finish(null);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const rel = (clientX: number, clientY: number) => {
     const b = boxRef.current!;
@@ -216,7 +248,7 @@ function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null
 
   const apply = async () => {
     const img = imgRef.current;
-    if (!img) return onDone(null);
+    if (!img || !img.naturalWidth) return finish(null);
     setWorking(true);
     let { x, y, w, h } = rect;
     if (w < 0.02 || h < 0.02) {
@@ -235,7 +267,7 @@ function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null
     ctx.drawImage(img, Math.round(x * nw), Math.round(y * nh), cw, ch, 0, 0, cw, ch);
     const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.92));
     setWorking(false);
-    onDone(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null);
+    finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null);
   };
 
   return (
@@ -258,7 +290,7 @@ function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null
       </div>
       <div className="mt-3 flex items-center justify-center gap-2">
         <button
-          onClick={() => onDone(null)}
+          onClick={() => finish(null)}
           className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white"
         >
           취소

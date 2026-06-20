@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSongs } from "../lib/catalog";
-import { useConti } from "../lib/useConti";
+import { useConti, type ContiItem } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl } from "../lib/share";
 import { buildContiPdf, downloadContiFile, shareContiFile } from "../lib/contiPdf";
@@ -32,14 +32,29 @@ export default function Conti() {
 
   // ---- drag-to-reorder + long-press/right-click delete ----
   const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOrder, setDragOrder] = useState<ContiItem[] | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const dragIdRef = useRef<string | null>(null);
+  const dragOrderRef = useRef<ContiItem[] | null>(null);
   const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
 
   // remember the focused memo input so preset chips can insert at its cursor
   const memoElRef = useRef<HTMLInputElement | null>(null);
   const memoSongRef = useRef<string | null>(null);
+  const pendingSelRef = useRef<{ el: HTMLInputElement; pos: number } | null>(null);
+  // restore the caret after the controlled memo value has updated
+  useEffect(() => {
+    const p = pendingSelRef.current;
+    if (!p) return;
+    pendingSelRef.current = null;
+    p.el.focus();
+    try {
+      p.el.setSelectionRange(p.pos, p.pos);
+    } catch {
+      /* ignore */
+    }
+  });
   const insertPreset = (text: string) => {
     const el = memoElRef.current;
     const songId = memoSongRef.current;
@@ -49,30 +64,13 @@ export default function Conti() {
     }
     const start = el.selectionStart ?? el.value.length;
     const end = el.selectionEnd ?? start;
-    const cur = el.value;
-    const next = cur.slice(0, start) + text + cur.slice(end);
+    const next = el.value.slice(0, start) + text + el.value.slice(end);
+    pendingSelRef.current = { el, pos: start + text.length };
     setSongNote(songId, next);
-    const pos = start + text.length;
-    requestAnimationFrame(() => {
-      el.focus();
-      try {
-        el.setSelectionRange(pos, pos);
-      } catch {
-        /* ignore */
-      }
-    });
   };
 
   useEffect(() => () => window.removeEventListener("touchmove", preventScroll), []);
 
-  const reorderTo = (id: string, to: number) => {
-    const items = conti.slice();
-    const from = items.findIndex((it) => it.id === id);
-    if (from < 0 || to < 0 || to >= items.length || from === to) return;
-    const [it] = items.splice(from, 1);
-    items.splice(to, 0, it);
-    replace(items);
-  };
   const indexFromY = (y: number) => {
     const list = listRef.current;
     if (!list) return -1;
@@ -89,15 +87,23 @@ export default function Conti() {
       lpTimer.current = null;
     }
   };
+  // preview the reorder locally during the drag, commit once on drop
   const beginDrag = (id: string) => {
     dragIdRef.current = id;
+    const snap = conti.slice();
+    dragOrderRef.current = snap;
     setDragId(id);
+    setDragOrder(snap);
     window.addEventListener("touchmove", preventScroll, { passive: false });
   };
   const endDrag = () => {
+    const order = dragOrderRef.current;
     dragIdRef.current = null;
+    dragOrderRef.current = null;
     setDragId(null);
+    setDragOrder(null);
     window.removeEventListener("touchmove", preventScroll);
+    if (order && order.some((it, i) => it.id !== conti[i]?.id)) replace(order);
   };
   // drag handle (grip) — starts the reorder immediately, works on touch
   const onHandleDown = (e: React.PointerEvent, id: string) => {
@@ -108,9 +114,17 @@ export default function Conti() {
     beginDrag(id);
   };
   const onHandleMove = (e: React.PointerEvent) => {
-    if (!dragIdRef.current) return;
+    const id = dragIdRef.current;
+    const order = dragOrderRef.current;
+    if (!id || !order) return;
     const to = indexFromY(e.clientY);
-    if (to >= 0) reorderTo(dragIdRef.current, to);
+    const from = order.findIndex((it) => it.id === id);
+    if (to < 0 || from < 0 || to === from) return;
+    const next = order.slice();
+    const [it] = next.splice(from, 1);
+    next.splice(to, 0, it);
+    dragOrderRef.current = next;
+    setDragOrder(next);
   };
   const onHandleUp = (e: React.PointerEvent) => {
     (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
@@ -135,9 +149,10 @@ export default function Conti() {
   const shared = params.get("d");
   const sharedItems = useMemo(() => (shared ? decodeConti(shared) : null), [shared]);
 
+  const displayItems = dragOrder ?? conti;
   const rows = useMemo(
-    () => conti.map((it) => ({ ...it, song: songById.get(it.id)! })).filter((r) => r.song),
-    [conti]
+    () => displayItems.map((it) => ({ ...it, song: songById.get(it.id)! })).filter((r) => r.song),
+    [displayItems, songById]
   );
 
   const playlistUrl = useMemo(
@@ -288,7 +303,7 @@ export default function Conti() {
                 onContextMenu={(e) => {
                   e.preventDefault();
                   if (dragIdRef.current) return; // mid-drag long-press, not a delete
-                  if ((e.target as HTMLElement).closest("[data-drag-handle]")) return;
+                  if ((e.target as HTMLElement).closest("button, input, textarea, a, [data-drag-handle]")) return;
                   setConfirmRemove(r.id);
                 }}
                 className={
