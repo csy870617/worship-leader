@@ -453,7 +453,7 @@ export default function Conti() {
                 {row.map((p) => (
                   <button
                     key={p}
-                    onPointerDown={(e) => { e.preventDefault(); insertPreset(p); }}
+                    onPointerDown={(e) => { e.preventDefault(); insertPreset(`${p} - `); }}
                     className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                   >
                     {p}
