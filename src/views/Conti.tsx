@@ -285,7 +285,12 @@ export default function Conti() {
                 onPointerMove={onRowPointerEnd}
                 onPointerUp={onRowPointerEnd}
                 onPointerCancel={onRowPointerEnd}
-                onContextMenu={(e) => { e.preventDefault(); setConfirmRemove(r.id); }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  if (dragIdRef.current) return; // mid-drag long-press, not a delete
+                  if ((e.target as HTMLElement).closest("[data-drag-handle]")) return;
+                  setConfirmRemove(r.id);
+                }}
                 className={
                   "flex select-none items-center gap-2 rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/50 " +
                   (dragId === r.id ? "opacity-70 ring-2 ring-indigo-400 shadow-lg" : "")
@@ -297,6 +302,7 @@ export default function Conti() {
                   onPointerMove={onHandleMove}
                   onPointerUp={onHandleUp}
                   onPointerCancel={onHandleUp}
+                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
                   style={{ touchAction: "none" }}
                   className="-my-2 flex w-8 shrink-0 cursor-grab touch-none flex-col items-center justify-center self-stretch text-slate-300 active:cursor-grabbing dark:text-slate-600"
                   title="끌어서 순서 변경"
