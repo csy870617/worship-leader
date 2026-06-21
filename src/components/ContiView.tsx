@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetText } from "../lib/useConti";
-import { useSongAttach } from "../lib/songAttach";
+import { removeSongSheet, replaceSongSheet, useSongAttach } from "../lib/songAttach";
 import { youtubePlaylistUrl } from "../lib/share";
-import { fetchSheetInteractive, loadSheet } from "../lib/attachments";
+import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
+import { CropModal } from "./SongAttach";
 
 type Page =
   | { kind: "info"; item: ContiItem; song: Song; aid?: string; n: number }
@@ -27,6 +28,37 @@ export default function ContiView({
   const [mode, setMode] = useState<"scroll" | "page">("page");
   const [page, setPage] = useState(0);
   const swipeRef = useRef<{ x: number; y: number } | null>(null);
+  const [sheetMenu, setSheetMenu] = useState<{ songId: string; aid: string } | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const cropTarget = useRef<{ songId: string; aid: string } | null>(null);
+
+  const startCrop = async (songId: string, aid: string) => {
+    setSheetMenu(null);
+    const dataUrl = (await loadSheet(aid)) ?? (await fetchSheetInteractive(aid));
+    if (!dataUrl) return;
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      cropTarget.current = { songId, aid };
+      setCropFile(new File([blob], "sheet.jpg", { type: blob.type || "image/jpeg" }));
+    } catch {
+      /* ignore */
+    }
+  };
+  const onCropDone = async (newFile: File | null) => {
+    const t = cropTarget.current;
+    cropTarget.current = null;
+    setCropFile(null);
+    if (newFile && t) {
+      const newAid = await saveSheetFromFile(newFile, songById.get(t.songId)?.title ?? "");
+      replaceSongSheet(t.songId, t.aid, newAid);
+      removeSheetEverywhere(t.aid);
+    }
+  };
+  const deleteSheet = (songId: string, aid: string) => {
+    setSheetMenu(null);
+    removeSongSheet(songId, aid);
+    removeSheetEverywhere(aid);
+  };
 
   const rows = useMemo(
     () =>
@@ -152,7 +184,14 @@ export default function ContiView({
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 pb-24">
             {rows.map(({ item, song }, i) => (
-              <SongBlock key={item.id} item={item} song={song} n={i + 1} attach={attach} />
+              <SongBlock
+                key={item.id}
+                item={item}
+                song={song}
+                n={i + 1}
+                attach={attach}
+                onMenu={(aid) => setSheetMenu({ songId: item.id, aid })}
+              />
             ))}
           </div>
         </div>
@@ -199,7 +238,13 @@ export default function ContiView({
                     </div>
                     {cur.aid && (
                       <div className="mt-3 min-h-0 flex-1">
-                        <SheetFigure key={cur.aid} aid={cur.aid} texts={attach[cur.item.id]?.sheetTexts?.[cur.aid] ?? []} fit />
+                        <SheetFigure
+                          key={cur.aid}
+                          aid={cur.aid}
+                          texts={attach[cur.item.id]?.sheetTexts?.[cur.aid] ?? []}
+                          fit
+                          onMenu={() => setSheetMenu({ songId: cur.item.id, aid: cur.aid! })}
+                        />
                       </div>
                     )}
                   </>
@@ -210,7 +255,13 @@ export default function ContiView({
                       <span className="truncate text-sm font-semibold text-slate-500 dark:text-slate-400">{cur.song.title}</span>
                     </div>
                     <div className="min-h-0 flex-1">
-                      <SheetFigure key={cur.aid} aid={cur.aid} texts={attach[cur.item.id]?.sheetTexts?.[cur.aid] ?? []} fit />
+                      <SheetFigure
+                        key={cur.aid}
+                        aid={cur.aid}
+                        texts={attach[cur.item.id]?.sheetTexts?.[cur.aid] ?? []}
+                        fit
+                        onMenu={() => setSheetMenu({ songId: cur.item.id, aid: cur.aid })}
+                      />
                     </div>
                   </>
                 ))}
@@ -246,6 +297,39 @@ export default function ContiView({
           )}
         </div>
       )}
+
+      {sheetMenu && (
+        <div
+          className="fixed inset-0 z-[55] flex items-end justify-center bg-black/40 p-4"
+          onClick={() => setSheetMenu(null)}
+        >
+          <div
+            className="w-full max-w-xs space-y-1.5 rounded-2xl bg-white p-2 shadow-xl dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => startCrop(sheetMenu.songId, sheetMenu.aid)}
+              className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
+            >
+              자르기
+            </button>
+            <button
+              onClick={() => deleteSheet(sheetMenu.songId, sheetMenu.aid)}
+              className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
+            >
+              삭제
+            </button>
+            <button
+              onClick={() => setSheetMenu(null)}
+              className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-500 active:bg-slate-100 dark:text-slate-400 dark:active:bg-slate-700"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
+      {cropFile && <CropModal file={cropFile} onDone={onCropDone} />}
     </div>
   );
 }
@@ -256,12 +340,14 @@ function SongBlock({
   n,
   attach,
   firstSheetOnly = false,
+  onMenu,
 }: {
   item: ContiItem;
   song: Song;
   n: number;
   attach: ReturnType<typeof useSongAttach>;
   firstSheetOnly?: boolean;
+  onMenu?: (aid: string) => void;
 }) {
   const a = attach[item.id];
   const keys = item.key ? item.key : song.keys.join(" / ");
@@ -278,13 +364,28 @@ function SongBlock({
         <p className="ml-7 mt-1 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">{a.note}</p>
       )}
       {shown.map((aid) => (
-        <SheetFigure key={aid} aid={aid} texts={a?.sheetTexts?.[aid] ?? []} />
+        <SheetFigure
+          key={aid}
+          aid={aid}
+          texts={a?.sheetTexts?.[aid] ?? []}
+          onMenu={onMenu ? () => onMenu(aid) : undefined}
+        />
       ))}
     </section>
   );
 }
 
-function SheetFigure({ aid, texts, fit = false }: { aid: string; texts: SheetText[]; fit?: boolean }) {
+function SheetFigure({
+  aid,
+  texts,
+  fit = false,
+  onMenu,
+}: {
+  aid: string;
+  texts: SheetText[];
+  fit?: boolean;
+  onMenu?: () => void;
+}) {
   const [url, setUrl] = useState<string | null>(null);
   const [needsSync, setNeedsSync] = useState(false);
   const [w, setW] = useState(0);
@@ -371,7 +472,8 @@ function SheetFigure({ aid, texts, fit = false }: { aid: string; texts: SheetTex
           src={url}
           alt="악보"
           onLoad={measure}
-          className="block max-h-full max-w-full rounded-lg border border-slate-200 dark:border-slate-700"
+          onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(); } : undefined}
+          className="block max-h-full max-w-full rounded-lg"
         />
         {box && (
           <div className="pointer-events-none absolute" style={{ left: box.l, top: box.t, width: box.w, height: box.h }}>
@@ -389,7 +491,8 @@ function SheetFigure({ aid, texts, fit = false }: { aid: string; texts: SheetTex
           src={url}
           alt="악보"
           onLoad={measure}
-          className="block w-full rounded-lg border border-slate-200 dark:border-slate-700"
+          onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(); } : undefined}
+          className="block w-full rounded-lg"
         />
         {overlay(w)}
       </div>

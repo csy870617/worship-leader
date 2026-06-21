@@ -114,6 +114,14 @@ export function removeSongSheet(id: string, aid: string) {
     return { ...a, sheets, sheetTexts: st };
   });
 }
+export function replaceSongSheet(id: string, oldAid: string, newAid: string) {
+  update(id, (a) => {
+    const sheets = (a.sheets ?? []).map((x) => (x === oldAid ? newAid : x));
+    const st = { ...(a.sheetTexts ?? {}) };
+    delete st[oldAid]; // annotations don't map to the re-cropped image
+    return { ...a, sheets, sheetTexts: st };
+  });
+}
 export function setSongSheetTexts(id: string, aid: string, list: SheetText[]) {
   update(id, (a) => {
     const st = { ...(a.sheetTexts ?? {}) };

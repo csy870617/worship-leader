@@ -181,13 +181,14 @@ export default function SongAttachEditor({
   );
 }
 
-function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null) => void }) {
+export function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null) => void }) {
   const [src, setSrc] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
-  const startRef = useRef<{ x: number; y: number } | null>(null);
-  const [rect, setRect] = useState({ x: 0.05, y: 0.05, w: 0.9, h: 0.9 });
+  const [rect, setRect] = useState({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+  const dragRef = useRef<{ mode: string; sx: number; sy: number; sr: typeof rect } | null>(null);
   const [working, setWorking] = useState(false);
+  const MIN = 0.08;
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -221,39 +222,49 @@ function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
   const rel = (clientX: number, clientY: number) => {
-    const b = boxRef.current!;
-    const r = b.getBoundingClientRect();
-    return {
-      x: Math.min(1, Math.max(0, (clientX - r.left) / r.width)),
-      y: Math.min(1, Math.max(0, (clientY - r.top) / r.height)),
-    };
+    const r = boxRef.current!.getBoundingClientRect();
+    return { x: clamp((clientX - r.left) / r.width), y: clamp((clientY - r.top) / r.height) };
   };
 
-  const onDown = (e: React.PointerEvent) => {
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+  const startDrag = (e: React.PointerEvent, mode: string) => {
+    e.stopPropagation();
+    boxRef.current?.setPointerCapture?.(e.pointerId);
     const p = rel(e.clientX, e.clientY);
-    startRef.current = p;
-    setRect({ x: p.x, y: p.y, w: 0, h: 0 });
+    dragRef.current = { mode, sx: p.x, sy: p.y, sr: rect };
   };
   const onMove = (e: React.PointerEvent) => {
-    if (!startRef.current) return;
-    const s = startRef.current;
+    const d = dragRef.current;
+    if (!d) return;
     const p = rel(e.clientX, e.clientY);
-    setRect({ x: Math.min(s.x, p.x), y: Math.min(s.y, p.y), w: Math.abs(p.x - s.x), h: Math.abs(p.y - s.y) });
+    if (d.mode === "move") {
+      setRect({
+        ...d.sr,
+        x: clamp(d.sr.x + (p.x - d.sx), 0, 1 - d.sr.w),
+        y: clamp(d.sr.y + (p.y - d.sy), 0, 1 - d.sr.h),
+      });
+    } else {
+      let left = d.sr.x;
+      let top = d.sr.y;
+      let right = d.sr.x + d.sr.w;
+      let bottom = d.sr.y + d.sr.h;
+      if (d.mode.includes("w")) left = Math.min(p.x, right - MIN);
+      if (d.mode.includes("e")) right = Math.max(p.x, left + MIN);
+      if (d.mode.includes("n")) top = Math.min(p.y, bottom - MIN);
+      if (d.mode.includes("s")) bottom = Math.max(p.y, top + MIN);
+      setRect({ x: left, y: top, w: right - left, h: bottom - top });
+    }
   };
   const onUp = () => {
-    startRef.current = null;
+    dragRef.current = null;
   };
 
   const apply = async () => {
     const img = imgRef.current;
     if (!img || !img.naturalWidth) return finish(null);
     setWorking(true);
-    let { x, y, w, h } = rect;
-    if (w < 0.02 || h < 0.02) {
-      x = 0; y = 0; w = 1; h = 1; // too small → use whole image
-    }
+    const { x, y, w, h } = rect;
     const nw = img.naturalWidth;
     const nh = img.naturalHeight;
     const cw = Math.max(1, Math.round(w * nw));
@@ -270,22 +281,45 @@ function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null
     finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null);
   };
 
+  const corner = (c: string): React.CSSProperties => ({
+    position: "absolute",
+    ...(c.includes("n") ? { top: -11 } : { bottom: -11 }),
+    ...(c.includes("w") ? { left: -11 } : { right: -11 }),
+    cursor: `${c}-resize`,
+  });
+
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-black/90 p-4">
-      <p className="mb-2 text-center text-sm text-white/80">사용할 영역을 드래그하세요</p>
+      <p className="mb-2 text-center text-sm text-white/80">프레임을 옮기고 모서리로 크기를 맞추세요</p>
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <div
           ref={boxRef}
-          onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
+          onPointerCancel={onUp}
           className="relative inline-block touch-none select-none"
         >
           {src && <img ref={imgRef} src={src} alt="악보" draggable={false} className="block max-h-[68vh] max-w-full" />}
           <div
-            className="pointer-events-none absolute border-2 border-indigo-400 bg-indigo-400/10"
-            style={{ left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.w * 100}%`, height: `${rect.h * 100}%` }}
-          />
+            onPointerDown={(e) => startDrag(e, "move")}
+            className="absolute cursor-move border-2 border-white"
+            style={{
+              left: `${rect.x * 100}%`,
+              top: `${rect.y * 100}%`,
+              width: `${rect.w * 100}%`,
+              height: `${rect.h * 100}%`,
+              boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
+            }}
+          >
+            {["nw", "ne", "sw", "se"].map((c) => (
+              <div
+                key={c}
+                onPointerDown={(e) => startDrag(e, c)}
+                style={corner(c)}
+                className="h-6 w-6 rounded-full border-2 border-white bg-indigo-500"
+              />
+            ))}
+          </div>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-center gap-2">
@@ -353,7 +387,7 @@ function SheetThumb({
   };
 
   return (
-    <div className="relative h-20 w-16 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+    <div className="relative h-20 w-16 overflow-hidden rounded-lg bg-slate-50 dark:bg-slate-800">
       {state === "ready" && url ? (
         <button onClick={onOpen} className="block h-full w-full" title="크게 보기">
           <img src={url} alt="악보" className="h-full w-full object-cover" />
