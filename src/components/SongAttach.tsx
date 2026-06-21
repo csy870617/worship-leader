@@ -208,7 +208,7 @@ export default function SongAttachEditor({
       </div>
 
       {cropQueue.length > 0 && <CropModal file={cropQueue[0]} onDone={onCropDone} />}
-      {recrop && <CropModal file={recrop.file} onDone={onRecropDone} />}
+      {recrop && <CropModal file={recrop.file} onDone={onRecropDone} manageHistory={false} />}
 
       {sheetMenu && (
         <div
@@ -244,7 +244,18 @@ export default function SongAttachEditor({
   );
 }
 
-export function CropModal({ file, onDone }: { file: File; onDone: (cropped: File | null) => void }) {
+export function CropModal({
+  file,
+  onDone,
+  manageHistory = true,
+}: {
+  file: File;
+  onDone: (cropped: File | null) => void;
+  // When nested under another history-managing overlay (e.g. ContiView, SheetLightbox),
+  // pass false so the crop modal doesn't push/pop the history stack — otherwise its
+  // history.back() would also close the parent overlay.
+  manageHistory?: boolean;
+}) {
   const [src, setSrc] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -274,6 +285,7 @@ export function CropModal({ file, onDone }: { file: File; onDone: (cropped: File
     }
   };
   useEffect(() => {
+    if (!manageHistory) return;
     window.history.pushState({ wlCrop: true }, "");
     pushedRef.current = true;
     const onPop = () => {
@@ -283,7 +295,7 @@ export function CropModal({ file, onDone }: { file: File; onDone: (cropped: File
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [manageHistory]);
 
   const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
   const rel = (clientX: number, clientY: number) => {

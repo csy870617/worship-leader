@@ -329,7 +329,7 @@ export default function ContiView({
         </div>
       )}
 
-      {cropFile && <CropModal file={cropFile} onDone={onCropDone} />}
+      {cropFile && <CropModal file={cropFile} onDone={onCropDone} manageHistory={false} />}
     </div>
   );
 }
