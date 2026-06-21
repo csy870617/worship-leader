@@ -64,12 +64,12 @@ export default function SongAttachEditor({
       /* ignore */
     }
   };
-  const onRecropDone = async (newFile: File | null) => {
+  const onRecropDone = async (newFile: File | null, crop?: { x: number; y: number; w: number; h: number }) => {
     const t = recrop;
     setRecrop(null);
     if (newFile && t) {
       const newAid = await saveSheetFromFile(newFile, songTitle);
-      replaceSongSheet(songId, t.aid, newAid);
+      replaceSongSheet(songId, t.aid, newAid, crop);
       removeSheetEverywhere(t.aid);
     }
   };
@@ -250,7 +250,7 @@ export function CropModal({
   manageHistory = true,
 }: {
   file: File;
-  onDone: (cropped: File | null) => void;
+  onDone: (cropped: File | null, crop?: { x: number; y: number; w: number; h: number }) => void;
   // When nested under another history-managing overlay (e.g. ContiView, SheetLightbox),
   // pass false so the crop modal doesn't push/pop the history stack — otherwise its
   // history.back() would also close the parent overlay.
@@ -275,10 +275,10 @@ export function CropModal({
   onDoneRef.current = onDone;
   const closedRef = useRef(false);
   const pushedRef = useRef(false);
-  const finish = (result: File | null) => {
+  const finish = (result: File | null, crop?: { x: number; y: number; w: number; h: number }) => {
     if (closedRef.current) return;
     closedRef.current = true;
-    onDoneRef.current(result);
+    onDoneRef.current(result, crop);
     if (pushedRef.current) {
       pushedRef.current = false;
       window.history.back();
@@ -353,7 +353,7 @@ export function CropModal({
     ctx.drawImage(img, Math.round(x * nw), Math.round(y * nh), cw, ch, 0, 0, cw, ch);
     const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.92));
     setWorking(false);
-    finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null);
+    finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null, { x, y, w, h });
   };
 
   const corner = (c: string): React.CSSProperties => ({

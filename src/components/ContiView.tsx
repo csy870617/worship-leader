@@ -44,13 +44,13 @@ export default function ContiView({
       /* ignore */
     }
   };
-  const onCropDone = async (newFile: File | null) => {
+  const onCropDone = async (newFile: File | null, crop?: { x: number; y: number; w: number; h: number }) => {
     const t = cropTarget.current;
     cropTarget.current = null;
     setCropFile(null);
     if (newFile && t) {
       const newAid = await saveSheetFromFile(newFile, songById.get(t.songId)?.title ?? "");
-      replaceSongSheet(t.songId, t.aid, newAid);
+      replaceSongSheet(t.songId, t.aid, newAid, crop);
       removeSheetEverywhere(t.aid);
     }
   };

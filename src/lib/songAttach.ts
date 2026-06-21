@@ -114,11 +114,31 @@ export function removeSongSheet(id: string, aid: string) {
     return { ...a, sheets, sheetTexts: st };
   });
 }
-export function replaceSongSheet(id: string, oldAid: string, newAid: string) {
+export function replaceSongSheet(
+  id: string,
+  oldAid: string,
+  newAid: string,
+  crop?: { x: number; y: number; w: number; h: number },
+) {
   update(id, (a) => {
     const sheets = (a.sheets ?? []).map((x) => (x === oldAid ? newAid : x));
     const st = { ...(a.sheetTexts ?? {}) };
-    delete st[oldAid]; // annotations don't map to the re-cropped image
+    const old = st[oldAid];
+    delete st[oldAid];
+    // Remap text annotations into the cropped region: positions and sizes are
+    // fractions of the image, so divide by the crop's width/height and drop any
+    // text whose anchor falls outside the new frame.
+    if (crop && crop.w > 0 && crop.h > 0 && old && old.length) {
+      const mapped = old
+        .map((t) => ({
+          ...t,
+          x: (t.x - crop.x) / crop.w,
+          y: (t.y - crop.y) / crop.h,
+          size: t.size / crop.w,
+        }))
+        .filter((t) => t.x >= 0 && t.x <= 1 && t.y >= 0 && t.y <= 1);
+      if (mapped.length) st[newAid] = mapped;
+    }
     return { ...a, sheets, sheetTexts: st };
   });
 }
