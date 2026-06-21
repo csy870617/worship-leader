@@ -3,6 +3,7 @@ import type { SheetText } from "../lib/useConti";
 import {
   addSongSheet,
   removeSongSheet,
+  replaceSongSheet,
   setSongNote,
   setSongSheetTexts,
   setSongYoutube,
@@ -49,6 +50,35 @@ export default function SongAttachEditor({
   const [err, setErr] = useState<string | null>(null);
   const [viewer, setViewer] = useState<number | null>(null);
   const [cropQueue, setCropQueue] = useState<File[]>([]);
+  const [sheetMenu, setSheetMenu] = useState<string | null>(null);
+  const [recrop, setRecrop] = useState<{ aid: string; file: File } | null>(null);
+
+  const startRecrop = async (aid: string) => {
+    setSheetMenu(null);
+    const dataUrl = (await loadSheet(aid)) ?? (await fetchSheetInteractive(aid));
+    if (!dataUrl) return;
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      setRecrop({ aid, file: new File([blob], "sheet.jpg", { type: blob.type || "image/jpeg" }) });
+    } catch {
+      /* ignore */
+    }
+  };
+  const onRecropDone = async (newFile: File | null) => {
+    const t = recrop;
+    setRecrop(null);
+    if (newFile && t) {
+      const newAid = await saveSheetFromFile(newFile, songTitle);
+      replaceSongSheet(songId, t.aid, newAid);
+      removeSheetEverywhere(t.aid);
+    }
+  };
+  const deleteSheetFromMenu = (aid: string) => {
+    setSheetMenu(null);
+    setViewer(null);
+    removeSongSheet(songId, aid);
+    removeSheetEverywhere(aid);
+  };
 
   const onFiles = (files: FileList | null) => {
     if (!files) return;
@@ -146,6 +176,7 @@ export default function SongAttachEditor({
             start={viewer}
             texts={sheetTexts}
             onTexts={(aid, list) => setSongSheetTexts(songId, aid, list)}
+            onMenu={(aid) => setSheetMenu(aid)}
             onClose={() => setViewer(null)}
           />
         )}
@@ -177,6 +208,38 @@ export default function SongAttachEditor({
       </div>
 
       {cropQueue.length > 0 && <CropModal file={cropQueue[0]} onDone={onCropDone} />}
+      {recrop && <CropModal file={recrop.file} onDone={onRecropDone} />}
+
+      {sheetMenu && (
+        <div
+          className="fixed inset-0 z-[55] flex items-end justify-center bg-black/40 p-4"
+          onClick={() => setSheetMenu(null)}
+        >
+          <div
+            className="w-full max-w-xs space-y-1.5 rounded-2xl bg-white p-2 shadow-xl dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => startRecrop(sheetMenu)}
+              className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
+            >
+              자르기
+            </button>
+            <button
+              onClick={() => deleteSheetFromMenu(sheetMenu)}
+              className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
+            >
+              삭제
+            </button>
+            <button
+              onClick={() => setSheetMenu(null)}
+              className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-500 active:bg-slate-100 dark:text-slate-400 dark:active:bg-slate-700"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -424,12 +487,14 @@ function SheetLightbox({
   start,
   texts,
   onTexts,
+  onMenu,
   onClose,
 }: {
   ids: string[];
   start: number;
   texts: Record<string, SheetText[]>;
   onTexts: (aid: string, list: SheetText[]) => void;
+  onMenu?: (aid: string) => void;
   onClose: () => void;
 }) {
   const [index, setIndex] = useState(start);
@@ -615,6 +680,7 @@ function SheetLightbox({
           <div
             ref={boxRef}
             onClick={onBoxClick}
+            onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(currentId); } : undefined}
             className={"relative inline-block " + (placing ? "cursor-crosshair" : "")}
           >
             <img src={url} alt="악보" onLoad={measure} className="block max-h-[62vh] max-w-full rounded-lg" />
