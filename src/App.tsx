@@ -112,7 +112,7 @@ export default function App() {
 
           <main className="flex-1 pb-20 md:pb-10">
             <Routes>
-              <Route path="/" element={<Navigate to="/browse" replace />} />
+              <Route path="/" element={<Navigate to="/conti" replace />} />
               <Route path="/browse" element={<Browse />} />
               <Route path="/search" element={<Search />} />
               <Route path="/conti" element={<Conti />} />
