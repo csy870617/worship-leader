@@ -44,6 +44,7 @@ export default function Conti() {
   useBackDismiss(menuOpen, () => setMenuOpen(false));
   useBackDismiss(confirmClear, () => setConfirmClear(false));
   useBackDismiss(confirmDelete, () => setConfirmDelete(false));
+  useBackDismiss(shareReady != null, () => { setShareReady(null); setShareErr(null); });
 
   // ---- drag-to-reorder + long-press/right-click delete ----
   const [dragId, setDragId] = useState<string | null>(null);
@@ -600,8 +601,15 @@ export default function Conti() {
       )}
 
       {shareReady && (
-        <div className="fixed inset-x-0 bottom-24 z-30 flex flex-col items-center gap-2 px-4">
-          {shareErr && (
+        <>
+          <button
+            aria-hidden
+            tabIndex={-1}
+            onClick={() => { setShareReady(null); setShareErr(null); }}
+            className="fixed inset-0 z-30 cursor-default bg-black/30"
+          />
+          <div className="fixed inset-x-0 bottom-24 z-40 flex flex-col items-center gap-2 px-4">
+            {shareErr && (
             <div className="max-w-xs rounded-lg bg-rose-600 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-white shadow">
               앱에서는 PDF 공유가 막혀 있어요.
               <br />
@@ -655,7 +663,8 @@ export default function Conti() {
               다운로드
             </button>
           </div>
-        </div>
+          </div>
+        </>
       )}
 
       {showView && (
