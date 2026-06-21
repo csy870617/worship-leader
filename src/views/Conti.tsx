@@ -310,16 +310,6 @@ export default function Conti() {
                 <button
                   onClick={() => {
                     setMenuOpen(false);
-                    if (confirm(`'${active.name}' 콘티를 삭제할까요?`)) deleteConti(activeId);
-                  }}
-                  className="block w-full px-4 py-2 text-left text-sm text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
-                >
-                  콘티 삭제
-                </button>
-                <div className="my-1 border-t border-slate-100 dark:border-slate-700" />
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
                     markUsed(conti.map((c) => c.id));
                     flash("오늘 사용으로 기록됐어요");
                   }}
@@ -335,6 +325,16 @@ export default function Conti() {
                   className="block w-full px-4 py-2 text-left text-sm text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
                 >
                   비우기
+                </button>
+                <div className="my-1 border-t border-slate-100 dark:border-slate-700" />
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (confirm(`'${active.name}' 콘티를 삭제할까요?`)) deleteConti(activeId);
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
+                >
+                  콘티 삭제
                 </button>
               </div>
             </>
