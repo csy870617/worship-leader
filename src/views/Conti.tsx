@@ -32,6 +32,7 @@ export default function Conti() {
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [pdfBusy, setPdfBusy] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [shareReady, setShareReady] = useState<File | null>(null);
   const [shareErr, setShareErr] = useState<string | null>(null);
   const [showView, setShowView] = useState(false);
@@ -330,7 +331,7 @@ export default function Conti() {
                 <button
                   onClick={() => {
                     setMenuOpen(false);
-                    if (confirm(`'${active.name}' 콘티를 삭제할까요?`)) deleteConti(activeId);
+                    setConfirmDelete(true);
                   }}
                   className="block w-full px-4 py-2 text-left text-sm text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
                 >
@@ -718,6 +719,39 @@ export default function Conti() {
                 className="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-semibold text-white active:bg-rose-700"
               >
                 비우기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-6"
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
+              {active.name}
+            </p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              이 콘티를 삭제할까요?
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => { deleteConti(activeId); setConfirmDelete(false); }}
+                className="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-semibold text-white active:bg-rose-700"
+              >
+                삭제
               </button>
             </div>
           </div>
