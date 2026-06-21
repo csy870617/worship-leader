@@ -5,7 +5,7 @@ import { removeSongSheet, replaceSongSheet, useSongAttach } from "../lib/songAtt
 import { youtubePlaylistUrl } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
-import { registerBack } from "../lib/backStack";
+import { registerBack, useBackDismiss } from "../lib/backStack";
 import { CropModal } from "./SongAttach";
 
 type Page =
@@ -32,6 +32,7 @@ export default function ContiView({
   const [sheetMenu, setSheetMenu] = useState<{ songId: string; aid: string } | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
   const cropTarget = useRef<{ songId: string; aid: string } | null>(null);
+  useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
 
   const startCrop = async (songId: string, aid: string) => {
     setSheetMenu(null);

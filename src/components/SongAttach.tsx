@@ -16,7 +16,7 @@ import {
   saveSheetFromFile,
 } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
-import { registerBack } from "../lib/backStack";
+import { registerBack, useBackDismiss } from "../lib/backStack";
 
 const TEXT_COLORS = ["#ef4444", "#000000", "#ffffff", "#2563eb", "#16a34a", "#eab308"];
 const TEXT_SIZES: { label: string; value: number }[] = [
@@ -53,6 +53,7 @@ export default function SongAttachEditor({
   const [cropQueue, setCropQueue] = useState<File[]>([]);
   const [sheetMenu, setSheetMenu] = useState<string | null>(null);
   const [recrop, setRecrop] = useState<{ aid: string; file: File } | null>(null);
+  useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
 
   const startRecrop = async (aid: string) => {
     setSheetMenu(null);

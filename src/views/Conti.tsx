@@ -6,6 +6,7 @@ import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl, copyText } from "../lib/share";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
 import { setSongNote, useSongAttach } from "../lib/songAttach";
+import { useBackDismiss } from "../lib/backStack";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
 import ContiView from "../components/ContiView";
@@ -39,10 +40,16 @@ export default function Conti() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [memoFocused, setMemoFocused] = useState(false);
 
+  // back button / navigation dismisses any open popup instead of leaving the page
+  useBackDismiss(menuOpen, () => setMenuOpen(false));
+  useBackDismiss(confirmClear, () => setConfirmClear(false));
+  useBackDismiss(confirmDelete, () => setConfirmDelete(false));
+
   // ---- drag-to-reorder + long-press/right-click delete ----
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOrder, setDragOrder] = useState<ContiItem[] | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  useBackDismiss(confirmRemove != null, () => setConfirmRemove(null));
   const dragIdRef = useRef<string | null>(null);
   const dragOrderRef = useRef<ContiItem[] | null>(null);
   const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
