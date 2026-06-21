@@ -16,6 +16,7 @@ import {
   saveSheetFromFile,
 } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
+import { registerBack } from "../lib/backStack";
 
 const TEXT_COLORS = ["#ef4444", "#000000", "#ffffff", "#2563eb", "#16a34a", "#eab308"];
 const TEXT_SIZES: { label: string; value: number }[] = [
@@ -208,7 +209,7 @@ export default function SongAttachEditor({
       </div>
 
       {cropQueue.length > 0 && <CropModal file={cropQueue[0]} onDone={onCropDone} />}
-      {recrop && <CropModal file={recrop.file} onDone={onRecropDone} manageHistory={false} />}
+      {recrop && <CropModal file={recrop.file} onDone={onRecropDone} />}
 
       {sheetMenu && (
         <div
@@ -247,14 +248,9 @@ export default function SongAttachEditor({
 export function CropModal({
   file,
   onDone,
-  manageHistory = true,
 }: {
   file: File;
   onDone: (cropped: File | null, crop?: { x: number; y: number; w: number; h: number }) => void;
-  // When nested under another history-managing overlay (e.g. ContiView, SheetLightbox),
-  // pass false so the crop modal doesn't push/pop the history stack — otherwise its
-  // history.back() would also close the parent overlay.
-  manageHistory?: boolean;
 }) {
   const [src, setSrc] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
@@ -274,28 +270,22 @@ export function CropModal({
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
   const closedRef = useRef(false);
-  const pushedRef = useRef(false);
+  const dismissRef = useRef<((popHistory: boolean) => void) | null>(null);
   const finish = (result: File | null, crop?: { x: number; y: number; w: number; h: number }) => {
     if (closedRef.current) return;
     closedRef.current = true;
     onDoneRef.current(result, crop);
-    if (pushedRef.current) {
-      pushedRef.current = false;
-      window.history.back();
-    }
+    dismissRef.current?.(true);
   };
   useEffect(() => {
-    if (!manageHistory) return;
-    window.history.pushState({ wlCrop: true }, "");
-    pushedRef.current = true;
-    const onPop = () => {
-      pushedRef.current = false;
-      finish(null);
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
+    dismissRef.current = registerBack(() => {
+      if (closedRef.current) return;
+      closedRef.current = true;
+      onDoneRef.current(null);
+    });
+    return () => dismissRef.current?.(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [manageHistory]);
+  }, []);
 
   const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
   const rel = (clientX: number, clientY: number) => {
@@ -530,25 +520,20 @@ function SheetLightbox({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const closedRef = useRef(false);
-  const pushedRef = useRef(false);
+  const dismissRef = useRef<((popHistory: boolean) => void) | null>(null);
   const close = () => {
     if (closedRef.current) return;
     closedRef.current = true;
     onCloseRef.current();
-    if (pushedRef.current) {
-      pushedRef.current = false;
-      window.history.back();
-    }
+    dismissRef.current?.(true);
   };
   useEffect(() => {
-    window.history.pushState({ wlSheet: true }, "");
-    pushedRef.current = true;
-    const onPop = () => {
-      pushedRef.current = false;
-      close();
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
+    dismissRef.current = registerBack(() => {
+      if (closedRef.current) return;
+      closedRef.current = true;
+      onCloseRef.current();
+    });
+    return () => dismissRef.current?.(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

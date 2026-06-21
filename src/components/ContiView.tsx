@@ -5,6 +5,7 @@ import { removeSongSheet, replaceSongSheet, useSongAttach } from "../lib/songAtt
 import { youtubePlaylistUrl } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
+import { registerBack } from "../lib/backStack";
 import { CropModal } from "./SongAttach";
 
 type Page =
@@ -84,29 +85,24 @@ export default function ContiView({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const closedRef = useRef(false);
-  const pushedRef = useRef(false);
+  const dismissRef = useRef<((popHistory: boolean) => void) | null>(null);
   const close = () => {
     if (closedRef.current) return;
     closedRef.current = true;
     onCloseRef.current();
-    if (pushedRef.current) {
-      pushedRef.current = false;
-      window.history.back();
-    }
+    dismissRef.current?.(true);
   };
   useEffect(() => {
-    window.history.pushState({ wlView: true }, "");
-    pushedRef.current = true;
-    const onPop = () => {
-      pushedRef.current = false;
-      close();
-    };
+    dismissRef.current = registerBack(() => {
+      if (closedRef.current) return;
+      closedRef.current = true;
+      onCloseRef.current();
+    });
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
-    window.addEventListener("popstate", onPop);
     window.addEventListener("keydown", onKey);
     return () => {
-      window.removeEventListener("popstate", onPop);
       window.removeEventListener("keydown", onKey);
+      dismissRef.current?.(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -329,7 +325,7 @@ export default function ContiView({
         </div>
       )}
 
-      {cropFile && <CropModal file={cropFile} onDone={onCropDone} manageHistory={false} />}
+      {cropFile && <CropModal file={cropFile} onDone={onCropDone} />}
     </div>
   );
 }
