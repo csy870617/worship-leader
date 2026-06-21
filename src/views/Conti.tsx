@@ -316,6 +316,26 @@ export default function Conti() {
                 >
                   콘티 삭제
                 </button>
+                <div className="my-1 border-t border-slate-100 dark:border-slate-700" />
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    markUsed(conti.map((c) => c.id));
+                    flash("오늘 사용으로 기록됐어요");
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
+                >
+                  사용 완료
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setConfirmClear(true);
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
+                >
+                  비우기
+                </button>
               </div>
             </>
           )}
@@ -566,22 +586,6 @@ export default function Conti() {
               className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 active:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:active:bg-slate-800"
             >
               다운로드
-            </button>
-          </div>
-
-          {/* record / manage */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => { markUsed(conti.map((c) => c.id)); flash("오늘 사용으로 기록됐어요"); }}
-              className="flex-1 rounded-lg py-2 text-sm font-semibold text-slate-500 active:bg-slate-100 dark:text-slate-400 dark:active:bg-slate-800"
-            >
-              사용 완료
-            </button>
-            <button
-              onClick={() => setConfirmClear(true)}
-              className="flex-1 rounded-lg py-2 text-sm font-semibold text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
-            >
-              비우기
             </button>
           </div>
         </div>
