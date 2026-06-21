@@ -16,9 +16,9 @@ import EditSong from "./views/EditSong";
 import Hidden from "./views/Hidden";
 
 const TABS = [
-  { to: "/browse", label: "둘러보기", icon: IconGrid },
-  { to: "/search", label: "찾기", icon: IconSearch },
   { to: "/conti", label: "콘티", icon: IconList, badge: true },
+  { to: "/browse", label: "찬양목록", icon: IconGrid },
+  { to: "/search", label: "찾기", icon: IconSearch },
   { to: "/favorites", label: "즐겨찾기", icon: IconStar },
 ];
 

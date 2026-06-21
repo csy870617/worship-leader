@@ -35,6 +35,8 @@ export default function Conti() {
   const [shareReady, setShareReady] = useState<File | null>(null);
   const [shareErr, setShareErr] = useState<string | null>(null);
   const [showView, setShowView] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [memoFocused, setMemoFocused] = useState(false);
 
   // ---- drag-to-reorder + long-press/right-click delete ----
   const [dragId, setDragId] = useState<string | null>(null);
@@ -248,69 +250,85 @@ export default function Conti() {
   return (
     <div className="pb-6">
       {/* setlist picker + manage */}
-      <div className="sticky top-14 md:top-0 z-10 space-y-2 border-b border-slate-100 bg-white/95 px-4 py-2.5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-        <div className="flex items-center gap-2">
-          <select
-            value={activeId}
-            onChange={(e) => setActive(e.target.value)}
-            aria-label="콘티 선택"
-            className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-          >
-            {contis.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.items.length}곡)
-              </option>
-            ))}
-          </select>
+      <div className="sticky top-14 md:top-0 z-10 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-4 py-2.5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+        <select
+          value={activeId}
+          onChange={(e) => setActive(e.target.value)}
+          aria-label="콘티 선택"
+          className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+        >
+          {contis.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} ({c.items.length}곡)
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => {
+            const name = prompt("새 콘티 이름", `콘티 ${contis.length + 1}`);
+            if (name !== null) {
+              createConti(name);
+              flash("새 콘티가 생성됐어요");
+            }
+          }}
+          aria-label="새 콘티"
+          className="inline-flex shrink-0 items-center justify-center rounded-lg bg-indigo-600 p-2 text-white active:bg-indigo-700"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+        </button>
+        <div className="relative shrink-0">
           <button
-            onClick={() => {
-              const name = prompt("새 콘티 이름", `콘티 ${contis.length + 1}`);
-              if (name !== null) {
-                createConti(name);
-                flash("새 콘티가 생성됐어요");
-              }
-            }}
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white active:bg-indigo-700"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="콘티 관리"
+            className="rounded-lg p-2 text-slate-500 active:bg-slate-100 dark:text-slate-300 dark:active:bg-slate-800"
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" />
             </svg>
-            새 콘티
           </button>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="truncate text-xs text-slate-400 dark:text-slate-500">
-            {active.name} · {rows.length}곡
-          </span>
-          <div className="flex shrink-0 items-center gap-3 text-xs font-medium">
-            <button
-              onClick={() => {
-                const name = prompt("콘티 이름 변경", active.name);
-                if (name) renameConti(activeId, name);
-              }}
-              className="text-slate-500 hover:text-slate-700 dark:text-slate-400"
-            >
-              이름 변경
-            </button>
-            <button
-              onClick={() => {
-                if (confirm(`'${active.name}' 콘티를 삭제할까요?`)) deleteConti(activeId);
-              }}
-              className="text-rose-500"
-            >
-              콘티 삭제
-            </button>
-          </div>
+          {menuOpen && (
+            <>
+              <button
+                aria-hidden
+                tabIndex={-1}
+                onClick={() => setMenuOpen(false)}
+                className="fixed inset-0 z-10 cursor-default"
+              />
+              <div className="absolute right-0 z-20 mt-1 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    const name = prompt("콘티 이름 변경", active.name);
+                    if (name) renameConti(activeId, name);
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
+                >
+                  이름 변경
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (confirm(`'${active.name}' 콘티를 삭제할까요?`)) deleteConti(activeId);
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
+                >
+                  콘티 삭제
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {rows.length === 0 && (
         <div className="px-6 py-16 text-center">
           <p className="text-sm text-slate-400 dark:text-slate-500">
-            이 콘티는 비어 있어요. 곡 목록의 ⊕ 버튼으로 담아 보세요.
+            이 콘티는 비어 있어요. 찬양목록에서 곡을 담아 보세요.
           </p>
           <Link to="/browse" className="mt-3 inline-block text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-            곡 둘러보기 →
+            찬양목록 →
           </Link>
         </div>
       )}
@@ -412,8 +430,8 @@ export default function Conti() {
                     <input
                       value={att?.note ?? ""}
                       onChange={(e) => setSongNote(r.id, e.target.value)}
-                      onFocus={(e) => { memoElRef.current = e.currentTarget; memoSongRef.current = r.id; }}
-                      onBlur={() => { memoElRef.current = null; memoSongRef.current = null; }}
+                      onFocus={(e) => { memoElRef.current = e.currentTarget; memoSongRef.current = r.id; setMemoFocused(true); }}
+                      onBlur={() => { memoElRef.current = null; memoSongRef.current = null; setMemoFocused(false); }}
                       placeholder="메모 추가"
                       className="-mx-1 min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
                     />
@@ -441,12 +459,9 @@ export default function Conti() {
         })}
       </ol>
 
-      {/* memo quick-insert presets (insert at the focused memo's cursor) */}
-      {rows.length > 0 && (
-        <div className="mt-4 border-t border-slate-100 px-3 pt-3 dark:border-slate-800">
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            빠른 메모 입력
-          </p>
+      {/* memo quick-insert presets — only while a memo is being edited */}
+      {memoFocused && (
+        <div className="mt-3 border-y border-slate-100 px-3 py-2 dark:border-slate-800">
           <div className="space-y-1.5">
             {MEMO_PRESET_ROWS.map((row, ri) => (
               <div key={ri} className="flex flex-wrap gap-1.5">
@@ -465,61 +480,37 @@ export default function Conti() {
         </div>
       )}
 
-      {/* footer: share & record */}
+      {/* footer: grouped actions */}
       {rows.length > 0 && (
         <div className="mt-8 space-y-2 px-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            공유 · 기록
-          </p>
-          {/* row 1: playlist + download */}
+          {/* use now: view + playlist */}
           <div className="flex gap-2">
-            {playlistUrl && (
-              <a
-                href={playlistUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-600 py-2.5 text-sm font-semibold text-white active:bg-red-700"
-              >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
-                </svg>
-                플레이리스트
-              </a>
-            )}
             <button
               onClick={() => setShowView(true)}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 active:bg-slate-100 dark:border-slate-700 dark:text-slate-300"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-3 text-sm font-bold text-white active:bg-indigo-700"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
               </svg>
               콘티보기
             </button>
-            <button
-              disabled={pdfBusy}
-              onClick={async () => {
-                setPdfBusy(true);
-                flash("PDF를 만드는 중…");
-                try {
-                  const built = await buildContiPdf(active.name, conti, songById);
-                  if (!built) flash("PDF 생성에 실패했어요");
-                  else {
-                    downloadContiFile(built.file);
-                    flash("PDF를 다운로드했어요");
-                  }
-                } catch {
-                  flash("PDF 생성에 실패했어요");
-                } finally {
-                  setPdfBusy(false);
-                }
-              }}
-              className="flex-1 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white active:bg-indigo-700 disabled:opacity-60"
-            >
-              다운로드
-            </button>
+            {playlistUrl && (
+              <a
+                href={playlistUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-600 py-3 text-sm font-bold text-white active:bg-red-700"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
+                </svg>
+                플레이리스트
+              </a>
+            )}
           </div>
-          {/* row 2: share + record + clear */}
+
+          {/* export: share + download */}
           <div className="flex gap-2">
             <button
               disabled={pdfBusy}
@@ -541,8 +532,7 @@ export default function Conti() {
                   return;
                 }
                 // Mobile Web Share must fire right after a tap, but generation
-                // takes too long → always hand off to a fresh-gesture "지금 공유"
-                // tap when file sharing is supported.
+                // takes too long → hand off to a fresh-gesture "지금 공유" tap.
                 if (navigator.canShare?.({ files: [built.file] })) {
                   setShareReady(built.file);
                   flash("준비됐어요 · ‘지금 공유’를 누르세요");
@@ -551,19 +541,45 @@ export default function Conti() {
                   flash("이 브라우저는 공유를 지원하지 않아 다운로드했어요");
                 }
               }}
-              className="flex-1 rounded-lg border border-indigo-200 py-2.5 text-sm font-semibold text-indigo-600 active:bg-indigo-50 disabled:opacity-60 dark:border-indigo-500/40 dark:text-indigo-300"
+              className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 active:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:active:bg-slate-800"
             >
               {pdfBusy ? "만드는 중…" : "콘티 공유"}
             </button>
             <button
+              disabled={pdfBusy}
+              onClick={async () => {
+                setPdfBusy(true);
+                flash("PDF를 만드는 중…");
+                try {
+                  const built = await buildContiPdf(active.name, conti, songById);
+                  if (!built) flash("PDF 생성에 실패했어요");
+                  else {
+                    downloadContiFile(built.file);
+                    flash("PDF를 다운로드했어요");
+                  }
+                } catch {
+                  flash("PDF 생성에 실패했어요");
+                } finally {
+                  setPdfBusy(false);
+                }
+              }}
+              className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 active:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:active:bg-slate-800"
+            >
+              다운로드
+            </button>
+          </div>
+
+          {/* record / manage */}
+          <div className="flex gap-2">
+            <button
               onClick={() => { markUsed(conti.map((c) => c.id)); flash("오늘 사용으로 기록됐어요"); }}
-              className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
+              className="flex-1 rounded-lg py-2 text-sm font-semibold text-slate-500 active:bg-slate-100 dark:text-slate-400 dark:active:bg-slate-800"
             >
               사용 완료
             </button>
             <button
               onClick={() => setConfirmClear(true)}
-              className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-rose-500 dark:border-slate-700"
+              className="flex-1 rounded-lg py-2 text-sm font-semibold text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
             >
               비우기
             </button>
