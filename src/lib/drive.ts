@@ -173,6 +173,48 @@ export async function uploadSheet(dataUrl: string, name: string): Promise<string
   return (await r.json()).id as string;
 }
 
+async function uploadBlobToFolder(blob: Blob, name: string, folder: string): Promise<Response> {
+  const t = await getToken(true);
+  const metadata = { name, parents: [folder] };
+  const form = new FormData();
+  form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+  form.append("file", blob);
+  return fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink",
+    { method: "POST", headers: { Authorization: `Bearer ${t}` }, body: form }
+  );
+}
+
+/** Upload a file to Drive, make it readable by anyone with the link, and return
+ *  that shareable link. Used as a PDF-share fallback for installed PWAs where
+ *  file sharing is blocked. */
+export async function uploadSharedFile(blob: Blob, name: string): Promise<string> {
+  let r = await uploadBlobToFolder(blob, name, await ensureFolder());
+  if (!r.ok) {
+    localStorage.removeItem(folderKey());
+    r = await uploadBlobToFolder(blob, name, await ensureFolder());
+  }
+  if (!r.ok) throw new Error("드라이브 업로드 실패");
+  const created = await r.json();
+  const id = created.id as string;
+  const t = await getToken(true);
+  // grant "anyone with the link" read access (allowed under drive.file for our own file)
+  await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ role: "reader", type: "anyone" }),
+  });
+  let link: string | undefined = created.webViewLink;
+  if (!link) {
+    const gr = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${id}?fields=webViewLink`,
+      { headers: { Authorization: `Bearer ${t}` } }
+    );
+    if (gr.ok) link = (await gr.json()).webViewLink;
+  }
+  return link || `https://drive.google.com/file/d/${id}/view`;
+}
+
 export async function downloadSheet(fileId: string, interactive = false): Promise<string> {
   const t = await getToken(interactive);
   const r = await fetch(

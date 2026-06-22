@@ -4,6 +4,7 @@ import { useSongs } from "../lib/catalog";
 import { useConti, type ContiItem } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl, copyText } from "../lib/share";
+import { driveEnabled, uploadSharedFile } from "../lib/drive";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
 import { setSongNote, useSongAttach } from "../lib/songAttach";
 import { useBackDismiss } from "../lib/backStack";
@@ -36,6 +37,7 @@ export default function Conti() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [shareReady, setShareReady] = useState<File | null>(null);
   const [shareErr, setShareErr] = useState<string | null>(null);
+  const [driveBusy, setDriveBusy] = useState(false);
   const [showView, setShowView] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [memoFocused, setMemoFocused] = useState(false);
@@ -224,6 +226,29 @@ export default function Conti() {
       if ((e as { name?: string })?.name === "AbortError") return;
       const ok = await copyText(text);
       flash(ok ? "공유 대신 텍스트를 복사했어요" : "공유에 실패했어요");
+    }
+  };
+  // PDF-share fallback: upload to Drive and share the link (works in PWAs)
+  const shareViaDrive = async () => {
+    if (!shareReady) return;
+    setDriveBusy(true);
+    try {
+      flash("드라이브에 올리는 중…");
+      const link = await uploadSharedFile(shareReady, shareReady.name || `${active.name}.pdf`);
+      const text = `${buildShareText()}\n\n📄 악보 PDF: ${link}`;
+      setShareReady(null);
+      setShareErr(null);
+      try {
+        await navigator.share({ title: active.name, text });
+      } catch (e) {
+        if ((e as { name?: string })?.name === "AbortError") return;
+        const ok = await copyText(text);
+        flash(ok ? "링크를 복사했어요" : "공유에 실패했어요");
+      }
+    } catch {
+      flash("드라이브 업로드에 실패했어요");
+    } finally {
+      setDriveBusy(false);
     }
   };
 
@@ -633,22 +658,38 @@ export default function Conti() {
             <div className="max-w-xs rounded-lg bg-rose-600 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-white shadow">
               앱에서는 PDF 공유가 막혀 있어요.
               <br />
-              텍스트로 공유(악보 제외)하거나,
+              {driveEnabled()
+                ? "드라이브 링크로 공유(악보 포함)하거나,"
+                : "텍스트로 공유(악보 제외)하거나,"}
               <br />
               다운로드 후 파일에서 공유하세요.
             </div>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {shareErr ? (
-              <button
-                onClick={async () => { await shareText(); setShareReady(null); setShareErr(null); }}
-                className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
-              >
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
-                </svg>
-                텍스트로 공유
-              </button>
+              <>
+                {driveEnabled() && (
+                  <button
+                    onClick={shareViaDrive}
+                    disabled={driveBusy}
+                    className="flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-emerald-700 disabled:opacity-60"
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                    {driveBusy ? "올리는 중…" : "드라이브 링크로 공유"}
+                  </button>
+                )}
+                <button
+                  onClick={async () => { await shareText(); setShareReady(null); setShareErr(null); }}
+                  className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                  </svg>
+                  텍스트로 공유
+                </button>
+              </>
             ) : (
               <button
                 onClick={async () => {
