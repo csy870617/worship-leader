@@ -37,6 +37,7 @@ export default function Conti() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [shareReady, setShareReady] = useState<File | null>(null);
   const [shareErr, setShareErr] = useState<string | null>(null);
+  const [driveLink, setDriveLink] = useState<string | null>(null);
   const [showView, setShowView] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [memoFocused, setMemoFocused] = useState(false);
@@ -46,6 +47,7 @@ export default function Conti() {
   useBackDismiss(confirmClear, () => setConfirmClear(false));
   useBackDismiss(confirmDelete, () => setConfirmDelete(false));
   useBackDismiss(shareReady != null, () => { setShareReady(null); setShareErr(null); });
+  useBackDismiss(driveLink != null, () => setDriveLink(null));
 
   // ---- drag-to-reorder + long-press/right-click delete ----
   const [dragId, setDragId] = useState<string | null>(null);
@@ -227,23 +229,31 @@ export default function Conti() {
       flash(ok ? "공유 대신 텍스트를 복사했어요" : "공유에 실패했어요");
     }
   };
-  // PDF-share fallback: upload the PDF to Drive and share its link (works in PWAs)
+  // PDF-share fallback: upload the PDF to Drive, then offer its link for sharing.
+  // Upload runs automatically; the actual share fires from a fresh button tap so
+  // the native share sheet reliably opens (a tap after async upload would lose
+  // user-activation and only be able to copy).
   const shareViaDrive = async (file: File) => {
     setShareReady(null);
     setShareErr(null);
     flash("드라이브에 올리는 중…");
     try {
       const link = await uploadSharedFile(file, file.name || `${active.name}.pdf`);
-      const text = `${buildShareText()}\n\n📄 악보 PDF: ${link}`;
-      try {
-        await navigator.share({ title: active.name, text });
-      } catch (e) {
-        if ((e as { name?: string })?.name === "AbortError") return;
-        const ok = await copyText(text);
-        flash(ok ? "링크를 복사했어요 · 붙여넣어 공유하세요" : "공유에 실패했어요");
-      }
+      setDriveLink(link);
     } catch {
       flash("드라이브 업로드에 실패했어요");
+    }
+  };
+  const shareDriveLink = async () => {
+    if (!driveLink) return;
+    const text = `${buildShareText()}\n\n📄 악보 PDF: ${driveLink}`;
+    try {
+      await navigator.share({ title: active.name, text });
+      setDriveLink(null);
+    } catch (e) {
+      if ((e as { name?: string })?.name === "AbortError") return;
+      const ok = await copyText(text);
+      flash(ok ? "링크를 복사했어요 · 붙여넣어 공유하세요" : "공유에 실패했어요");
     }
   };
 
@@ -679,11 +689,38 @@ export default function Conti() {
         </>
       )}
 
+      {driveLink && (
+        <>
+          <button
+            aria-hidden
+            tabIndex={-1}
+            onClick={() => setDriveLink(null)}
+            className="fixed inset-0 z-30 cursor-default bg-black/30"
+          />
+          <div className="fixed inset-x-0 bottom-24 z-40 flex flex-col items-center gap-3 px-4">
+            <div className="max-w-xs rounded-lg bg-slate-800 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-white shadow dark:bg-slate-700">
+              드라이브에 PDF를 올렸어요.
+              <br />
+              아래 버튼으로 링크를 공유하세요.
+            </div>
+            <button
+              onClick={shareDriveLink}
+              className="flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg active:bg-emerald-700"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+              </svg>
+              드라이브 링크 공유
+            </button>
+          </div>
+        </>
+      )}
+
       {showView && (
         <ContiView name={active.name} items={conti} songById={songById} onClose={() => setShowView(false)} />
       )}
 
-      {toast && !shareReady && (
+      {toast && !shareReady && !driveLink && (
         <div className="fixed inset-x-0 bottom-24 z-30 mx-auto w-fit rounded-full bg-slate-900 px-4 py-2 text-sm text-white shadow-lg dark:bg-slate-200 dark:text-slate-900">
           {toast}
         </div>
