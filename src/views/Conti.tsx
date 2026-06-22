@@ -203,14 +203,16 @@ export default function Conti() {
 
   // plain-text setlist (works with Web Share text/url, which PWAs allow)
   const buildShareText = () => {
-    const lines = conti.map((c, i) => {
+    const blocks = conti.map((c, i) => {
       const s = songById.get(c.id);
       if (!s) return `${i + 1}.`;
       const key = c.key ? ` (${c.key})` : s.keys.length ? ` (${s.keys.join("/")})` : "";
-      const note = attach[c.id]?.note ? ` — ${attach[c.id]!.note}` : "";
-      return `${i + 1}. ${s.title}${key}${note}`;
+      const note = attach[c.id]?.note;
+      let block = `${i + 1}. ${s.title}${key}`;
+      if (note) block += `\n${note}`;
+      return block;
     });
-    let text = `🎵 ${active.name} (${conti.length}곡)\n${lines.join("\n")}`;
+    let text = `🎵 ${active.name} (${conti.length}곡)\n\n${blocks.join("\n\n")}`;
     if (playlistUrl) text += `\n\n▶ 유튜브 재생목록: ${playlistUrl}`;
     return text;
   };
