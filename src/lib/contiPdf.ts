@@ -70,7 +70,7 @@ function buildInfoEl(
   );
   if (note) {
     parts.push(
-      `<div style="margin:8px 0 0 38px;font-size:17px;color:#374151;">${esc(note)}</div>`
+      `<div style="margin:8px 0 0 38px;font-size:22px;color:#374151;">${esc(note)}</div>`
     );
   }
   if (firstSheet) {

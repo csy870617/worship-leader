@@ -234,7 +234,7 @@ export default function ContiView({
                         )}
                       </div>
                       {attach[cur.item.id]?.note && (
-                        <p className="ml-7 mt-1 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">
+                        <p className="ml-7 mt-1 whitespace-pre-wrap text-lg text-slate-600 dark:text-slate-300">
                           {attach[cur.item.id]!.note}
                         </p>
                       )}
@@ -380,7 +380,7 @@ function SongBlock({
         {keys && <span className="text-sm font-bold text-indigo-600 dark:text-indigo-300">{keys}</span>}
       </div>
       {a?.note && (
-        <p className="ml-7 mt-1 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">{a.note}</p>
+        <p className="ml-7 mt-1 whitespace-pre-wrap text-lg text-slate-600 dark:text-slate-300">{a.note}</p>
       )}
       {shown.map((aid) => (
         <SheetFigure
