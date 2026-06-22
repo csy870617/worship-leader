@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetText } from "../lib/useConti";
-import { removeSongSheet, replaceSongSheet, useSongAttach } from "../lib/songAttach";
+import { removeSongSheet, replaceSongSheet, setSongSheetTexts, useSongAttach } from "../lib/songAttach";
 import { youtubePlaylistUrl } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
 import { registerBack, useBackDismiss } from "../lib/backStack";
-import { CropModal } from "./SongAttach";
+import { CropModal, SheetLightbox } from "./SongAttach";
 
 type Page =
   | { kind: "info"; item: ContiItem; song: Song; aid?: string; n: number }
@@ -32,7 +32,13 @@ export default function ContiView({
   const [sheetMenu, setSheetMenu] = useState<{ songId: string; aid: string } | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
   const cropTarget = useRef<{ songId: string; aid: string } | null>(null);
+  const [textTarget, setTextTarget] = useState<{ songId: string; aid: string } | null>(null);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
+
+  const startText = (songId: string, aid: string) => {
+    setSheetMenu(null);
+    setTextTarget({ songId, aid });
+  };
 
   const startCrop = async (songId: string, aid: string) => {
     setSheetMenu(null);
@@ -301,24 +307,30 @@ export default function ContiView({
           onClick={() => setSheetMenu(null)}
         >
           <div
-            className="w-full max-w-xs space-y-1.5 rounded-2xl bg-white p-2 shadow-xl dark:bg-slate-800"
+            className="grid w-full max-w-xs grid-cols-2 gap-1.5 rounded-2xl bg-white p-2 shadow-xl dark:bg-slate-800"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => startCrop(sheetMenu.songId, sheetMenu.aid)}
-              className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
+              className="rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
             >
               자르기
             </button>
             <button
+              onClick={() => startText(sheetMenu.songId, sheetMenu.aid)}
+              className="rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
+            >
+              텍스트
+            </button>
+            <button
               onClick={() => deleteSheet(sheetMenu.songId, sheetMenu.aid)}
-              className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
+              className="rounded-xl px-4 py-3 text-center text-sm font-semibold text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
             >
               삭제
             </button>
             <button
               onClick={() => setSheetMenu(null)}
-              className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-500 active:bg-slate-100 dark:text-slate-400 dark:active:bg-slate-700"
+              className="rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-500 active:bg-slate-100 dark:text-slate-400 dark:active:bg-slate-700"
             >
               취소
             </button>
@@ -327,6 +339,16 @@ export default function ContiView({
       )}
 
       {cropFile && <CropModal file={cropFile} onDone={onCropDone} />}
+
+      {textTarget && (
+        <SheetLightbox
+          ids={[textTarget.aid]}
+          start={0}
+          texts={{ [textTarget.aid]: attach[textTarget.songId]?.sheetTexts?.[textTarget.aid] ?? [] }}
+          onTexts={(aid, list) => setSongSheetTexts(textTarget.songId, aid, list)}
+          onClose={() => setTextTarget(null)}
+        />
+      )}
     </div>
   );
 }

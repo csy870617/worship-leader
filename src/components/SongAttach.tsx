@@ -485,7 +485,7 @@ function SheetThumb({
   );
 }
 
-function SheetLightbox({
+export function SheetLightbox({
   ids,
   start,
   texts,
