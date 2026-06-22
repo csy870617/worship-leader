@@ -746,7 +746,10 @@ export function SheetLightbox({
                   cursor: "move",
                   touchAction: "none",
                   padding: "1px 3px",
-                  outline: sel === i ? "1px dashed rgba(255,255,255,0.8)" : "none",
+                  borderRadius: 4,
+                  outline: sel === i ? "2px solid #6366f1" : "none",
+                  outlineOffset: 2,
+                  boxShadow: sel === i ? "0 0 0 4px rgba(99,102,241,0.25)" : "none",
                 }}
               >
                 {a.text}
