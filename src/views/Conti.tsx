@@ -54,6 +54,7 @@ export default function Conti() {
   const dragIdRef = useRef<string | null>(null);
   const dragOrderRef = useRef<ContiItem[] | null>(null);
   const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lpStart = useRef<{ x: number; y: number } | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
 
   // remember the focused memo input so preset chips can insert at its cursor
@@ -99,6 +100,7 @@ export default function Conti() {
     return lis.length - 1;
   };
   const cancelLP = () => {
+    lpStart.current = null;
     if (lpTimer.current) {
       clearTimeout(lpTimer.current);
       lpTimer.current = null;
@@ -152,7 +154,13 @@ export default function Conti() {
     if (e.pointerType === "mouse") return; // mouse uses right-click
     const t = e.target as HTMLElement;
     if (t.closest("button, input, a, textarea, [data-drag-handle]")) return;
+    lpStart.current = { x: e.clientX, y: e.clientY };
     lpTimer.current = setTimeout(() => setConfirmRemove(id), 500);
+  };
+  // only a real finger move (not holding-still jitter) cancels the long-press
+  const onRowPointerMove = (e: React.PointerEvent) => {
+    const s = lpStart.current;
+    if (s && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 10) cancelLP();
   };
   const onRowPointerEnd = () => cancelLP();
 
@@ -374,7 +382,7 @@ export default function Conti() {
             <li key={r.id}>
               <div
                 onPointerDown={(e) => onRowPointerDown(e, r.id)}
-                onPointerMove={onRowPointerEnd}
+                onPointerMove={onRowPointerMove}
                 onPointerUp={onRowPointerEnd}
                 onPointerCancel={onRowPointerEnd}
                 onContextMenu={(e) => {
