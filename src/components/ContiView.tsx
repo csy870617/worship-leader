@@ -303,37 +303,54 @@ export default function ContiView({
 
       {sheetMenu && (
         <div
-          className="fixed inset-0 z-[55] flex items-end justify-center bg-black/40 p-4"
+          className="fixed inset-0 z-[55] flex items-end justify-center bg-black/50 p-3 backdrop-blur-sm"
           onClick={() => setSheetMenu(null)}
         >
           <div
-            className="grid w-full max-w-xs grid-cols-2 gap-1.5 rounded-2xl bg-white p-2 shadow-xl dark:bg-slate-800"
+            className="w-full max-w-sm rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/10"
             onClick={(e) => e.stopPropagation()}
+            style={{ animation: "wlSheetUp .18s ease-out" }}
           >
-            <button
-              onClick={() => startCrop(sheetMenu.songId, sheetMenu.aid)}
-              className="rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
-            >
-              자르기
-            </button>
-            <button
-              onClick={() => startText(sheetMenu.songId, sheetMenu.aid)}
-              className="rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
-            >
-              텍스트
-            </button>
-            <button
-              onClick={() => deleteSheet(sheetMenu.songId, sheetMenu.aid)}
-              className="rounded-xl px-4 py-3 text-center text-sm font-semibold text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
-            >
-              삭제
-            </button>
-            <button
-              onClick={() => setSheetMenu(null)}
-              className="rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-500 active:bg-slate-100 dark:text-slate-400 dark:active:bg-slate-700"
-            >
-              취소
-            </button>
+            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-200 dark:bg-slate-600" />
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                onClick={() => startCrop(sheetMenu.songId, sheetMenu.aid)}
+                className="flex flex-col items-center gap-1.5 rounded-2xl bg-slate-50 py-4 text-slate-700 transition active:scale-95 active:bg-slate-100 dark:bg-slate-700/50 dark:text-slate-200 dark:active:bg-slate-700"
+              >
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                  <circle cx="6" cy="6" r="2.5" /><circle cx="6" cy="18" r="2.5" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 8l12 8M8 16L20 8" />
+                </svg>
+                <span className="text-sm font-semibold">자르기</span>
+              </button>
+              <button
+                onClick={() => startText(sheetMenu.songId, sheetMenu.aid)}
+                className="flex flex-col items-center gap-1.5 rounded-2xl bg-slate-50 py-4 text-slate-700 transition active:scale-95 active:bg-slate-100 dark:bg-slate-700/50 dark:text-slate-200 dark:active:bg-slate-700"
+              >
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 7V5.5h16V7M12 5.5V19m-3 0h6" />
+                </svg>
+                <span className="text-sm font-semibold">텍스트</span>
+              </button>
+              <button
+                onClick={() => setSheetMenu(null)}
+                className="flex flex-col items-center gap-1.5 rounded-2xl bg-slate-50 py-4 text-slate-500 transition active:scale-95 active:bg-slate-100 dark:bg-slate-700/50 dark:text-slate-400 dark:active:bg-slate-700"
+              >
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+                <span className="text-sm font-semibold">취소</span>
+              </button>
+              <button
+                onClick={() => deleteSheet(sheetMenu.songId, sheetMenu.aid)}
+                className="flex flex-col items-center gap-1.5 rounded-2xl bg-rose-50 py-4 text-rose-600 transition active:scale-95 active:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:active:bg-rose-500/20"
+              >
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7m-7 0 .7 11a2 2 0 0 0 2 1.9h2.6a2 2 0 0 0 2-1.9L17 7" />
+                </svg>
+                <span className="text-sm font-semibold">삭제</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
