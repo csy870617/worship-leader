@@ -486,6 +486,16 @@ export default function Conti() {
                     )}
                   </div>
                 </div>
+                <button
+                  onClick={() => setConfirmRemove(r.id)}
+                  aria-label="콘티에서 삭제"
+                  title="콘티에서 삭제"
+                  className="-my-2 flex w-8 shrink-0 items-center justify-center self-stretch rounded-r-xl text-slate-300 active:bg-rose-50 active:text-rose-500 dark:text-slate-600 dark:active:bg-rose-500/10"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
 
               {open.has(r.id) && (
