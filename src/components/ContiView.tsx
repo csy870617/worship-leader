@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetText } from "../lib/useConti";
 import { removeSongSheet, replaceSongSheet, setSongSheetTexts, useSongAttach } from "../lib/songAttach";
-import { youtubePlaylistUrl } from "../lib/share";
+import { youtubePlaylistUrl, openYouTube } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
 import { registerBack, useBackDismiss } from "../lib/backStack";
@@ -163,6 +163,7 @@ export default function ContiView({
               href={playlistUrl}
               target="_blank"
               rel="noreferrer"
+              onClick={(e) => { e.preventDefault(); openYouTube(playlistUrl); }}
               aria-label="유튜브 재생목록"
               className="rounded-full p-1 text-red-600 active:bg-red-50 dark:text-red-500"
             >

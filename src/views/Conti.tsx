@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useSongs } from "../lib/catalog";
 import { useConti, type ContiItem } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
-import { decodeConti, youtubePlaylistUrl, copyText } from "../lib/share";
+import { decodeConti, youtubePlaylistUrl, copyText, openYouTube } from "../lib/share";
 import { driveEnabled, uploadSharedFile } from "../lib/drive";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
 import { setSongNote, useSongAttach } from "../lib/songAttach";
@@ -579,6 +579,7 @@ export default function Conti() {
                 href={playlistUrl}
                 target="_blank"
                 rel="noreferrer"
+                onClick={(e) => { e.preventDefault(); openYouTube(playlistUrl); }}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-600 py-3 text-sm font-bold text-white active:bg-red-700"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>

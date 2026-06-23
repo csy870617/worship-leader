@@ -118,6 +118,26 @@ export function youtubePlaylistUrl(urls: (string | undefined)[]): string | null 
   return `https://www.youtube.com/watch_videos?video_ids=${ids.slice(0, 50).join(",")}`;
 }
 
+/**
+ * Open a YouTube URL in the YouTube app when it's installed, otherwise in a
+ * normal browser. On Android we use an `intent://` URL with a browser fallback;
+ * on iOS/desktop a plain https URL already opens the app via universal links
+ * (and falls back to the browser when the app isn't installed).
+ */
+export function openYouTube(httpsUrl: string) {
+  const ua = navigator.userAgent || "";
+  if (/Android/i.test(ua)) {
+    const noScheme = httpsUrl.replace(/^https?:\/\//, "");
+    const intent =
+      `intent://${noScheme}#Intent;scheme=https;` +
+      `package=com.google.android.youtube;` +
+      `S.browser_fallback_url=${encodeURIComponent(httpsUrl)};end`;
+    window.location.href = intent;
+    return;
+  }
+  window.open(httpsUrl, "_blank", "noopener");
+}
+
 /** Copy text to clipboard with a legacy fallback. */
 export async function copyText(text: string): Promise<boolean> {
   try {
