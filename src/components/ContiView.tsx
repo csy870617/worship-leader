@@ -510,7 +510,7 @@ function SheetFigure({
           alt="악보"
           onLoad={measure}
           onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(); } : undefined}
-          className="block max-h-full max-w-full rounded-lg"
+          className="block max-h-full max-w-full"
         />
         {box && (
           <div className="pointer-events-none absolute" style={{ left: box.l, top: box.t, width: box.w, height: box.h }}>
@@ -529,7 +529,7 @@ function SheetFigure({
           alt="악보"
           onLoad={measure}
           onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(); } : undefined}
-          className="block w-full rounded-lg"
+          className="block w-full"
         />
         {overlay(w)}
       </div>

@@ -681,7 +681,7 @@ export function SheetLightbox({
             onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(currentId); } : undefined}
             className={"relative inline-block " + (placing ? "cursor-crosshair" : "")}
           >
-            <img src={url} alt="악보" onLoad={measure} className="block max-h-[62vh] max-w-full rounded-lg" />
+            <img src={url} alt="악보" onLoad={measure} className="block max-h-[62vh] max-w-full" />
             {many && (
               <>
                 <button
