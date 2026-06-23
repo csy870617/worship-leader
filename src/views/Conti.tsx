@@ -240,8 +240,12 @@ export default function Conti() {
     try {
       const link = await uploadSharedFile(file, file.name || `${active.name}.pdf`);
       setDriveLink(link);
-    } catch {
-      flash("드라이브 업로드에 실패했어요");
+    } catch (e) {
+      if ((e as Error)?.message === "link_sharing_blocked") {
+        flash("드라이브 링크 공유가 제한돼 있어요");
+      } else {
+        flash("드라이브 업로드 실패 · 드라이브 연결을 확인하세요");
+      }
     }
   };
   const shareDriveLink = async () => {
@@ -253,6 +257,7 @@ export default function Conti() {
     } catch (e) {
       if ((e as { name?: string })?.name === "AbortError") return;
       const ok = await copyText(text);
+      setDriveLink(null);
       flash(ok ? "링크를 복사했어요 · 붙여넣어 공유하세요" : "공유에 실패했어요");
     }
   };

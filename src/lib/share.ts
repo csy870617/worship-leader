@@ -1,5 +1,6 @@
 import type { ContiItem } from "./useConti";
 import { getSongById } from "./catalog";
+import { isInAppBrowser } from "./inapp";
 
 // UTF-8 safe base64 (handles Korean notes)
 function b64encode(str: string): string {
@@ -120,13 +121,15 @@ export function youtubePlaylistUrl(urls: (string | undefined)[]): string | null 
 
 /**
  * Open a YouTube URL in the YouTube app when it's installed, otherwise in a
- * normal browser. On Android we use an `intent://` URL with a browser fallback;
- * on iOS/desktop a plain https URL already opens the app via universal links
- * (and falls back to the browser when the app isn't installed).
+ * normal browser. On a real Android browser we use an `intent://` URL with a
+ * browser fallback (opens the app if installed, the browser if not). In-app
+ * webviews (KakaoTalk, etc.) and iOS/desktop don't support `intent://`, so we
+ * open the plain https URL there — it hands off to the app via app/universal
+ * links when installed and stays in the browser otherwise.
  */
 export function openYouTube(httpsUrl: string) {
   const ua = navigator.userAgent || "";
-  if (/Android/i.test(ua)) {
+  if (/Android/i.test(ua) && !isInAppBrowser()) {
     const noScheme = httpsUrl.replace(/^https?:\/\//, "");
     const intent =
       `intent://${noScheme}#Intent;scheme=https;` +

@@ -199,11 +199,16 @@ export async function uploadSharedFile(blob: Blob, name: string): Promise<string
   const id = created.id as string;
   const t = await getToken(true);
   // grant "anyone with the link" read access (allowed under drive.file for our own file)
-  await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, {
+  const pr = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, {
     method: "POST",
     headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" },
     body: JSON.stringify({ role: "reader", type: "anyone" }),
   });
+  if (!pr.ok) {
+    // link sharing is blocked (e.g. Workspace policy) — the link wouldn't be
+    // openable by others, so don't hand back a dead link
+    throw new Error("link_sharing_blocked");
+  }
   let link: string | undefined = created.webViewLink;
   if (!link) {
     const gr = await fetch(
