@@ -5,7 +5,7 @@ import { getSongAttach } from "./songAttach";
 import { youtubePlaylistUrl } from "./share";
 
 const esc = (s: string) =>
-  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
+  String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 
 function safeName(name: string) {
   return name.replace(/[\\/:*?"<>|]/g, "_").trim() || "conti";
@@ -199,17 +199,28 @@ export async function buildContiPdf(
     for (let i = 0; i < entries.length; i++) {
       const { song, item, sheets } = entries[i];
       // page 1: info + first sheet (+ playlist link on the very first page)
-      await renderPage(buildInfoEl(i, song, item, sheets[0], i === 0 ? playlistUrl : undefined), false);
+      try {
+        await renderPage(buildInfoEl(i, song, item, sheets[0], i === 0 ? playlistUrl : undefined), false);
+      } catch (e) {
+        console.error("[pdf] info page failed", i, e);
+      }
       // remaining sheets: one per page so they're never shrunk together / cut
       for (let k = 1; k < sheets.length; k++) {
-        await renderPage(buildSheetEl(sheets[k]), true);
+        try {
+          await renderPage(buildSheetEl(sheets[k]), true);
+        } catch (e) {
+          console.error("[pdf] sheet page failed", i, k, e);
+        }
       }
     }
+
+    if (!pageAdded) return null; // every page failed to render
 
     const blob = pdf.output("blob");
     const file = new File([blob], `${safeName(name)}.pdf`, { type: "application/pdf" });
     return { file, playlistUrl };
-  } catch {
+  } catch (e) {
+    console.error("[pdf] build failed", e);
     return null;
   }
 }
