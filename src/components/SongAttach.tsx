@@ -257,8 +257,8 @@ export default function SongAttachEditor({
                 key={aid}
                 data-thumb-aid={aid}
                 onPointerDown={(e) => onThumbDown(e, aid)}
-                style={{ touchAction: "none" }}
-                className={dragAid === aid ? "opacity-40" : ""}
+                style={{ touchAction: "none", WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none" }}
+                className={"select-none " + (dragAid === aid ? "opacity-40" : "")}
               >
                 <SheetThumb
                   aid={aid}
@@ -559,7 +559,7 @@ function SheetThumb({
     <div className="relative h-20 w-16 overflow-hidden rounded-lg bg-slate-50 dark:bg-slate-800">
       {state === "ready" && url ? (
         <button onClick={onOpen} className="block h-full w-full" title="크게 보기">
-          <img src={url} alt="악보" className="h-full w-full object-cover" />
+          <img src={url} alt="악보" draggable={false} className="h-full w-full object-cover" />
         </button>
       ) : state === "needsSync" ? (
         <button
