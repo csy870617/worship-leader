@@ -107,27 +107,9 @@ export default function Browse() {
   return (
     <div>
       <div className="sticky top-14 md:top-0 z-10 space-y-2 border-b border-slate-100 bg-white/95 px-4 pt-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-        {/* quick title search */}
-        <div className="relative">
-          <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-            <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.82l3.64 3.64a.75.75 0 1 0 1.06-1.06l-3.64-3.64A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clipRule="evenodd" />
-          </svg>
-          <input
-            value={q}
-            onChange={(e) => patch({ q: e.target.value || null })}
-            inputMode="search"
-            placeholder="찬양 제목 검색"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-9 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          />
-          {q && (
-            <button onClick={() => patch({ q: null })} aria-label="지우기" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 active:bg-slate-100 dark:active:bg-slate-700">
-              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
-            </button>
-          )}
-        </div>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
           {/* axis selector (which chip row to show) */}
-          <div className="flex rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
+          <div className="flex shrink-0 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
             {AXES.map((a) => (
               <button
                 key={a.value}
@@ -142,12 +124,30 @@ export default function Browse() {
               </button>
             ))}
           </div>
+          {/* quick title search (between the axis chips and the sort menu) */}
+          <div className="relative min-w-0 flex-1">
+            <svg className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.82l3.64 3.64a.75.75 0 1 0 1.06-1.06l-3.64-3.64A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clipRule="evenodd" />
+            </svg>
+            <input
+              value={q}
+              onChange={(e) => patch({ q: e.target.value || null })}
+              inputMode="search"
+              placeholder="찬양 검색"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1 pl-8 pr-7 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            />
+            {q && (
+              <button onClick={() => patch({ q: null })} aria-label="지우기" className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-slate-400 active:bg-slate-100 dark:active:bg-slate-700">
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
+              </button>
+            )}
+          </div>
           {/* sort */}
           <select
             value={sort}
             onChange={(e) => patch({ sort: e.target.value })}
             aria-label="정렬"
-            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            className="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           >
             <option value="key">코드순</option>
             <option value="title">가나다순</option>
