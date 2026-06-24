@@ -18,6 +18,11 @@ const AXES: { value: Axis; label: string }[] = [
 // which URL param holds each axis's selected value
 const PARAM: Record<Axis, string> = { key: "key", theme: "theme", tempo: "tempo" };
 
+// Code filter groups Eb+E under "E" and Bb+B under "B"; other keys stand alone.
+const KEY_GROUPS = ["C", "D", "E", "F", "G", "A", "B"];
+const KEY_MEMBERS: Record<string, string[]> = { E: ["Eb", "E"], B: ["Bb", "B"] };
+const keyMembers = (group: string) => KEY_MEMBERS[group] ?? [group];
+
 // rank a song by its lowest key using the chip order (C, D, Eb, …)
 const KEY_ORDER = new Map(data.keys.map((k, i) => [k, i]));
 const keyRank = (s: Song) =>
@@ -42,7 +47,7 @@ export default function Browse() {
   }, [params]);
 
   const options = useMemo(() => {
-    if (axis === "key") return data.keys.map((k) => ({ value: k, label: k }));
+    if (axis === "key") return KEY_GROUPS.map((k) => ({ value: k, label: k }));
     if (axis === "theme") return data.themes.map((t) => ({ value: t, label: t }));
     return data.tempos.map((t) => ({ value: t, label: TEMPO_LABEL[t] }));
   }, [axis]);
@@ -59,7 +64,10 @@ export default function Browse() {
           String(s.hymnNo ?? "").includes(nq)
       );
     }
-    if (selKeys.length) arr = arr.filter((s) => s.keys.some((k) => selKeys.includes(k)));
+    if (selKeys.length) {
+      const wanted = new Set(selKeys.flatMap(keyMembers));
+      arr = arr.filter((s) => s.keys.some((k) => wanted.has(k)));
+    }
     if (selTempos.length) arr = arr.filter((s) => s.tempos.some((t) => selTempos.includes(t)));
     if (selThemes.length) arr = arr.filter((s) => s.themes.some((t) => selThemes.includes(t)));
     arr = [...arr];

@@ -388,7 +388,7 @@ export default function Conti() {
                   }}
                   className="block w-full px-4 py-2 text-left text-sm text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"
                 >
-                  콘티 삭제
+                  삭제
                 </button>
               </div>
             </>
