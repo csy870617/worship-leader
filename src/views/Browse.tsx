@@ -95,10 +95,15 @@ export default function Browse() {
     setParams(p, { replace: true });
   };
 
-  // toggle one value inside an axis (multi-select)
+  // toggle a value inside an axis — tempo is multi-select, code/theme single-select
   const toggleVal = (name: string, value: string) => {
     const cur = list(name);
-    const next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
+    let next: string[];
+    if (name === "tempo") {
+      next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
+    } else {
+      next = cur.includes(value) ? [] : [value]; // pick one, or clear if re-tapped
+    }
     patch({ [name]: next.length ? next.join(",") : null });
   };
 
