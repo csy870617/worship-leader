@@ -23,22 +23,52 @@ const BASE_STYLE =
   `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;` +
   "font-family:'Pretendard',-apple-system,sans-serif;padding:14px 18px;box-sizing:border-box;";
 
-type SheetImg = { url: string; texts?: SheetText[] };
+type SheetImg = { url: string };
 
-/** An image with positioned text annotations baked over it. */
-function sheetOverlay(url: string, widthPx: number, texts?: SheetText[]): string {
-  const spans = (texts ?? [])
-    .map((t) => {
-      const fs = Math.round(t.size * widthPx);
-      // html2canvas renders text a touch lower than the browser does (baseline /
-      // line-box handling), so lift it ~8% of the font size to match the editor.
-      const lift = Math.round(fs * 0.08);
-      return `<span style="position:absolute;left:${t.x * 100}%;top:${t.y * 100}%;transform:translate(-50%,-50%) translate(0,-${lift}px);color:${esc(
-        t.color
-      )};font-size:${fs}px;font-weight:700;line-height:1;white-space:nowrap;">${esc(t.text)}</span>`;
-    })
-    .join("");
-  return `<div style="position:relative;width:100%;"><img src="${url}" style="width:100%;display:block;" />${spans}</div>`;
+/** A sheet image (annotations are already baked in by compositeSheet). */
+function sheetOverlay(url: string): string {
+  return `<div style="position:relative;width:100%;"><img src="${url}" style="width:100%;display:block;" /></div>`;
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = () => rej(new Error("image load failed"));
+    img.src = src;
+  });
+}
+
+/**
+ * Bake text annotations onto the sheet image with the canvas 2D API. Centering
+ * via textAlign/textBaseline = "center"/"middle" matches the editor's
+ * translate(-50%,-50%) exactly — and bypasses html2canvas, which shifts text
+ * vertically. Returns the original url when there are no annotations.
+ */
+async function compositeSheet(url: string, texts?: SheetText[]): Promise<string> {
+  if (!texts || !texts.length) return url;
+  try {
+    const img = await loadImage(url);
+    const W = img.naturalWidth || img.width;
+    const H = img.naturalHeight || img.height;
+    if (!W || !H) return url;
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0, W, H);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const t of texts) {
+      const fs = Math.max(1, Math.round(t.size * W)); // size is a fraction of width (same as the editor)
+      ctx.font = `700 ${fs}px Pretendard, system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = t.color;
+      ctx.fillText(t.text, t.x * W, t.y * H);
+    }
+    return canvas.toDataURL("image/jpeg", 0.92);
+  } catch {
+    return url; // fall back to the plain image
+  }
 }
 
 /** Info page: number, title, key, memo, and (optionally) the first sheet. */
@@ -75,8 +105,7 @@ function buildInfoEl(
     );
   }
   if (firstSheet) {
-    // image width = render width minus the 18px horizontal padding on each side
-    parts.push(`<div style="margin:12px 0 0 0;">${sheetOverlay(firstSheet.url, PX_W - 36, firstSheet.texts)}</div>`);
+    parts.push(`<div style="margin:12px 0 0 0;">${sheetOverlay(firstSheet.url)}</div>`);
   }
 
   el.innerHTML = parts.join("");
@@ -88,7 +117,7 @@ function buildSheetEl(sheet: SheetImg): HTMLDivElement {
   const el = document.createElement("div");
   el.style.cssText =
     `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;font-family:'Pretendard',-apple-system,sans-serif;padding:0;box-sizing:border-box;`;
-  el.innerHTML = sheetOverlay(sheet.url, PX_W, sheet.texts);
+  el.innerHTML = sheetOverlay(sheet.url);
   return el;
 }
 
@@ -114,6 +143,14 @@ export async function buildContiPdf(
     return null;
   }
 
+  // make sure the annotation font is loaded before we rasterize text onto canvas
+  try {
+    await (document as any).fonts?.load?.("700 40px Pretendard");
+    await (document as any).fonts?.ready;
+  } catch {
+    /* best-effort */
+  }
+
   // resolve to (song, item, sheet images), reading attachments from the song store
   const entries: { song: Song; item: ContiItem; sheets: SheetImg[] }[] = [];
   for (const item of items) {
@@ -123,10 +160,10 @@ export async function buildContiPdf(
     const sheets: SheetImg[] = [];
     if (att?.sheets?.length) {
       const urls = await Promise.all(att.sheets.map((aid) => loadSheet(aid)));
-      att.sheets.forEach((aid, idx) => {
+      for (let idx = 0; idx < att.sheets.length; idx++) {
         const u = urls[idx];
-        if (u) sheets.push({ url: u, texts: att.sheetTexts?.[aid] });
-      });
+        if (u) sheets.push({ url: await compositeSheet(u, att.sheetTexts?.[att.sheets[idx]]) });
+      }
     }
     entries.push({ song, item, sheets });
   }
