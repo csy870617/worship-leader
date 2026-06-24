@@ -217,7 +217,14 @@ export default function SongAttachEditor({
               <div
                 key={aid}
                 data-thumb-aid={aid}
-                className={"relative " + (dragAid === aid ? "opacity-40" : "")}
+                className={
+                  "relative rounded-lg transition-transform duration-150 " +
+                  (dragAid === aid
+                    ? "z-10 scale-105 shadow-xl ring-2 ring-indigo-500"
+                    : dragAid
+                    ? "opacity-70"
+                    : "")
+                }
               >
                 <SheetThumb
                   aid={aid}
@@ -227,6 +234,11 @@ export default function SongAttachEditor({
                     removeSheetEverywhere(aid);
                   }}
                 />
+                {orderedIds.length > 1 && (
+                  <span className="pointer-events-none absolute left-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-bold leading-none text-white shadow">
+                    {idx + 1}
+                  </span>
+                )}
                 {orderedIds.length > 1 && (
                   <span
                     onPointerDown={(e) => onGripDown(e, aid)}
