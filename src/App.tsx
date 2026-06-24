@@ -5,6 +5,7 @@ import { useConti } from "./lib/useConti";
 import { useSongs } from "./lib/catalog";
 import { getLastBrowse } from "./lib/browseState";
 import { migrateFromContis } from "./lib/songAttach";
+import { copyText } from "./lib/share";
 import { initSync } from "./lib/sync";
 import AuthButton from "./components/AuthButton";
 import Browse from "./views/Browse";
@@ -37,6 +38,17 @@ export default function App() {
     migrateFromContis();
     return cleanup;
   }, []);
+
+  // FAITHS: open the native share sheet to share the link (fall back to copy)
+  const shareFaiths = async () => {
+    try {
+      await navigator.share({ title: "FAITHS", url: FAITHS_URL });
+    } catch (e) {
+      if ((e as { name?: string })?.name === "AbortError") return; // user dismissed
+      const ok = await copyText(FAITHS_URL);
+      if (!ok) window.open(FAITHS_URL, "_blank", "noopener");
+    }
+  };
 
   // detail / edit get a full-bleed screen on mobile (their own back button)
   const hideMobileChrome =
@@ -93,15 +105,13 @@ export default function App() {
                   )}
                 </NavLink>
               ))}
-              <a
-                href={FAITHS_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+              <button
+                onClick={shareFaiths}
+                className="relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
               >
                 <IconShare />
                 FAITHS
-              </a>
+              </button>
             </nav>
             <div className="mt-auto flex items-center gap-2 px-1 pt-3">{controls}</div>
           </aside>
@@ -163,15 +173,13 @@ export default function App() {
               )}
             </NavLink>
           ))}
-          <a
-            href={FAITHS_URL}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            onClick={shareFaiths}
             className="relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-slate-400 dark:text-slate-500"
           >
             <IconShare />
             FAITHS
-          </a>
+          </button>
         </nav>
       )}
     </div>
