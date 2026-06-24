@@ -28,14 +28,15 @@ type SheetImg = { url: string; texts?: SheetText[] };
 /** An image with positioned text annotations baked over it. */
 function sheetOverlay(url: string, widthPx: number, texts?: SheetText[]): string {
   const spans = (texts ?? [])
-    .map(
-      (t) =>
-        `<span style="position:absolute;left:${t.x * 100}%;top:${t.y * 100}%;transform:translate(-50%,-50%);color:${esc(
-          t.color
-        )};font-size:${Math.round(t.size * widthPx)}px;font-weight:700;line-height:1;white-space:nowrap;">${esc(
-          t.text
-        )}</span>`
-    )
+    .map((t) => {
+      const fs = Math.round(t.size * widthPx);
+      // html2canvas renders text a touch lower than the browser does (baseline /
+      // line-box handling), so lift it ~8% of the font size to match the editor.
+      const lift = Math.round(fs * 0.08);
+      return `<span style="position:absolute;left:${t.x * 100}%;top:${t.y * 100}%;transform:translate(-50%,-50%) translate(0,-${lift}px);color:${esc(
+        t.color
+      )};font-size:${fs}px;font-weight:700;line-height:1;white-space:nowrap;">${esc(t.text)}</span>`;
+    })
     .join("");
   return `<div style="position:relative;width:100%;"><img src="${url}" style="width:100%;display:block;" />${spans}</div>`;
 }
