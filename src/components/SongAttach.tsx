@@ -56,97 +56,58 @@ export default function SongAttachEditor({
   const [recrop, setRecrop] = useState<{ aid: string; file: File } | null>(null);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
 
-  // ---- drag-to-reorder sheets (mouse drag / long-press touch) ----
-  // Uses window-level pointer listeners (not setPointerCapture): when the dragged
-  // thumbnail's DOM node is moved during a reorder the browser would drop element
-  // capture, freezing the drag. Window listeners survive the reorder.
+  // ---- drag-to-reorder sheets via a grip handle (same proven pattern as the
+  // conti list: pointer-capture on the handle + rect hit-testing). Works for
+  // mouse and touch; tapping the thumbnail still opens it. ----
   const [dragAid, setDragAid] = useState<string | null>(null);
   const [dragOrder, setDragOrder] = useState<string[] | null>(null);
   const dragAidRef = useRef<string | null>(null);
   const dragOrderRef = useRef<string[] | null>(null);
-  const didDragRef = useRef(false);
-  const pressRef = useRef<{ aid: string; x: number; y: number; type: string } | null>(null);
-  const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sheetIdsRef = useRef(sheetIds);
-  sheetIdsRef.current = sheetIds;
-  const songIdRef = useRef(songId);
-  songIdRef.current = songId;
+  const gridRef = useRef<HTMLDivElement>(null);
   const orderedIds = dragOrder ?? sheetIds;
 
-  const beginDrag = (aid: string) => {
-    dragAidRef.current = aid;
-    dragOrderRef.current = sheetIdsRef.current.slice();
-    setDragAid(aid);
-    setDragOrder(sheetIdsRef.current.slice());
-  };
-  // stable listeners that delegate to the latest logic via refs
-  const moveLogic = useRef<(e: PointerEvent) => void>(() => {});
-  const upLogic = useRef<() => void>(() => {});
-  const winMove = useRef((e: PointerEvent) => moveLogic.current(e)).current;
-  const winUp = useRef(() => upLogic.current()).current;
-
-  moveLogic.current = (e: PointerEvent) => {
-    const press = pressRef.current;
-    if (!press) return;
-    const moved = Math.hypot(e.clientX - press.x, e.clientY - press.y);
-    if (!dragAidRef.current) {
-      if (press.type === "mouse" && moved > 6) {
-        beginDrag(press.aid); // mouse: start after a small move so clicks still open
-      } else if (lpTimer.current && moved > 10) {
-        clearTimeout(lpTimer.current); // touch: early move = scroll intent, cancel long-press
-        lpTimer.current = null;
+  const aidFromPoint = (x: number, y: number): string | null => {
+    const els = gridRef.current?.querySelectorAll<HTMLElement>("[data-thumb-aid]");
+    if (!els) return null;
+    for (const el of Array.from(els)) {
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        return el.getAttribute("data-thumb-aid");
       }
-      if (!dragAidRef.current) return;
     }
-    e.preventDefault();
-    const over = (document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)
-      ?.closest("[data-thumb-aid]")
-      ?.getAttribute("data-thumb-aid");
-    if (!over || over === dragAidRef.current) return;
-    const base = (dragOrderRef.current ?? sheetIdsRef.current).slice();
-    const from = base.indexOf(dragAidRef.current);
-    const to = base.indexOf(over);
-    if (from === -1 || to === -1) return;
-    base.splice(to, 0, base.splice(from, 1)[0]);
-    dragOrderRef.current = base;
-    didDragRef.current = true;
-    setDragOrder(base);
+    return null;
   };
-  upLogic.current = () => {
-    window.removeEventListener("pointermove", winMove);
-    window.removeEventListener("pointerup", winUp);
-    window.removeEventListener("pointercancel", winUp);
-    if (lpTimer.current) {
-      clearTimeout(lpTimer.current);
-      lpTimer.current = null;
-    }
-    if (dragAidRef.current && didDragRef.current && dragOrderRef.current) {
-      setSongSheets(songIdRef.current, dragOrderRef.current);
-    }
+  const onGripDown = (e: React.PointerEvent, aid: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    dragAidRef.current = aid;
+    dragOrderRef.current = sheetIds.slice();
+    setDragAid(aid);
+    setDragOrder(sheetIds.slice());
+  };
+  const onGripMove = (e: React.PointerEvent) => {
+    if (!dragAidRef.current || !dragOrderRef.current) return;
+    const over = aidFromPoint(e.clientX, e.clientY);
+    if (!over || over === dragAidRef.current) return;
+    const order = dragOrderRef.current.slice();
+    const from = order.indexOf(dragAidRef.current);
+    const to = order.indexOf(over);
+    if (from < 0 || to < 0) return;
+    order.splice(to, 0, order.splice(from, 1)[0]);
+    dragOrderRef.current = order;
+    setDragOrder(order);
+  };
+  const onGripUp = (e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    const order = dragOrderRef.current;
     dragAidRef.current = null;
     dragOrderRef.current = null;
-    pressRef.current = null;
     setDragAid(null);
     setDragOrder(null);
+    if (order && order.some((x, i) => x !== sheetIds[i])) setSongSheets(songId, order);
   };
-
-  const onThumbDown = (e: React.PointerEvent, aid: string) => {
-    if ((e.target as HTMLElement).closest('[aria-label="악보 삭제"]')) return; // let remove work
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    didDragRef.current = false;
-    pressRef.current = { aid, x: e.clientX, y: e.clientY, type: e.pointerType };
-    if (e.pointerType !== "mouse") {
-      lpTimer.current = setTimeout(() => beginDrag(aid), 300);
-    }
-    window.addEventListener("pointermove", winMove, { passive: false });
-    window.addEventListener("pointerup", winUp);
-    window.addEventListener("pointercancel", winUp);
-  };
-  useEffect(() => () => {
-    window.removeEventListener("pointermove", winMove);
-    window.removeEventListener("pointerup", winUp);
-    window.removeEventListener("pointercancel", winUp);
-  }, [winMove, winUp]);
 
   const startRecrop = async (aid: string) => {
     setSheetMenu(null);
@@ -251,26 +212,38 @@ export default function SongAttachEditor({
           악보
         </label>
         {orderedIds.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-2">
+          <div ref={gridRef} className="mb-2 flex flex-wrap gap-2">
             {orderedIds.map((aid, idx) => (
               <div
                 key={aid}
                 data-thumb-aid={aid}
-                onPointerDown={(e) => onThumbDown(e, aid)}
-                style={{ touchAction: "none", WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none" }}
-                className={"select-none " + (dragAid === aid ? "opacity-40" : "")}
+                className={"relative " + (dragAid === aid ? "opacity-40" : "")}
               >
                 <SheetThumb
                   aid={aid}
-                  onOpen={() => {
-                    if (didDragRef.current) return; // a drag just ended — don't open
-                    setViewer(idx);
-                  }}
+                  onOpen={() => setViewer(idx)}
                   onRemove={() => {
                     removeSongSheet(songId, aid);
                     removeSheetEverywhere(aid);
                   }}
                 />
+                {orderedIds.length > 1 && (
+                  <span
+                    onPointerDown={(e) => onGripDown(e, aid)}
+                    onPointerMove={onGripMove}
+                    onPointerUp={onGripUp}
+                    onPointerCancel={onGripUp}
+                    title="끌어서 순서 변경"
+                    style={{ touchAction: "none" }}
+                    className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex cursor-grab items-center justify-center rounded-md bg-slate-900/70 px-1.5 py-0.5 text-white active:cursor-grabbing"
+                  >
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                      <circle cx="8" cy="7" r="1.4" /><circle cx="16" cy="7" r="1.4" />
+                      <circle cx="8" cy="12" r="1.4" /><circle cx="16" cy="12" r="1.4" />
+                      <circle cx="8" cy="17" r="1.4" /><circle cx="16" cy="17" r="1.4" />
+                    </svg>
+                  </span>
+                )}
               </div>
             ))}
           </div>
