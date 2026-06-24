@@ -57,69 +57,96 @@ export default function SongAttachEditor({
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
 
   // ---- drag-to-reorder sheets (mouse drag / long-press touch) ----
+  // Uses window-level pointer listeners (not setPointerCapture): when the dragged
+  // thumbnail's DOM node is moved during a reorder the browser would drop element
+  // capture, freezing the drag. Window listeners survive the reorder.
+  const [dragAid, setDragAid] = useState<string | null>(null);
   const [dragOrder, setDragOrder] = useState<string[] | null>(null);
   const dragAidRef = useRef<string | null>(null);
+  const dragOrderRef = useRef<string[] | null>(null);
   const didDragRef = useRef(false);
-  const pendingMouse = useRef<{ aid: string; x: number; y: number } | null>(null);
+  const pressRef = useRef<{ aid: string; x: number; y: number; type: string } | null>(null);
   const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lpStart = useRef<{ x: number; y: number } | null>(null);
+  const sheetIdsRef = useRef(sheetIds);
+  sheetIdsRef.current = sheetIds;
+  const songIdRef = useRef(songId);
+  songIdRef.current = songId;
   const orderedIds = dragOrder ?? sheetIds;
 
-  const beginSheetDrag = (aid: string) => {
+  const beginDrag = (aid: string) => {
     dragAidRef.current = aid;
-    setDragOrder(sheetIds.slice());
+    dragOrderRef.current = sheetIdsRef.current.slice();
+    setDragAid(aid);
+    setDragOrder(sheetIdsRef.current.slice());
   };
-  const cancelLP = () => {
-    if (lpTimer.current) clearTimeout(lpTimer.current);
-    lpTimer.current = null;
-    lpStart.current = null;
-  };
-  const onThumbDown = (e: React.PointerEvent, aid: string) => {
-    if ((e.target as HTMLElement).closest('[aria-label="악보 삭제"]')) return; // let remove work
-    didDragRef.current = false;
-    // capture so move/up keep firing even if the finger leaves this thumb
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-    if (e.pointerType === "mouse") {
-      if (e.button !== 0) return;
-      pendingMouse.current = { aid, x: e.clientX, y: e.clientY };
-    } else {
-      lpStart.current = { x: e.clientX, y: e.clientY };
-      lpTimer.current = setTimeout(() => beginSheetDrag(aid), 300);
+  // stable listeners that delegate to the latest logic via refs
+  const moveLogic = useRef<(e: PointerEvent) => void>(() => {});
+  const upLogic = useRef<() => void>(() => {});
+  const winMove = useRef((e: PointerEvent) => moveLogic.current(e)).current;
+  const winUp = useRef(() => upLogic.current()).current;
+
+  moveLogic.current = (e: PointerEvent) => {
+    const press = pressRef.current;
+    if (!press) return;
+    const moved = Math.hypot(e.clientX - press.x, e.clientY - press.y);
+    if (!dragAidRef.current) {
+      if (press.type === "mouse" && moved > 6) {
+        beginDrag(press.aid); // mouse: start after a small move so clicks still open
+      } else if (lpTimer.current && moved > 10) {
+        clearTimeout(lpTimer.current); // touch: early move = scroll intent, cancel long-press
+        lpTimer.current = null;
+      }
+      if (!dragAidRef.current) return;
     }
-  };
-  const onThumbMove = (e: React.PointerEvent) => {
-    // mouse: start the drag only after a small movement (so a click still opens)
-    const pm = pendingMouse.current;
-    if (pm && !dragAidRef.current && Math.hypot(e.clientX - pm.x, e.clientY - pm.y) > 6) {
-      beginSheetDrag(pm.aid);
-    }
-    // touch: a real move before the long-press fires is a scroll, not a drag
-    if (lpTimer.current && lpStart.current && Math.hypot(e.clientX - lpStart.current.x, e.clientY - lpStart.current.y) > 10) {
-      cancelLP();
-    }
-    if (!dragAidRef.current) return;
     e.preventDefault();
     const over = (document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)
       ?.closest("[data-thumb-aid]")
       ?.getAttribute("data-thumb-aid");
     if (!over || over === dragAidRef.current) return;
+    const base = (dragOrderRef.current ?? sheetIdsRef.current).slice();
+    const from = base.indexOf(dragAidRef.current);
+    const to = base.indexOf(over);
+    if (from === -1 || to === -1) return;
+    base.splice(to, 0, base.splice(from, 1)[0]);
+    dragOrderRef.current = base;
     didDragRef.current = true;
-    setDragOrder((prev) => {
-      const list = (prev ?? sheetIds).slice();
-      const from = list.indexOf(dragAidRef.current!);
-      const to = list.indexOf(over);
-      if (from === -1 || to === -1) return prev;
-      list.splice(to, 0, list.splice(from, 1)[0]);
-      return list;
-    });
+    setDragOrder(base);
   };
-  const onThumbUp = () => {
-    pendingMouse.current = null;
-    cancelLP();
-    if (dragAidRef.current && didDragRef.current && dragOrder) setSongSheets(songId, dragOrder);
+  upLogic.current = () => {
+    window.removeEventListener("pointermove", winMove);
+    window.removeEventListener("pointerup", winUp);
+    window.removeEventListener("pointercancel", winUp);
+    if (lpTimer.current) {
+      clearTimeout(lpTimer.current);
+      lpTimer.current = null;
+    }
+    if (dragAidRef.current && didDragRef.current && dragOrderRef.current) {
+      setSongSheets(songIdRef.current, dragOrderRef.current);
+    }
     dragAidRef.current = null;
+    dragOrderRef.current = null;
+    pressRef.current = null;
+    setDragAid(null);
     setDragOrder(null);
   };
+
+  const onThumbDown = (e: React.PointerEvent, aid: string) => {
+    if ((e.target as HTMLElement).closest('[aria-label="악보 삭제"]')) return; // let remove work
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    didDragRef.current = false;
+    pressRef.current = { aid, x: e.clientX, y: e.clientY, type: e.pointerType };
+    if (e.pointerType !== "mouse") {
+      lpTimer.current = setTimeout(() => beginDrag(aid), 300);
+    }
+    window.addEventListener("pointermove", winMove, { passive: false });
+    window.addEventListener("pointerup", winUp);
+    window.addEventListener("pointercancel", winUp);
+  };
+  useEffect(() => () => {
+    window.removeEventListener("pointermove", winMove);
+    window.removeEventListener("pointerup", winUp);
+    window.removeEventListener("pointercancel", winUp);
+  }, [winMove, winUp]);
 
   const startRecrop = async (aid: string) => {
     setSheetMenu(null);
@@ -230,11 +257,8 @@ export default function SongAttachEditor({
                 key={aid}
                 data-thumb-aid={aid}
                 onPointerDown={(e) => onThumbDown(e, aid)}
-                onPointerMove={onThumbMove}
-                onPointerUp={onThumbUp}
-                onPointerCancel={onThumbUp}
                 style={{ touchAction: "none" }}
-                className={dragAidRef.current === aid ? "opacity-50" : ""}
+                className={dragAid === aid ? "opacity-40" : ""}
               >
                 <SheetThumb
                   aid={aid}
