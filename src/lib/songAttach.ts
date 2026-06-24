@@ -106,6 +106,17 @@ export function setSongYoutube(id: string, url: string | null) {
 export function addSongSheet(id: string, aid: string) {
   update(id, (a) => ({ ...a, sheets: [...(a.sheets ?? []), aid] }));
 }
+/** Replace the sheet order of a song (drag-and-drop commit). Keeps only the
+ *  ids that already belong to the song, so a stale list can't add/drop sheets. */
+export function setSongSheets(id: string, order: string[]) {
+  update(id, (a) => {
+    const current = a.sheets ?? [];
+    const next = order.filter((x) => current.includes(x));
+    // guard: only accept a pure reordering of the same set
+    if (next.length !== current.length) return a;
+    return { ...a, sheets: next };
+  });
+}
 export function removeSongSheet(id: string, aid: string) {
   update(id, (a) => {
     const sheets = (a.sheets ?? []).filter((x) => x !== aid);

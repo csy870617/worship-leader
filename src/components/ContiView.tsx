@@ -115,6 +115,16 @@ export default function ContiView({
   }, []);
 
   const go = (d: number) => setPage((p) => Math.min(total - 1, Math.max(0, p + d)));
+  // flip pages with the mouse wheel / trackpad (one notch = one page)
+  const wheelLock = useRef(false);
+  const onWheel = (e: React.WheelEvent) => {
+    if (Math.abs(e.deltaY) < 8 || wheelLock.current) return;
+    wheelLock.current = true;
+    go(e.deltaY > 0 ? 1 : -1);
+    window.setTimeout(() => {
+      wheelLock.current = false;
+    }, 350);
+  };
   useEffect(() => {
     if (page > total - 1) setPage(Math.max(0, total - 1));
   }, [total, page]);
@@ -200,7 +210,7 @@ export default function ContiView({
           </div>
         </div>
       ) : (
-        <div className="relative flex-1 overflow-hidden">
+        <div className="relative flex-1 overflow-hidden" onWheel={onWheel}>
           <div
             className="flex h-full justify-center px-3 py-3"
             style={{ touchAction: "pan-y" }}

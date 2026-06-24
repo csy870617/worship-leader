@@ -5,6 +5,7 @@ import {
   removeSongSheet,
   replaceSongSheet,
   setSongNote,
+  setSongSheets,
   setSongSheetTexts,
   setSongYoutube,
   useSongAttach,
@@ -54,6 +55,71 @@ export default function SongAttachEditor({
   const [sheetMenu, setSheetMenu] = useState<string | null>(null);
   const [recrop, setRecrop] = useState<{ aid: string; file: File } | null>(null);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
+
+  // ---- drag-to-reorder sheets (mouse drag / long-press touch) ----
+  const [dragOrder, setDragOrder] = useState<string[] | null>(null);
+  const dragAidRef = useRef<string | null>(null);
+  const didDragRef = useRef(false);
+  const pendingMouse = useRef<{ aid: string; x: number; y: number } | null>(null);
+  const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lpStart = useRef<{ x: number; y: number } | null>(null);
+  const orderedIds = dragOrder ?? sheetIds;
+
+  const beginSheetDrag = (aid: string) => {
+    dragAidRef.current = aid;
+    setDragOrder(sheetIds.slice());
+  };
+  const cancelLP = () => {
+    if (lpTimer.current) clearTimeout(lpTimer.current);
+    lpTimer.current = null;
+    lpStart.current = null;
+  };
+  const onThumbDown = (e: React.PointerEvent, aid: string) => {
+    if ((e.target as HTMLElement).closest('[aria-label="악보 삭제"]')) return; // let remove work
+    didDragRef.current = false;
+    // capture so move/up keep firing even if the finger leaves this thumb
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    if (e.pointerType === "mouse") {
+      if (e.button !== 0) return;
+      pendingMouse.current = { aid, x: e.clientX, y: e.clientY };
+    } else {
+      lpStart.current = { x: e.clientX, y: e.clientY };
+      lpTimer.current = setTimeout(() => beginSheetDrag(aid), 300);
+    }
+  };
+  const onThumbMove = (e: React.PointerEvent) => {
+    // mouse: start the drag only after a small movement (so a click still opens)
+    const pm = pendingMouse.current;
+    if (pm && !dragAidRef.current && Math.hypot(e.clientX - pm.x, e.clientY - pm.y) > 6) {
+      beginSheetDrag(pm.aid);
+    }
+    // touch: a real move before the long-press fires is a scroll, not a drag
+    if (lpTimer.current && lpStart.current && Math.hypot(e.clientX - lpStart.current.x, e.clientY - lpStart.current.y) > 10) {
+      cancelLP();
+    }
+    if (!dragAidRef.current) return;
+    e.preventDefault();
+    const over = (document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)
+      ?.closest("[data-thumb-aid]")
+      ?.getAttribute("data-thumb-aid");
+    if (!over || over === dragAidRef.current) return;
+    didDragRef.current = true;
+    setDragOrder((prev) => {
+      const list = (prev ?? sheetIds).slice();
+      const from = list.indexOf(dragAidRef.current!);
+      const to = list.indexOf(over);
+      if (from === -1 || to === -1) return prev;
+      list.splice(to, 0, list.splice(from, 1)[0]);
+      return list;
+    });
+  };
+  const onThumbUp = () => {
+    pendingMouse.current = null;
+    cancelLP();
+    if (dragAidRef.current && didDragRef.current && dragOrder) setSongSheets(songId, dragOrder);
+    dragAidRef.current = null;
+    setDragOrder(null);
+  };
 
   const startRecrop = async (aid: string) => {
     setSheetMenu(null);
@@ -157,18 +223,31 @@ export default function SongAttachEditor({
         <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
           악보
         </label>
-        {sheetIds.length > 0 && (
+        {orderedIds.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
-            {sheetIds.map((aid, idx) => (
-              <SheetThumb
+            {orderedIds.map((aid, idx) => (
+              <div
                 key={aid}
-                aid={aid}
-                onOpen={() => setViewer(idx)}
-                onRemove={() => {
-                  removeSongSheet(songId, aid);
-                  removeSheetEverywhere(aid);
-                }}
-              />
+                data-thumb-aid={aid}
+                onPointerDown={(e) => onThumbDown(e, aid)}
+                onPointerMove={onThumbMove}
+                onPointerUp={onThumbUp}
+                onPointerCancel={onThumbUp}
+                style={{ touchAction: "none" }}
+                className={dragAidRef.current === aid ? "opacity-50" : ""}
+              >
+                <SheetThumb
+                  aid={aid}
+                  onOpen={() => {
+                    if (didDragRef.current) return; // a drag just ended — don't open
+                    setViewer(idx);
+                  }}
+                  onRemove={() => {
+                    removeSongSheet(songId, aid);
+                    removeSheetEverywhere(aid);
+                  }}
+                />
+              </div>
             ))}
           </div>
         )}
