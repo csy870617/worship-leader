@@ -1,26 +1,10 @@
-import type { Song, Tempo } from "../types";
-import { TEMPO_LABEL } from "../types";
+import type { Song } from "../types";
 import { daysSince } from "../lib/useHistory";
-
-const TEMPO_STYLE: Record<Tempo, string> = {
-  FAST: "bg-rose-100 text-rose-700",
-  SLOW: "bg-sky-100 text-sky-700",
-  MEDIUM: "bg-amber-100 text-amber-700",
-  HYMN: "bg-emerald-100 text-emerald-700",
-};
 
 export function KeyBadge({ k }: { k: string }) {
   return (
     <span className="inline-flex min-w-[1.6rem] items-center justify-center rounded-md bg-indigo-600 px-1.5 py-0.5 text-xs font-bold text-white">
       {k}
-    </span>
-  );
-}
-
-export function TempoBadge({ t }: { t: Tempo }) {
-  return (
-    <span className={`rounded-md px-1.5 py-0.5 text-xs font-semibold ${TEMPO_STYLE[t]}`}>
-      {TEMPO_LABEL[t]}
     </span>
   );
 }
@@ -56,9 +40,6 @@ export function SongMeta({ song, lastUsed }: { song: Song; lastUsed?: string | n
     <div className="mt-1 flex flex-wrap items-center gap-1">
       {song.keys.map((k) => (
         <KeyBadge key={k} k={k} />
-      ))}
-      {song.tempos.map((t) => (
-        <TempoBadge key={t} t={t} />
       ))}
       {song.hymnNo != null && (
         <span className="rounded-md bg-slate-200 px-1.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-200">

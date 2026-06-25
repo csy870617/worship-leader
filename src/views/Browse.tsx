@@ -2,21 +2,20 @@ import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { data, normalize, sortKo } from "../data";
 import { useSongs } from "../lib/catalog";
-import { TEMPO_LABEL, type Song } from "../types";
+import { type Song } from "../types";
 import { useHistory } from "../lib/useHistory";
 import { setLastBrowse } from "../lib/browseState";
 import ChipRow from "../components/ChipRow";
 import SongList from "../components/SongList";
 
-type Axis = "key" | "theme" | "tempo";
+type Axis = "key" | "theme";
 const AXES: { value: Axis; label: string }[] = [
   { value: "key", label: "코드" },
   { value: "theme", label: "주제" },
-  { value: "tempo", label: "템포" },
 ];
 
 // which URL param holds each axis's selected value
-const PARAM: Record<Axis, string> = { key: "key", theme: "theme", tempo: "tempo" };
+const PARAM: Record<Axis, string> = { key: "key", theme: "theme" };
 
 // Code filter groups Eb+E under "E" and Bb+B under "B"; other keys stand alone.
 const KEY_GROUPS = ["C", "D", "E", "F", "G", "A", "B"];
@@ -36,7 +35,6 @@ export default function Browse() {
   const list = (name: string) => (params.get(name) ?? "").split(",").filter(Boolean);
   const selKeys = list("key");
   const selThemes = list("theme");
-  const selTempos = list("tempo");
   const { history } = useHistory();
   const { songs, hiddenCount } = useSongs();
 
@@ -48,8 +46,7 @@ export default function Browse() {
 
   const options = useMemo(() => {
     if (axis === "key") return KEY_GROUPS.map((k) => ({ value: k, label: k }));
-    if (axis === "theme") return data.themes.map((t) => ({ value: t, label: t }));
-    return data.tempos.map((t) => ({ value: t, label: TEMPO_LABEL[t] }));
+    return data.themes.map((t) => ({ value: t, label: t }));
   }, [axis]);
 
   // OR within each axis, AND across axes
@@ -68,7 +65,6 @@ export default function Browse() {
       const wanted = new Set(selKeys.flatMap(keyMembers));
       arr = arr.filter((s) => s.keys.some((k) => wanted.has(k)));
     }
-    if (selTempos.length) arr = arr.filter((s) => s.tempos.some((t) => selTempos.includes(t)));
     if (selThemes.length) arr = arr.filter((s) => s.themes.some((t) => selThemes.includes(t)));
     arr = [...arr];
     if (sort === "recent") {
@@ -95,27 +91,19 @@ export default function Browse() {
     setParams(p, { replace: true });
   };
 
-  // toggle a value inside an axis — tempo is multi-select, code/theme single-select
+  // code & theme are single-select (pick one, or clear if re-tapped)
   const toggleVal = (name: string, value: string) => {
     const cur = list(name);
-    let next: string[];
-    if (name === "tempo") {
-      next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
-    } else {
-      next = cur.includes(value) ? [] : [value]; // pick one, or clear if re-tapped
-    }
+    const next = cur.includes(value) ? [] : [value];
     patch({ [name]: next.length ? next.join(",") : null });
   };
 
   // active-filter summary pills (one per selected value)
   const pills: { axis: Axis; value: string; label: string }[] = [];
   selKeys.forEach((v) => pills.push({ axis: "key", value: v, label: v }));
-  selTempos.forEach((v) =>
-    pills.push({ axis: "tempo", value: v, label: TEMPO_LABEL[v as keyof typeof TEMPO_LABEL] ?? v })
-  );
   selThemes.forEach((v) => pills.push({ axis: "theme", value: v, label: v }));
 
-  const activeValues = axis === "key" ? selKeys : axis === "theme" ? selThemes : selTempos;
+  const activeValues = axis === "key" ? selKeys : selThemes;
 
   return (
     <div>
@@ -192,7 +180,7 @@ export default function Browse() {
             ))}
             {pills.length > 1 && (
               <button
-                onClick={() => patch({ key: null, theme: null, tempo: null })}
+                onClick={() => patch({ key: null, theme: null })}
                 className="text-xs font-medium text-slate-400 underline dark:text-slate-500"
               >
                 전체 해제

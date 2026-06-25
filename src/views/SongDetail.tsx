@@ -1,8 +1,7 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { youtubeSearchUrl } from "../data";
 import { hideSong, isOverridden, isUserSong, relatedSongs, removeSong, useSongs } from "../lib/catalog";
-import { TEMPO_LABEL } from "../types";
-import { KeyBadge, TempoBadge, LastUsedBadge } from "../components/Badges";
+import { KeyBadge, LastUsedBadge } from "../components/Badges";
 import FavoriteButton from "../components/FavoriteButton";
 import AddToContiButton from "../components/AddToContiButton";
 import SongAttachEditor from "../components/SongAttach";
@@ -153,18 +152,6 @@ export default function SongDetail() {
           )}
         </Field>
 
-        <Field label="템포">
-          {song.tempos.length ? (
-            <div className="flex flex-wrap gap-1.5">
-              {song.tempos.map((t) => (
-                <TempoBadge key={t} t={t} />
-              ))}
-            </div>
-          ) : (
-            <Empty />
-          )}
-        </Field>
-
         <Field label="주제">
           {song.themes.length ? (
             <div className="flex flex-wrap gap-1.5">
@@ -208,10 +195,9 @@ export default function SongDetail() {
             어울리는 곡 추천
           </h2>
           <ul className="space-y-1.5">
-            {related.map(({ song: s, relation, sameTempo, sharedThemes }) => {
+            {related.map(({ song: s, relation, sharedThemes }) => {
               const reasons = [
                 relation.label,
-                sameTempo ? `같은 템포` : "",
                 sharedThemes[0] ? `주제 ${sharedThemes[0]}` : "",
               ].filter(Boolean);
               return (
@@ -221,7 +207,7 @@ export default function SongDetail() {
                       {s.title}
                     </Link>
                     <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                      {s.keys.join("/")} · {TEMPO_LABEL[s.tempos[0]]}
+                      {s.keys.join("/")}
                       {reasons.length ? ` · ${reasons.join(", ")}` : ""}
                     </span>
                   </div>
@@ -234,8 +220,7 @@ export default function SongDetail() {
       )}
 
       <p className="mt-8 text-xs leading-relaxed text-slate-400 dark:text-slate-500">
-        템포 분류: {Object.values(TEMPO_LABEL).join(" · ")}. 데이터는 인도자 시트
-        스냅샷 기준입니다.
+        데이터는 인도자 시트 스냅샷 기준입니다.
       </p>
     </div>
   );

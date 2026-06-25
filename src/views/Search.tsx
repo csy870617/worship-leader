@@ -2,14 +2,13 @@ import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { data, normalize, sortKo } from "../data";
 import { useSongs } from "../lib/catalog";
-import { TEMPO_LABEL, type Song } from "../types";
+import { type Song } from "../types";
 import SongList from "../components/SongList";
 
 export default function Search() {
   const [params, setParams] = useSearchParams();
   const q = params.get("q") ?? "";
   const key = params.get("key") ?? "";
-  const tempo = params.get("tempo") ?? "";
   const theme = params.get("theme") ?? "";
 
   const patch = (next: Record<string, string>) => {
@@ -21,7 +20,7 @@ export default function Search() {
     setParams(p, { replace: true });
   };
 
-  const active = q.trim() || key || tempo || theme;
+  const active = q.trim() || key || theme;
   const { songs } = useSongs();
 
   const results = useMemo(() => {
@@ -30,7 +29,6 @@ export default function Search() {
     return songs
       .filter((s: Song) => {
         if (key && !s.keys.includes(key)) return false;
-        if (tempo && !s.tempos.includes(tempo as Song["tempos"][number])) return false;
         if (theme && !s.themes.includes(theme)) return false;
         if (nq) {
           const hit =
@@ -43,7 +41,7 @@ export default function Search() {
         return true;
       })
       .sort(sortKo);
-  }, [q, key, tempo, theme, active, songs]);
+  }, [q, key, theme, active, songs]);
 
   const selectCls =
     "rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
@@ -73,10 +71,6 @@ export default function Search() {
           <select value={key} onChange={(e) => patch({ key: e.target.value })} aria-label="코드" className={selectCls}>
             <option value="">코드 전체</option>
             {data.keys.map((k) => <option key={k} value={k}>{k}</option>)}
-          </select>
-          <select value={tempo} onChange={(e) => patch({ tempo: e.target.value })} aria-label="템포" className={selectCls}>
-            <option value="">템포 전체</option>
-            {data.tempos.map((t) => <option key={t} value={t}>{TEMPO_LABEL[t]}</option>)}
           </select>
           <select value={theme} onChange={(e) => patch({ theme: e.target.value })} aria-label="주제" className={`${selectCls} min-w-0 flex-1`}>
             <option value="">주제 전체</option>

@@ -1,16 +1,20 @@
 import { useMemo, useState } from "react";
 import { data, sortKo } from "../data";
-import { TEMPO_LABEL, type Song } from "../types";
+import { type Song } from "../types";
 import { useHistory } from "../lib/useHistory";
 import ChipRow from "./ChipRow";
 import SongList from "./SongList";
 
-type Axis = "key" | "theme" | "tempo";
+type Axis = "key" | "theme";
 const AXES: { value: Axis; label: string }[] = [
   { value: "key", label: "코드" },
   { value: "theme", label: "주제" },
-  { value: "tempo", label: "템포" },
 ];
+
+// Code filter groups Eb+E under "E" and Bb+B under "B"; other keys stand alone.
+const KEY_GROUPS = ["C", "D", "E", "F", "G", "A", "B"];
+const KEY_MEMBERS: Record<string, string[]> = { E: ["Eb", "E"], B: ["Bb", "B"] };
+const keyMembers = (group: string) => KEY_MEMBERS[group] ?? [group];
 
 // rank a song by its lowest key using the chip order (C, D, Eb, …)
 const KEY_ORDER = new Map(data.keys.map((k, i) => [k, i]));
@@ -18,7 +22,7 @@ const keyRank = (s: Song) =>
   s.keys.length ? Math.min(...s.keys.map((k) => KEY_ORDER.get(k) ?? 99)) : 99;
 
 /**
- * A song list with the same code/theme/tempo filtering + sorting as 둘러보기,
+ * A song list with the same code/theme filtering + sorting as 찬양목록,
  * but driven by local state (independent per screen).
  */
 export default function FilteredSongList({
@@ -31,18 +35,19 @@ export default function FilteredSongList({
   const { history } = useHistory();
   const [axis, setAxis] = useState<Axis>("key");
   const [sort, setSort] = useState<"key" | "title" | "recent">("title");
-  const [sel, setSel] = useState<Record<Axis, string[]>>({ key: [], theme: [], tempo: [] });
+  const [sel, setSel] = useState<Record<Axis, string[]>>({ key: [], theme: [] });
 
   const options = useMemo(() => {
-    if (axis === "key") return data.keys.map((k) => ({ value: k, label: k }));
-    if (axis === "theme") return data.themes.map((t) => ({ value: t, label: t }));
-    return data.tempos.map((t) => ({ value: t, label: TEMPO_LABEL[t] }));
+    if (axis === "key") return KEY_GROUPS.map((k) => ({ value: k, label: k }));
+    return data.themes.map((t) => ({ value: t, label: t }));
   }, [axis]);
 
   const filtered = useMemo(() => {
     let arr = songs;
-    if (sel.key.length) arr = arr.filter((s) => s.keys.some((k) => sel.key.includes(k)));
-    if (sel.tempo.length) arr = arr.filter((s) => s.tempos.some((t) => sel.tempo.includes(t)));
+    if (sel.key.length) {
+      const wanted = new Set(sel.key.flatMap(keyMembers));
+      arr = arr.filter((s) => s.keys.some((k) => wanted.has(k)));
+    }
     if (sel.theme.length) arr = arr.filter((s) => s.themes.some((t) => sel.theme.includes(t)));
     arr = [...arr];
     if (sort === "recent") {
@@ -60,19 +65,14 @@ export default function FilteredSongList({
     return arr;
   }, [songs, sel, sort, history]);
 
+  // single-select per axis (pick one, or clear if re-tapped)
   const toggleVal = (a: Axis, value: string) =>
-    setSel((s) => ({
-      ...s,
-      [a]: s[a].includes(value) ? s[a].filter((v) => v !== value) : [...s[a], value],
-    }));
+    setSel((s) => ({ ...s, [a]: s[a].includes(value) ? [] : [value] }));
   const clearAxis = (a: Axis) => setSel((s) => ({ ...s, [a]: [] }));
-  const clearAll = () => setSel({ key: [], theme: [], tempo: [] });
+  const clearAll = () => setSel({ key: [], theme: [] });
 
   const pills: { axis: Axis; value: string; label: string }[] = [];
   sel.key.forEach((v) => pills.push({ axis: "key", value: v, label: v }));
-  sel.tempo.forEach((v) =>
-    pills.push({ axis: "tempo", value: v, label: TEMPO_LABEL[v as keyof typeof TEMPO_LABEL] ?? v })
-  );
   sel.theme.forEach((v) => pills.push({ axis: "theme", value: v, label: v }));
 
   return (

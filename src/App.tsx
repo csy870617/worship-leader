@@ -144,7 +144,6 @@ export default function App() {
               {/* legacy deep links */}
               <Route path="/code" element={<Navigate to="/browse?axis=key" replace />} />
               <Route path="/theme" element={<Navigate to="/browse?axis=theme" replace />} />
-              <Route path="/tempo" element={<Navigate to="/browse?axis=tempo" replace />} />
               <Route path="*" element={<Navigate to="/browse" replace />} />
             </Routes>
           </main>

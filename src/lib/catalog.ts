@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { staticSongs } from "../data";
-import type { Song, Tempo } from "../types";
+import type { Song } from "../types";
 import { bestRelation, type Relation } from "./keys";
 
 // ---- merged catalog = static snapshot + user-added songs, minus hidden ----
@@ -18,7 +18,6 @@ function sanitizeSong(s: any): Song | null {
     id: s.id,
     title: s.title,
     keys: arr(s.keys),
-    tempos: arr(s.tempos) as Song["tempos"],
     themes: arr(s.themes),
     hymnNo: typeof s.hymnNo === "number" ? s.hymnNo : null,
   };
@@ -146,7 +145,6 @@ export function getHiddenSongs(): Song[] {
 export interface SongInput {
   title: string;
   keys: string[];
-  tempos: Tempo[];
   themes: string[];
   hymnNo: number | null;
 }
@@ -186,8 +184,6 @@ export function resetOverride(id: string) {
 // ---- query helpers (operate on the current merged catalog) ----
 export const byKey = (key: string) => songs.filter((s) => s.keys.includes(key));
 export const byTheme = (theme: string) => songs.filter((s) => s.themes.includes(theme));
-export const byTempo = (tempo: string) =>
-  songs.filter((s) => s.tempos.includes(tempo as Tempo));
 
 export interface Suggestion {
   song: Song;
@@ -215,11 +211,10 @@ export function compatibleSongs(
 export interface Related {
   song: Song;
   relation: Relation;
-  sameTempo: boolean;
   sharedThemes: string[];
 }
 
-/** Songs that fit a given song across key + tempo + theme, best matches first. */
+/** Songs that fit a given song across key + theme, best matches first. */
 export function relatedSongs(
   song: Song,
   excludeIds: Set<string> = new Set(),
@@ -229,11 +224,9 @@ export function relatedSongs(
     .filter((s) => !excludeIds.has(s.id))
     .map((s) => {
       const relation = bestRelation(song.keys, s.keys);
-      const sameTempo = song.tempos.some((t) => s.tempos.includes(t));
       const sharedThemes = s.themes.filter((t) => song.themes.includes(t));
-      const score =
-        relation.score * 2 + (sameTempo ? 2 : 0) + Math.min(sharedThemes.length, 3) * 2;
-      return { song: s, relation, sameTempo, sharedThemes, score };
+      const score = relation.score * 2 + Math.min(sharedThemes.length, 3) * 2;
+      return { song: s, relation, sharedThemes, score };
     })
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score || a.song.title.localeCompare(b.song.title, "ko"))
