@@ -12,22 +12,13 @@
     "Bb",
     "B"
   ],
-  "tempos": [
-    "FAST",
-    "SLOW",
-    "MEDIUM"
-  ],
   "themes": [
-    "찬양과 경배",
-    "예수와 십자가",
-    "하나님과 성령",
-    "감사와 은혜",
-    "사랑",
-    "고백",
-    "간구와 영적전쟁",
-    "결단과 헌신",
-    "인도와 보호",
-    "선교와 교제"
+    "경배와 찬양",
+    "은혜와 사랑",
+    "회개와 고백",
+    "기도와 간구",
+    "축복과 교제",
+    "선교와 승리"
   ],
   "songs": [
     {
@@ -36,12 +27,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -52,12 +39,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -67,12 +50,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -82,11 +61,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -96,12 +72,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -111,12 +83,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "찬양과 경배"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -126,11 +94,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -140,11 +105,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -154,12 +116,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -169,12 +127,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -184,12 +138,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "인도와 보호"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -199,11 +149,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -213,12 +160,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -228,12 +171,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -243,12 +182,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "선교와 교제",
-        "간구와 영적전쟁"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -258,13 +193,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -274,12 +204,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -289,13 +215,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백",
-        "선교와 교제"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -305,11 +226,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -319,12 +237,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -334,12 +248,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -349,12 +259,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -364,11 +270,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -378,12 +281,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -393,12 +292,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -408,12 +303,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "사랑"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -423,12 +314,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -438,11 +325,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -452,13 +336,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "감사와 은혜",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -468,11 +347,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -482,11 +358,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -496,12 +369,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "인도와 보호",
-        "간구와 영적전쟁"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -511,12 +380,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -526,13 +391,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "예수와 십자가",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -543,12 +403,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -560,12 +416,8 @@
         "A",
         "Bb"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -575,11 +427,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "간구와 영적전쟁"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -589,11 +438,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -603,12 +449,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "찬양과 경배"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -618,12 +460,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -633,12 +471,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "간구와 영적전쟁"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -648,12 +482,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -663,12 +493,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "하나님과 성령"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -678,12 +504,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -693,12 +515,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -708,11 +526,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -722,12 +537,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -737,12 +548,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -752,12 +559,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "감사와 은혜"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -767,11 +570,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -781,12 +581,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -796,12 +592,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -811,12 +603,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -827,12 +615,8 @@
         "D",
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -844,12 +628,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -859,12 +639,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -874,11 +650,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -888,12 +661,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -903,12 +672,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -919,11 +684,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -934,12 +696,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -949,12 +707,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -964,12 +718,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -979,12 +729,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -994,12 +740,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1009,12 +751,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1024,11 +762,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1038,11 +773,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -1052,11 +784,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -1066,12 +795,8 @@
       "keys": [
         "Bb"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -1081,11 +806,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1095,11 +817,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "인도와 보호"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1109,12 +828,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1125,11 +840,8 @@
         "A",
         "Bb"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1139,12 +851,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1154,12 +862,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -1169,11 +873,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1183,12 +884,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1198,11 +895,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1212,12 +906,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1227,12 +917,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1242,12 +928,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1259,12 +941,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -1274,11 +952,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1288,13 +963,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "사랑",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1304,12 +974,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "사랑"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1319,12 +985,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -1334,12 +996,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -1350,12 +1008,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -1365,12 +1019,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1381,12 +1031,8 @@
         "C",
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1396,12 +1042,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1411,11 +1053,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1425,12 +1064,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "사랑"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1440,11 +1075,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1454,12 +1086,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1471,12 +1099,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1486,12 +1110,8 @@
       "keys": [
         "Bb"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1501,12 +1121,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1516,12 +1132,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1531,12 +1143,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1546,12 +1154,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -1561,12 +1165,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -1576,12 +1176,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1591,12 +1187,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1608,11 +1200,8 @@
         "D",
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1622,12 +1211,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1637,13 +1222,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1653,12 +1233,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1668,12 +1244,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1683,12 +1255,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1698,11 +1266,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1712,12 +1277,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1730,12 +1291,8 @@
         "A",
         "Bb"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1745,12 +1302,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1760,12 +1313,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1776,13 +1325,8 @@
         "D",
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -1792,13 +1336,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "예수와 십자가",
-        "선교와 교제"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -1810,12 +1349,8 @@
         "A",
         "Bb"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1825,12 +1360,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "인도와 보호"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1841,12 +1372,8 @@
         "E",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1857,12 +1384,8 @@
         "F",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -1872,12 +1395,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1889,12 +1408,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "선교와 교제"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1904,12 +1419,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -1919,11 +1430,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -1934,12 +1442,8 @@
         "C",
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -1949,12 +1453,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "인도와 보호"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -1964,12 +1464,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "사랑",
-        "선교와 교제"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1979,12 +1475,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -1994,11 +1486,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2008,12 +1497,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -2023,11 +1508,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2037,12 +1519,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2052,11 +1530,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "인도와 보호"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -2066,12 +1541,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -2081,12 +1552,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "결단과 헌신",
-        "간구와 영적전쟁"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2097,12 +1564,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -2112,12 +1575,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2127,11 +1586,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "인도와 보호"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -2141,12 +1597,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2156,12 +1608,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2171,11 +1619,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2186,12 +1631,8 @@
         "C",
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "결단과 헌신"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2201,12 +1642,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2216,11 +1653,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2230,11 +1664,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2244,13 +1675,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "간구와 영적전쟁",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2260,11 +1686,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2274,12 +1697,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2289,12 +1708,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2304,12 +1719,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2319,12 +1730,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2334,11 +1741,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -2348,12 +1752,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2363,12 +1763,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2379,12 +1775,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -2394,12 +1786,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2409,12 +1797,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -2424,12 +1808,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -2439,12 +1819,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "사랑",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -2454,11 +1830,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "인도와 보호"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2469,11 +1842,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2483,12 +1853,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2498,12 +1864,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "감사와 은혜"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2514,12 +1876,8 @@
         "D",
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -2530,12 +1888,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "결단과 헌신"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2545,12 +1899,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -2564,12 +1914,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -2580,12 +1926,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "간구와 영적전쟁"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -2595,12 +1937,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2610,11 +1948,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2625,12 +1960,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2640,11 +1971,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2655,12 +1983,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -2670,12 +1994,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -2685,12 +2005,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "사랑"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2700,12 +2016,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "사랑"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2715,12 +2027,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -2730,13 +2038,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "하나님과 성령",
-        "사랑"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2746,13 +2049,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "사랑",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2762,12 +2060,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "사랑"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2777,12 +2071,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "사랑"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2792,12 +2082,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "감사와 은혜"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2807,12 +2093,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "하나님과 성령"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -2822,11 +2104,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2836,12 +2115,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "찬양과 경배"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -2852,11 +2127,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2866,11 +2138,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2880,12 +2149,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2897,12 +2162,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2912,12 +2173,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -2928,12 +2185,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2943,12 +2196,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2958,12 +2207,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "하나님과 성령",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2973,12 +2218,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -2989,11 +2230,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3003,11 +2241,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3017,12 +2252,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3032,12 +2263,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3047,12 +2274,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3062,12 +2285,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -3078,12 +2297,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -3093,12 +2308,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "예수와 십자가"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3108,11 +2319,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3122,11 +2330,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3136,12 +2341,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3151,12 +2352,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3166,12 +2363,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "고백",
-        "간구와 영적전쟁"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3181,12 +2374,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3198,12 +2387,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "인도와 보호"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3213,12 +2398,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3229,12 +2410,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3244,12 +2421,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3259,12 +2432,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3274,13 +2443,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "사랑",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3290,12 +2454,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "예수와 십자가"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -3305,12 +2465,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3320,12 +2476,8 @@
       "keys": [
         "B"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "예수와 십자가"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -3336,12 +2488,8 @@
         "D",
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3352,12 +2500,8 @@
         "C",
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3368,12 +2512,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3383,12 +2523,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "사랑",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3398,12 +2534,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3415,12 +2547,8 @@
         "A",
         "Bb"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3431,12 +2559,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "인도와 보호"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3446,12 +2570,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3461,13 +2581,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "하나님과 성령",
-        "사랑"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3477,12 +2592,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3493,12 +2604,8 @@
         "C",
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3508,12 +2615,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3523,11 +2626,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3537,12 +2637,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3552,12 +2648,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3567,11 +2659,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3582,12 +2671,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3598,12 +2683,8 @@
         "C",
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3613,12 +2694,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3629,12 +2706,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3644,11 +2717,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3658,13 +2728,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "찬양과 경배",
-        "하나님과 성령"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3674,12 +2739,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3689,12 +2750,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "인도와 보호",
-        "간구와 영적전쟁"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -3704,11 +2761,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3718,12 +2772,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3735,12 +2785,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3750,11 +2796,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3764,12 +2807,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3779,11 +2818,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3793,12 +2829,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "인도와 보호"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -3808,13 +2840,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "결단과 헌신",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3826,14 +2853,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백",
-        "인도와 보호",
-        "선교와 교제"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3845,13 +2866,8 @@
         "A",
         "B"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "예수와 십자가",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3861,12 +2877,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "사랑"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3876,12 +2888,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "사랑"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3891,11 +2899,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3906,12 +2911,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3921,11 +2922,8 @@
       "keys": [
         "Eb"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3935,12 +2933,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -3950,12 +2944,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3965,12 +2955,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -3981,12 +2967,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -3996,12 +2978,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "선교와 교제"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4011,12 +2989,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -4027,12 +3001,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4042,12 +3012,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4057,12 +3023,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4072,12 +3034,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4087,12 +3045,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4102,13 +3056,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "감사와 은혜",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4119,12 +3068,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4134,12 +3079,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "감사와 은혜"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4149,12 +3090,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4164,12 +3101,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "찬양과 경배"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4179,12 +3112,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4194,12 +3123,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4209,12 +3134,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "선교와 교제"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -4224,12 +3145,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4239,12 +3156,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4254,12 +3167,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "선교와 교제"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -4269,12 +3178,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4284,12 +3189,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4301,12 +3202,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4316,12 +3213,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "선교와 교제"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4331,11 +3224,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4345,12 +3235,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "사랑"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4361,12 +3247,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4376,12 +3258,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "결단과 헌신"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4391,11 +3269,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4405,12 +3280,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "사랑"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4420,12 +3291,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "하나님과 성령",
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4436,11 +3303,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4450,12 +3314,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4466,12 +3326,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -4481,12 +3337,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "선교와 교제"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4496,13 +3348,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가",
-        "선교와 교제"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4513,12 +3360,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4528,13 +3371,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -4544,11 +3382,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4558,12 +3393,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4573,13 +3404,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4589,12 +3415,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4605,11 +3427,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -4619,11 +3438,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4633,12 +3449,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -4648,12 +3460,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4665,12 +3473,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -4680,11 +3484,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4694,12 +3495,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "하나님과 성령"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4709,13 +3506,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -4725,11 +3517,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4740,12 +3529,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4755,12 +3540,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4770,11 +3551,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4784,12 +3562,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -4799,12 +3573,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -4814,12 +3584,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -4829,12 +3595,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -4844,12 +3606,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4859,12 +3617,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -4874,12 +3628,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "선교와 교제"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4889,12 +3639,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "간구와 영적전쟁"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4904,13 +3650,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제",
-        "간구와 영적전쟁"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -4920,11 +3661,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4935,12 +3673,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -4950,11 +3684,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -4965,12 +3696,8 @@
         "E",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -4981,11 +3708,8 @@
         "C",
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -4995,12 +3719,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -5011,12 +3731,8 @@
         "D",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -5026,12 +3742,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5041,11 +3753,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5055,12 +3764,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "하나님과 성령"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5070,12 +3775,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "하나님과 성령"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -5085,12 +3786,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5101,11 +3798,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5115,11 +3809,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5129,12 +3820,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5144,11 +3831,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5158,12 +3842,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -5173,11 +3853,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -5187,12 +3864,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -5203,12 +3876,8 @@
         "A",
         "Bb"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5218,11 +3887,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5233,12 +3899,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5248,12 +3910,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5263,12 +3921,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5278,12 +3932,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "간구와 영적전쟁"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -5295,12 +3945,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -5310,12 +3956,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5325,12 +3967,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5340,11 +3978,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5354,12 +3989,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5369,11 +4000,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -5383,12 +4011,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "하나님과 성령"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5398,12 +4022,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5414,11 +4034,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5430,12 +4047,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5445,12 +4058,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5460,11 +4069,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -5474,12 +4080,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -5489,11 +4091,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5503,12 +4102,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5518,12 +4113,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5533,11 +4124,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -5547,11 +4135,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5561,11 +4146,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -5575,11 +4157,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -5589,12 +4168,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "결단과 헌신"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5606,13 +4181,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백",
-        "인도와 보호"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -5623,11 +4193,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "인도와 보호"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -5638,11 +4205,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5652,12 +4216,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "사랑",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5668,12 +4228,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5683,12 +4239,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "사랑"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5698,12 +4250,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -5713,12 +4261,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "사랑",
-        "선교와 교제"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -5728,11 +4272,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -5742,12 +4283,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "인도와 보호"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -5757,12 +4294,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -5772,13 +4305,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "간구와 영적전쟁",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -5788,12 +4316,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -5803,13 +4327,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -5819,12 +4338,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5834,12 +4349,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "인도와 보호",
-        "선교와 교제"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -5849,12 +4360,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5864,11 +4371,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5878,11 +4382,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5892,12 +4393,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5909,11 +4406,8 @@
         "F",
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5923,12 +4417,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -5938,12 +4428,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -5953,12 +4439,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "고백"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -5968,12 +4450,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -5983,11 +4461,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -5997,13 +4472,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "사랑",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6013,12 +4483,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "간구와 영적전쟁"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -6028,11 +4494,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6042,12 +4505,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "인도와 보호"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -6057,12 +4516,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6072,12 +4527,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6088,11 +4539,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6102,12 +4550,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6117,12 +4561,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -6132,11 +4572,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6146,11 +4583,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "인도와 보호"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -6160,12 +4594,8 @@
       "keys": [
         "B"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -6175,12 +4605,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -6191,11 +4617,8 @@
         "D",
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6205,11 +4628,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6219,11 +4639,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6233,12 +4650,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "감사와 은혜",
-        "찬양과 경배"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6248,11 +4661,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6264,11 +4674,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6278,12 +4685,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6294,13 +4697,8 @@
         "G",
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "선교와 교제",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6310,12 +4708,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "하나님과 성령"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6325,13 +4719,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "찬양과 경배",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6341,12 +4730,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "하나님과 성령",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6356,12 +4741,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -6372,12 +4753,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6388,12 +4765,8 @@
         "D",
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -6403,12 +4776,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -6418,12 +4787,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6433,11 +4798,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6447,12 +4809,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6462,11 +4820,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "인도와 보호"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -6476,12 +4831,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "인도와 보호",
-        "선교와 교제"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -6491,12 +4842,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "하나님과 성령",
-        "사랑"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -6506,11 +4853,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6520,12 +4864,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "간구와 영적전쟁"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6535,12 +4875,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "선교와 교제"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -6550,12 +4886,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "인도와 보호",
-        "선교와 교제"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -6565,12 +4897,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "인도와 보호"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6580,12 +4908,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6595,12 +4919,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6610,12 +4930,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -6625,13 +4941,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "사랑",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6641,12 +4952,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6657,12 +4964,8 @@
         "D",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6672,12 +4975,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "감사와 은혜",
-        "사랑"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6690,12 +4989,8 @@
         "A",
         "Bb"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "찬양과 경배",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6706,12 +5001,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "고백",
-        "인도와 보호"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6721,12 +5012,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "간구와 영적전쟁",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6736,11 +5023,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     },
@@ -6751,12 +5035,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "하나님과 성령",
-        "간구와 영적전쟁"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6766,11 +5046,8 @@
       "keys": [
         "D"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6780,12 +5057,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "선교와 교제"
+        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -6796,12 +5069,8 @@
         "C",
         "A"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "결단과 헌신",
-        "고백"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -6811,12 +5080,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "결단과 헌신",
-        "인도와 보호"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6826,12 +5091,8 @@
       "keys": [
         "A"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "고백"
+        "축복과 교제"
       ],
       "hymnNo": null
     },
@@ -6841,12 +5102,8 @@
       "keys": [
         "E"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "찬양과 경배",
-        "선교와 교제"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6856,12 +5113,8 @@
       "keys": [
         "F"
       ],
-      "tempos": [
-        "FAST"
-      ],
       "themes": [
-        "선교와 교제",
-        "간구와 영적전쟁"
+        "선교와 승리"
       ],
       "hymnNo": null
     },
@@ -6871,12 +5124,8 @@
       "keys": [
         "C"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "감사와 은혜",
-        "고백"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6887,12 +5136,8 @@
         "E",
         "F"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "사랑",
-        "선교와 교제"
+        "은혜와 사랑"
       ],
       "hymnNo": null
     },
@@ -6902,12 +5147,8 @@
       "keys": [
         "G"
       ],
-      "tempos": [
-        "MEDIUM"
-      ],
       "themes": [
-        "찬양과 경배",
-        "예수와 십자가"
+        "경배와 찬양"
       ],
       "hymnNo": null
     },
@@ -6919,12 +5160,8 @@
         "A",
         "Bb"
       ],
-      "tempos": [
-        "SLOW"
-      ],
       "themes": [
-        "예수와 십자가",
-        "고백"
+        "회개와 고백"
       ],
       "hymnNo": null
     }
