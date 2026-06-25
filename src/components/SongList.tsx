@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Link } from "react-router-dom";
 import type { Song } from "../types";
-import { KeyBadge } from "./Badges";
+import { KeyBadge, TempoBadge } from "./Badges";
 import FavoriteButton from "./FavoriteButton";
 import AddToContiButton from "./AddToContiButton";
 import { useFavorites } from "../lib/useFavorites";
@@ -61,6 +61,9 @@ const SongRow = memo(function SongRow({
         <span className="flex shrink-0 items-center gap-1">
           {song.keys.map((k) => (
             <KeyBadge key={k} k={k} />
+          ))}
+          {song.tempos.map((t) => (
+            <TempoBadge key={t} t={t} />
           ))}
         </span>
       </Link>

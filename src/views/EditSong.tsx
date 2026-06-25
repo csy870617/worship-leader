@@ -10,6 +10,7 @@ import {
   resetOverride,
   updateSong,
 } from "../lib/catalog";
+import { TEMPO_LABEL, type Tempo } from "../types";
 
 const KEY_CHOICES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
@@ -26,6 +27,7 @@ function EditSongForm({ id }: { id?: string }) {
 
   const [title, setTitle] = useState(existing?.title ?? "");
   const [keys, setKeys] = useState<string[]>(existing?.keys ?? []);
+  const [tempos, setTempos] = useState<Tempo[]>(existing?.tempos ?? []);
   const [themes, setThemes] = useState<string[]>(existing?.themes ?? []);
   const [hymnNo, setHymnNo] = useState(existing?.hymnNo != null ? String(existing.hymnNo) : "");
 
@@ -50,6 +52,7 @@ function EditSongForm({ id }: { id?: string }) {
     const input = {
       title: t,
       keys,
+      tempos,
       themes,
       hymnNo: hymnNo.trim() ? Number(hymnNo.trim()) : null,
     };
@@ -99,6 +102,16 @@ function EditSongForm({ id }: { id?: string }) {
           {KEY_CHOICES.map((k) => (
             <button key={k} onClick={() => toggle(keys, k, setKeys)} className={chip(keys.includes(k))}>
               {k}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section label="템포">
+        <div className="flex flex-wrap gap-2">
+          {data.tempos.map((t) => (
+            <button key={t} onClick={() => toggle(tempos, t, setTempos)} className={chip(tempos.includes(t))}>
+              {TEMPO_LABEL[t]}
             </button>
           ))}
         </div>
