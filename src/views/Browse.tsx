@@ -8,16 +8,25 @@ import { setLastBrowse } from "../lib/browseState";
 import ChipRow from "../components/ChipRow";
 import SongList from "../components/SongList";
 
-type Axis = "key" | "theme" | "tempo" | "hymn";
+type Axis = "cat" | "key" | "theme" | "tempo";
 const AXES: { value: Axis; label: string }[] = [
+  { value: "cat", label: "분류" },
   { value: "key", label: "코드" },
   { value: "theme", label: "주제" },
   { value: "tempo", label: "템포" },
-  { value: "hymn", label: "찬송가" },
 ];
 
-// which URL param holds each axis's selected value (찬송가 탭도 템포로 좁힘)
-const PARAM: Record<Axis, string> = { key: "key", theme: "theme", tempo: "tempo", hymn: "tempo" };
+// which URL param holds each axis's selected value
+const PARAM: Record<Axis, string> = { cat: "cat", key: "key", theme: "theme", tempo: "tempo" };
+
+// 분류(category) options — 찬송가 / CCM, multi-select
+const CAT_OPTIONS = [
+  { value: "hymn", label: "찬송가" },
+  { value: "ccm", label: "CCM" },
+];
+const CAT_LABEL: Record<string, string> = { hymn: "찬송가", ccm: "CCM" };
+// axes that allow picking multiple values at once
+const MULTI_AXES = new Set(["tempo", "cat"]);
 
 // Code filter groups Eb+E under "E" and Bb+B under "B"; other keys stand alone.
 const KEY_GROUPS = ["C", "D", "E", "F", "G", "A", "B"];
@@ -35,6 +44,7 @@ export default function Browse() {
   const sort = params.get("sort") || "title";
   const q = params.get("q") ?? "";
   const list = (name: string) => (params.get(name) ?? "").split(",").filter(Boolean);
+  const selCats = list("cat");
   const selKeys = list("key");
   const selThemes = list("theme");
   const selTempos = list("tempo");
@@ -48,16 +58,19 @@ export default function Browse() {
   }, [params]);
 
   const options = useMemo(() => {
+    if (axis === "cat") return CAT_OPTIONS;
     if (axis === "key") return KEY_GROUPS.map((k) => ({ value: k, label: k }));
     if (axis === "theme") return data.themes.map((t) => ({ value: t, label: t }));
-    // 템포·찬송가 탭 모두 템포 칩으로 좁힙니다(찬송가는 빠른곡/미디움/느린곡으로 분류).
     return data.tempos.map((t) => ({ value: t, label: TEMPO_LABEL[t] }));
   }, [axis]);
 
   // OR within each axis, AND across axes
   const filtered = useMemo(() => {
-    // 찬송가는 "찬송가" 탭에만, 나머지 곡은 코드/주제/템포 탭에만 보입니다.
-    let arr: Song[] = axis === "hymn" ? songs.filter((s) => s.isHymn) : songs.filter((s) => !s.isHymn);
+    let arr: Song[] = songs;
+    // 분류 필터: 찬송가/CCM 중 하나만 고르면 그쪽만, 둘 다(또는 미선택)면 전체
+    const wantHymn = selCats.includes("hymn");
+    const wantCcm = selCats.includes("ccm");
+    if (wantHymn !== wantCcm) arr = arr.filter((s) => (wantHymn ? s.isHymn : !s.isHymn));
     const nq = normalize(q);
     if (nq) {
       arr = arr.filter(
@@ -98,11 +111,11 @@ export default function Browse() {
     setParams(p, { replace: true });
   };
 
-  // toggle a value inside an axis — tempo is multi-select, code/theme single-select
+  // toggle a value inside an axis — 분류·템포는 다중 선택, 코드·주제는 단일 선택
   const toggleVal = (name: string, value: string) => {
     const cur = list(name);
     let next: string[];
-    if (name === "tempo") {
+    if (MULTI_AXES.has(name)) {
       next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
     } else {
       next = cur.includes(value) ? [] : [value]; // pick one, or clear if re-tapped
@@ -112,13 +125,15 @@ export default function Browse() {
 
   // active-filter summary pills (one per selected value)
   const pills: { axis: Axis; value: string; label: string }[] = [];
+  selCats.forEach((v) => pills.push({ axis: "cat", value: v, label: CAT_LABEL[v] ?? v }));
   selKeys.forEach((v) => pills.push({ axis: "key", value: v, label: v }));
   selTempos.forEach((v) =>
     pills.push({ axis: "tempo", value: v, label: TEMPO_LABEL[v as keyof typeof TEMPO_LABEL] ?? v })
   );
   selThemes.forEach((v) => pills.push({ axis: "theme", value: v, label: v }));
 
-  const activeValues = axis === "key" ? selKeys : axis === "theme" ? selThemes : selTempos;
+  const activeValues =
+    axis === "cat" ? selCats : axis === "key" ? selKeys : axis === "theme" ? selThemes : selTempos;
 
   return (
     <div>
@@ -195,7 +210,7 @@ export default function Browse() {
             ))}
             {pills.length > 1 && (
               <button
-                onClick={() => patch({ key: null, theme: null, tempo: null })}
+                onClick={() => patch({ cat: null, key: null, theme: null, tempo: null })}
                 className="text-xs font-medium text-slate-400 underline dark:text-slate-500"
               >
                 전체 해제

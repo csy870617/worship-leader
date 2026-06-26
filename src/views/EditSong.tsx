@@ -137,7 +137,7 @@ function EditSongForm({ id }: { id?: string }) {
           {isHymn ? "찬송가로 분류됨" : "찬송가 아님"}
         </button>
         <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-          켜면 둘러보기의 <b>찬송가</b> 탭에만 표시되고, 코드·주제·템포 탭에서는 빠집니다.
+          켜면 둘러보기 <b>분류</b> 탭에서 <b>찬송가</b>로 분류됩니다(끄면 CCM).
         </p>
       </Section>
 
