@@ -12,7 +12,7 @@ import {
 } from "../lib/catalog";
 import { TEMPO_LABEL, type Tempo } from "../types";
 
-const KEY_CHOICES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+const KEY_CHOICES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "Am", "Bm"];
 
 // remount the form when the route id changes so stale state can't carry over
 export default function EditSong() {
