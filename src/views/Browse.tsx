@@ -8,15 +8,16 @@ import { setLastBrowse } from "../lib/browseState";
 import ChipRow from "../components/ChipRow";
 import SongList from "../components/SongList";
 
-type Axis = "key" | "theme" | "tempo";
+type Axis = "key" | "theme" | "tempo" | "hymn";
 const AXES: { value: Axis; label: string }[] = [
   { value: "key", label: "코드" },
   { value: "theme", label: "주제" },
   { value: "tempo", label: "템포" },
+  { value: "hymn", label: "찬송가" },
 ];
 
-// which URL param holds each axis's selected value
-const PARAM: Record<Axis, string> = { key: "key", theme: "theme", tempo: "tempo" };
+// which URL param holds each axis's selected value (찬송가 탭도 템포로 좁힘)
+const PARAM: Record<Axis, string> = { key: "key", theme: "theme", tempo: "tempo", hymn: "tempo" };
 
 // Code filter groups Eb+E under "E" and Bb+B under "B"; other keys stand alone.
 const KEY_GROUPS = ["C", "D", "E", "F", "G", "A", "B"];
@@ -49,12 +50,14 @@ export default function Browse() {
   const options = useMemo(() => {
     if (axis === "key") return KEY_GROUPS.map((k) => ({ value: k, label: k }));
     if (axis === "theme") return data.themes.map((t) => ({ value: t, label: t }));
+    // 템포·찬송가 탭 모두 템포 칩으로 좁힙니다(찬송가는 빠른곡/미디움/느린곡으로 분류).
     return data.tempos.map((t) => ({ value: t, label: TEMPO_LABEL[t] }));
   }, [axis]);
 
   // OR within each axis, AND across axes
   const filtered = useMemo(() => {
-    let arr: Song[] = songs;
+    // 찬송가는 "찬송가" 탭에만, 나머지 곡은 코드/주제/템포 탭에만 보입니다.
+    let arr: Song[] = axis === "hymn" ? songs.filter((s) => s.isHymn) : songs.filter((s) => !s.isHymn);
     const nq = normalize(q);
     if (nq) {
       arr = arr.filter(

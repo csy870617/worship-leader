@@ -30,6 +30,7 @@ function EditSongForm({ id }: { id?: string }) {
   const [tempos, setTempos] = useState<Tempo[]>(existing?.tempos ?? []);
   const [themes, setThemes] = useState<string[]>(existing?.themes ?? []);
   const [hymnNo, setHymnNo] = useState(existing?.hymnNo != null ? String(existing.hymnNo) : "");
+  const [isHymn, setIsHymn] = useState(existing?.isHymn === true);
 
   if (editing && !existing) {
     return (
@@ -55,6 +56,7 @@ function EditSongForm({ id }: { id?: string }) {
       tempos,
       themes,
       hymnNo: hymnNo.trim() ? Number(hymnNo.trim()) : null,
+      isHymn,
     };
     if (editing && existing) {
       updateSong(existing.id, input);
@@ -125,6 +127,18 @@ function EditSongForm({ id }: { id?: string }) {
             </button>
           ))}
         </div>
+      </Section>
+
+      <Section label="찬송가">
+        <button
+          onClick={() => setIsHymn((v) => !v)}
+          className={chip(isHymn)}
+        >
+          {isHymn ? "찬송가로 분류됨" : "찬송가 아님"}
+        </button>
+        <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+          켜면 둘러보기의 <b>찬송가</b> 탭에만 표시되고, 코드·주제·템포 탭에서는 빠집니다.
+        </p>
       </Section>
 
       <Section label="새찬송가 번호 (선택)">

@@ -60,6 +60,11 @@ export function SongMeta({ song, lastUsed }: { song: Song; lastUsed?: string | n
       {song.tempos.map((t) => (
         <TempoBadge key={t} t={t} />
       ))}
+      {song.isHymn && (
+        <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+          찬송가
+        </span>
+      )}
       {song.hymnNo != null && (
         <span className="rounded-md bg-slate-200 px-1.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-200">
           새찬 {song.hymnNo}

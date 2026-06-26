@@ -99,6 +99,11 @@ export default function SongDetail() {
             </button>
           </span>
         )}
+        {song.isHymn && (
+          <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+            찬송가
+          </span>
+        )}
         {mine && (
           <span className="rounded-md bg-indigo-100 px-1.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
             내 곡

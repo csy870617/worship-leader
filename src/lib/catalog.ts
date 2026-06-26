@@ -21,6 +21,7 @@ function sanitizeSong(s: any): Song | null {
     tempos: arr(s.tempos) as Song["tempos"],
     themes: arr(s.themes),
     hymnNo: typeof s.hymnNo === "number" ? s.hymnNo : null,
+    isHymn: s.isHymn === true,
   };
 }
 
@@ -149,6 +150,7 @@ export interface SongInput {
   tempos: Tempo[];
   themes: string[];
   hymnNo: number | null;
+  isHymn?: boolean;
 }
 
 export function addSong(input: SongInput): Song {

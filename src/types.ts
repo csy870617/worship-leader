@@ -7,6 +7,8 @@ export interface Song {
   tempos: Tempo[];
   themes: string[];
   hymnNo: number | null;
+  /** 찬송가(전통 찬송) 여부 — 둘러보기의 "찬송가" 탭에만 노출됩니다. */
+  isHymn?: boolean;
 }
 
 export interface SongData {
