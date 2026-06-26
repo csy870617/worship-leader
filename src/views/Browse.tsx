@@ -11,9 +11,9 @@ import SongList from "../components/SongList";
 type Axis = "cat" | "key" | "theme" | "tempo";
 const AXES: { value: Axis; label: string }[] = [
   { value: "cat", label: "분류" },
+  { value: "tempo", label: "템포" },
   { value: "key", label: "코드" },
   { value: "theme", label: "주제" },
-  { value: "tempo", label: "템포" },
 ];
 
 // which URL param holds each axis's selected value
