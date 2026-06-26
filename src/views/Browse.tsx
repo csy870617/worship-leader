@@ -25,8 +25,8 @@ const CAT_OPTIONS = [
   { value: "ccm", label: "CCM" },
 ];
 const CAT_LABEL: Record<string, string> = { hymn: "찬송가", ccm: "CCM" };
-// axes that allow picking multiple values at once
-const MULTI_AXES = new Set(["tempo", "cat"]);
+// axes that allow picking multiple values at once (분류는 전체 칩이 있어 단일 선택)
+const MULTI_AXES = new Set(["tempo"]);
 
 // Code filter groups Eb+E under "E" and Bb+B under "B"; other keys stand alone.
 const KEY_GROUPS = ["C", "D", "E", "F", "G", "A", "B"];
@@ -111,7 +111,7 @@ export default function Browse() {
     setParams(p, { replace: true });
   };
 
-  // toggle a value inside an axis — 분류·템포는 다중 선택, 코드·주제는 단일 선택
+  // toggle a value inside an axis — 템포만 다중 선택, 나머지(분류·코드·주제)는 단일 선택
   const toggleVal = (name: string, value: string) => {
     const cur = list(name);
     let next: string[];
