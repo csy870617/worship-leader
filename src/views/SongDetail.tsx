@@ -1,7 +1,6 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { youtubeSearchUrl } from "../data";
-import { hideSong, isOverridden, isUserSong, relatedSongs, removeSong, useSongs } from "../lib/catalog";
-import { TEMPO_LABEL } from "../types";
+import { hideSong, isOverridden, isUserSong, removeSong, useSongs } from "../lib/catalog";
 import { KeyBadge, TempoBadge, LastUsedBadge } from "../components/Badges";
 import FavoriteButton from "../components/FavoriteButton";
 import AddToContiButton from "../components/AddToContiButton";
@@ -31,7 +30,6 @@ export default function SongDetail() {
   }
 
   const used = lastUsed(song.id);
-  const related = relatedSongs(song, new Set([song.id]), 6);
   const mine = isUserSong(song.id);
   const edited = isOverridden(song.id);
 
@@ -207,41 +205,6 @@ export default function SongDetail() {
         />
       </section>
 
-      {related.length > 0 && (
-        <section className="mt-8">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            어울리는 곡 추천
-          </h2>
-          <ul className="space-y-1.5">
-            {related.map(({ song: s, relation, sameTempo, sharedThemes }) => {
-              const reasons = [
-                relation.label,
-                sameTempo ? `같은 템포` : "",
-                sharedThemes[0] ? `주제 ${sharedThemes[0]}` : "",
-              ].filter(Boolean);
-              return (
-                <li key={s.id} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
-                  <div className="min-w-0 flex-1">
-                    <Link to={`/song/${s.id}`} className="block truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-                      {s.title}
-                    </Link>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                      {s.keys.join("/")} · {TEMPO_LABEL[s.tempos[0]]}
-                      {reasons.length ? ` · ${reasons.join(", ")}` : ""}
-                    </span>
-                  </div>
-                  <AddToContiButton active={inConti(s.id)} onToggle={() => toggleConti(s.id)} />
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
-      <p className="mt-8 text-xs leading-relaxed text-slate-400 dark:text-slate-500">
-        템포 분류: {Object.values(TEMPO_LABEL).join(" · ")}. 데이터는 인도자 시트
-        스냅샷 기준입니다.
-      </p>
     </div>
   );
 }
