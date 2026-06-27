@@ -5,7 +5,6 @@ import { useConti } from "./lib/useConti";
 import { useSongs } from "./lib/catalog";
 import { getLastBrowse } from "./lib/browseState";
 import { migrateFromContis } from "./lib/songAttach";
-import { copyText } from "./lib/share";
 import { initSync } from "./lib/sync";
 import AuthButton from "./components/AuthButton";
 import Browse from "./views/Browse";
@@ -38,17 +37,6 @@ export default function App() {
     migrateFromContis();
     return cleanup;
   }, []);
-
-  // FAITHS: open the native share sheet to share the link (fall back to copy)
-  const shareFaiths = async () => {
-    try {
-      await navigator.share({ title: "FAITHS", url: FAITHS_URL });
-    } catch (e) {
-      if ((e as { name?: string })?.name === "AbortError") return; // user dismissed
-      const ok = await copyText(FAITHS_URL);
-      if (!ok) window.open(FAITHS_URL, "_blank", "noopener");
-    }
-  };
 
   // detail / edit get a full-bleed screen on mobile (their own back button)
   const hideMobileChrome =
@@ -105,13 +93,15 @@ export default function App() {
                   )}
                 </NavLink>
               ))}
-              <button
-                onClick={shareFaiths}
+              <a
+                href={FAITHS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
               >
-                <IconShare />
+                <IconHome />
                 FAITHS
-              </button>
+              </a>
             </nav>
             <div className="mt-auto flex items-center gap-2 px-1 pt-3">{controls}</div>
           </aside>
@@ -173,13 +163,15 @@ export default function App() {
               )}
             </NavLink>
           ))}
-          <button
-            onClick={shareFaiths}
+          <a
+            href={FAITHS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-slate-400 dark:text-slate-500"
           >
-            <IconShare />
+            <IconHome />
             FAITHS
-          </button>
+          </a>
         </nav>
       )}
     </div>
@@ -207,10 +199,10 @@ function IconStar() {
     </svg>
   );
 }
-function IconShare() {
+function IconHome() {
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.5a.75.75 0 0 0 .75.75h4.5a.75.75 0 0 0 .75-.75V15a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v5.25a.75.75 0 0 0 .75.75h4.5a.75.75 0 0 0 .75-.75V9.75M8.25 21h8.25" />
     </svg>
   );
 }
