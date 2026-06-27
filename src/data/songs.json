@@ -6511,6 +6511,22 @@
       "hymnNo": null
     },
     {
+      "id": "b_1hzhddg",
+      "title": "born again",
+      "keys": [
+        "C",
+        "A",
+        "Bb"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "회개와 고백"
+      ],
+      "hymnNo": null
+    },
+    {
       "id": "b_4a9upd",
       "title": "갈보리 산 위에",
       "keys": [
@@ -8031,23 +8047,6 @@
       ],
       "themes": [
         "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "b_1hzhddg",
-      "title": "born again",
-      "keys": [
-        "C",
-        "A",
-        "Bb"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "회개와 고백"
       ],
       "hymnNo": null,
       "isHymn": true
