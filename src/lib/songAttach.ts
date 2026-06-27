@@ -67,7 +67,12 @@ let store: Store = load();
 let version = 0;
 const listeners = new Set<() => void>();
 function emit() {
-  localStorage.setItem(LS, JSON.stringify(store));
+  // persistence is best-effort: a quota error must not abort the in-memory update
+  try {
+    localStorage.setItem(LS, JSON.stringify(store));
+  } catch (e) {
+    console.warn("[songAttach] persist failed", e);
+  }
   version++;
   listeners.forEach((l) => l());
 }

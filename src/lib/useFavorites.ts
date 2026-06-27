@@ -17,7 +17,12 @@ let ids = new Set<string>(load());
 const listeners = new Set<(s: Set<string>) => void>();
 
 function emit() {
-  localStorage.setItem(KEY, JSON.stringify([...ids]));
+  // persistence is best-effort: a quota error must not abort the in-memory update
+  try {
+    localStorage.setItem(KEY, JSON.stringify([...ids]));
+  } catch (e) {
+    console.warn("[favorites] persist failed", e);
+  }
   for (const l of listeners) l(new Set(ids));
 }
 

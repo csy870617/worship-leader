@@ -133,7 +133,11 @@ function getMeta(): SyncMeta | null {
   }
 }
 function saveMeta(uid: string, at: number, dirty: boolean) {
-  localStorage.setItem(META, JSON.stringify({ uid, at, dirty }));
+  try {
+    localStorage.setItem(META, JSON.stringify({ uid, at, dirty }));
+  } catch (e) {
+    console.warn("[sync] meta persist failed", e);
+  }
 }
 function markDirty() {
   const m = getMeta();
@@ -177,15 +181,20 @@ function startLiveListener(uid: string) {
 
 function applyDoc(d: Partial<CloudDoc> | LocalSnapshot) {
   applyingRemote = true;
-  setUserSongs(d.userSongs ?? []);
-  setFavoriteIds(d.favorites ?? []);
-  const rc = readContis(d);
-  setContiState({ contis: rc.contis, activeId: rc.activeContiId });
-  setHistoryMap(d.history ?? {});
-  setHiddenIds(d.hidden ?? []);
-  setOverrides(d.overrides ?? {});
-  setSongAttachStore(d.songAttach ?? {});
-  applyingRemote = false;
+  // a setter can throw (e.g. localStorage quota); finally guarantees the flag
+  // resets, otherwise every later local edit would be silently ignored
+  try {
+    setUserSongs(d.userSongs ?? []);
+    setFavoriteIds(d.favorites ?? []);
+    const rc = readContis(d);
+    setContiState({ contis: rc.contis, activeId: rc.activeContiId });
+    setHistoryMap(d.history ?? {});
+    setHiddenIds(d.hidden ?? []);
+    setOverrides(d.overrides ?? {});
+    setSongAttachStore(d.songAttach ?? {});
+  } finally {
+    applyingRemote = false;
+  }
 }
 
 async function pushNow() {

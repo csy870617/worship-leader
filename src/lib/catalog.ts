@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { staticSongs } from "../data";
-import type { Song, Tempo } from "../types";
+import { TEMPO_LABEL, type Song, type Tempo } from "../types";
 import { bestRelation, type Relation } from "./keys";
 
 // ---- merged catalog = static snapshot + user-added songs, minus hidden ----
@@ -11,6 +11,12 @@ const LS_OVERRIDES = "wl.overrides"; // per-user edits to base (static) songs
 const arr = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
 
+// keep only values that are actual Tempo members, so a malformed record
+// (e.g. synced from another version) can't slip an unknown tempo into the UI
+const VALID_TEMPOS = new Set(Object.keys(TEMPO_LABEL));
+const tempos = (v: unknown): Tempo[] =>
+  arr(v).filter((t): t is Tempo => VALID_TEMPOS.has(t));
+
 // guarantee a well-formed Song so a malformed record can't crash rendering
 function sanitizeSong(s: any): Song | null {
   if (!s || typeof s.id !== "string" || typeof s.title !== "string" || !s.title) return null;
@@ -18,7 +24,7 @@ function sanitizeSong(s: any): Song | null {
     id: s.id,
     title: s.title,
     keys: arr(s.keys),
-    tempos: arr(s.tempos) as Song["tempos"],
+    tempos: tempos(s.tempos),
     themes: arr(s.themes),
     hymnNo: typeof s.hymnNo === "number" ? s.hymnNo : null,
     isHymn: s.isHymn === true,
@@ -79,9 +85,15 @@ recompute();
 
 const listeners = new Set<() => void>();
 function emit() {
-  localStorage.setItem(LS, JSON.stringify(userSongs));
-  localStorage.setItem(LS_HIDDEN, JSON.stringify([...hidden]));
-  localStorage.setItem(LS_OVERRIDES, JSON.stringify(overrides));
+  // persistence is best-effort: a quota error must not abort the in-memory
+  // update or the render that depends on it
+  try {
+    localStorage.setItem(LS, JSON.stringify(userSongs));
+    localStorage.setItem(LS_HIDDEN, JSON.stringify([...hidden]));
+    localStorage.setItem(LS_OVERRIDES, JSON.stringify(overrides));
+  } catch (e) {
+    console.warn("[catalog] persist failed", e);
+  }
   recompute();
   version++;
   listeners.forEach((l) => l());

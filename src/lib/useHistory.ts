@@ -18,7 +18,12 @@ let history: History = load();
 const listeners = new Set<(h: History) => void>();
 
 function emit() {
-  localStorage.setItem(KEY, JSON.stringify(history));
+  // persistence is best-effort: a quota error must not abort the in-memory update
+  try {
+    localStorage.setItem(KEY, JSON.stringify(history));
+  } catch (e) {
+    console.warn("[history] persist failed", e);
+  }
   for (const l of listeners) l({ ...history });
 }
 

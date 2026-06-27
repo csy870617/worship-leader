@@ -128,8 +128,9 @@ async function ensureFolder(): Promise<string> {
     if (!cr.ok) throw new Error("드라이브 폴더 생성 실패");
     id = (await cr.json()).id;
   }
-  if (id) localStorage.setItem(folderKey(), id);
-  return id!;
+  if (!id) throw new Error("드라이브 폴더 생성 실패");
+  localStorage.setItem(folderKey(), id);
+  return id;
 }
 
 function dataUrlToBlob(dataUrl: string): Blob {

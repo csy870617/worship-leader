@@ -108,7 +108,13 @@ let state: State = load();
 const listeners = new Set<(s: State) => void>();
 function commit(next: State) {
   state = next;
-  localStorage.setItem(KEY, JSON.stringify(state));
+  // persistence is best-effort: a quota error must not abort the in-memory
+  // update or the listeners that re-render from it
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn("[conti] persist failed", e);
+  }
   for (const l of listeners) l(state);
 }
 
