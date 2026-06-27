@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-06-17",
-  "source": "User-edited CSV (source-ccm.txt) + hymns",
+  "source": "User-edited full list (source-all.txt)",
   "keys": [
     "C",
     "D",
@@ -28,22 +28,6 @@
     "선교와 승리"
   ],
   "songs": [
-    {
-      "id": "b_1hzhddg",
-      "title": "born again",
-      "keys": [
-        "C",
-        "A",
-        "Bb"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null
-    },
     {
       "id": "b_1nr76r1",
       "title": "가슴마다 파도친다",
@@ -2683,7 +2667,8 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM",
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -6483,20 +6468,6 @@
       "hymnNo": null
     },
     {
-      "id": "b_sk1x9o",
-      "title": "행군 나팔 소리로",
-      "keys": [
-        "F"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_32r89",
       "title": "행복",
       "keys": [
@@ -6556,6 +6527,38 @@
       "isHymn": true
     },
     {
+      "id": "h_073",
+      "title": "강물 같이 흐르는 기쁨",
+      "keys": [
+        "F",
+        "G"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "은혜와 사랑"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_090",
+      "title": "괴로운 백성들이여",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "회개와 고백"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_ggdup5",
       "title": "구주를 생각만 해도",
       "keys": [
@@ -6604,11 +6607,91 @@
       "isHymn": true
     },
     {
+      "id": "h_006",
+      "title": "기뻐하며 경배하세",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_022",
+      "title": "기쁜 소리 들리니",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_053",
+      "title": "나 가나안 땅 귀한 성에",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "축복과 교제"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_1okfl8g",
       "title": "나 같은 죄인 살리신",
       "keys": [
         "F",
         "G"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "회개와 고백"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_028",
+      "title": "나 속죄함을 받은 후",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "회개와 고백"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_093",
+      "title": "나 주를 멀리 떠났다",
+      "keys": [
+        "G",
+        "A"
       ],
       "tempos": [
         "SLOW"
@@ -6657,6 +6740,70 @@
       "keys": [
         "G",
         "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "회개와 고백"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_039",
+      "title": "나의 죄를 씻기는",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "회개와 고백"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_063",
+      "title": "내 마음에 한 노래 있어",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "은혜와 사랑"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_077",
+      "title": "내 모든 시험 무거운 짐을",
+      "keys": [
+        "C",
+        "D"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "기도와 간구"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_076",
+      "title": "내 모양 이대로",
+      "keys": [
+        "F",
+        "G"
       ],
       "tempos": [
         "SLOW"
@@ -6765,6 +6912,54 @@
       "isHymn": true
     },
     {
+      "id": "h_044",
+      "title": "너 근심 걱정 말아라",
+      "keys": [
+        "A",
+        "Bb"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "은혜와 사랑"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_061",
+      "title": "늘 지켜 주시네",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "은혜와 사랑"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_001",
+      "title": "다 찬양하여라",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_8yfcdl",
       "title": "마귀들과 싸울지라",
       "keys": [
@@ -6776,6 +6971,38 @@
       ],
       "themes": [
         "선교와 승리"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_002",
+      "title": "만 입이 내게 있으면",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_091",
+      "title": "만세반석 열리니",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "회개와 고백"
       ],
       "hymnNo": null,
       "isHymn": true
@@ -6829,6 +7056,22 @@
       "isHymn": true
     },
     {
+      "id": "h_027",
+      "title": "슬픔 걱정 가득 차고",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "기도와 간구"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_15lcwrb",
       "title": "승리는 내 것일세",
       "keys": [
@@ -6840,6 +7083,38 @@
       ],
       "themes": [
         "회개와 고백"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_038",
+      "title": "시온성과 같은 교회",
+      "keys": [
+        "A",
+        "Bb"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "축복과 교제"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_015",
+      "title": "십자가 군병들아",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
       ],
       "hymnNo": null,
       "isHymn": true
@@ -6861,6 +7136,22 @@
       "isHymn": true
     },
     {
+      "id": "h_099",
+      "title": "아침 해 돋을 때",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_1q2tv26",
       "title": "아침 해가 돋을 때",
       "keys": [
@@ -6872,6 +7163,38 @@
       ],
       "themes": [
         "은혜와 사랑"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_025",
+      "title": "영광을 받으신 만군의 주",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_033",
+      "title": "영화로신 주 이름",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "경배와 찬양"
       ],
       "hymnNo": null,
       "isHymn": true
@@ -6893,6 +7216,22 @@
       "isHymn": true
     },
     {
+      "id": "h_056",
+      "title": "예수 그리스도 세상의 빛",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_1648a1t",
       "title": "예수 나를 위하여",
       "keys": [
@@ -6901,6 +7240,22 @@
       ],
       "tempos": [
         "SLOW"
+      ],
+      "themes": [
+        "회개와 고백"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_023",
+      "title": "예수 따라가며",
+      "keys": [
+        "F",
+        "G"
+      ],
+      "tempos": [
+        "FAST"
       ],
       "themes": [
         "회개와 고백"
@@ -6941,6 +7296,22 @@
       "isHymn": true
     },
     {
+      "id": "h_069",
+      "title": "예수님은 누구신가",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "은혜와 사랑"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_xgildx",
       "title": "예수를 나의 구주 삼고",
       "keys": [
@@ -6957,12 +7328,28 @@
       "isHymn": true
     },
     {
+      "id": "h_078",
+      "title": "오 놀라운 구세주 예수 내 주",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_9ob6u9",
       "title": "오 신실하신 주",
       "keys": [
+        "C",
         "D",
-        "E",
-        "C"
+        "E"
       ],
       "tempos": [
         "MEDIUM",
@@ -6970,6 +7357,102 @@
       ],
       "themes": [
         "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_024",
+      "title": "온 세상 위하여",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_095",
+      "title": "온 천하 만물 우러러",
+      "keys": [
+        "D",
+        "E"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_031",
+      "title": "우리들의 싸울 무기는",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_014",
+      "title": "우리들이 싸울 길은",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_035",
+      "title": "이 날은 주가 정하신",
+      "keys": [
+        "D",
+        "E"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_018",
+      "title": "이 눈에 아무 증거 아니뵈어도",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
       ],
       "hymnNo": null,
       "isHymn": true
@@ -6991,6 +7474,22 @@
       "isHymn": true
     },
     {
+      "id": "h_032",
+      "title": "일어나라 주의 백성",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_1lqqv8x",
       "title": "저 높은 곳을 향하여",
       "keys": [
@@ -7002,6 +7501,22 @@
       ],
       "themes": [
         "선교와 승리"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_100",
+      "title": "저 장미꽃 위에 이슬",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "축복과 교제"
       ],
       "hymnNo": null,
       "isHymn": true
@@ -7023,6 +7538,22 @@
       "isHymn": true
     },
     {
+      "id": "h_060",
+      "title": "주 날개 밑 내가 편안히 쉬네",
+      "keys": [
+        "D",
+        "E"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "은혜와 사랑"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_pkersh",
       "title": "주 달려 죽은 십자가",
       "keys": [
@@ -7034,6 +7565,38 @@
       ],
       "themes": [
         "회개와 고백"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_016",
+      "title": "주 믿는 사람 일어나라",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_097",
+      "title": "주 밤새도록 내게 말씀하시네",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "은혜와 사랑"
       ],
       "hymnNo": null,
       "isHymn": true
@@ -7055,14 +7618,30 @@
       "isHymn": true
     },
     {
+      "id": "h_089",
+      "title": "주 예수 내가 알기 전",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "은혜와 사랑"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_6cmz1s",
       "title": "주 예수 보다 더 귀한 것은 없네",
       "keys": [
-        "D",
-        "E"
+        "C",
+        "D"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "회개와 고백"
@@ -7087,22 +7666,6 @@
       "isHymn": true
     },
     {
-      "id": "b_3ajaux",
-      "title": "주 하나님 독생자 예수",
-      "keys": [
-        "A",
-        "Bb"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
       "id": "b_q3ru5l",
       "title": "주 하나님 지으신 모든 세계",
       "keys": [
@@ -7114,6 +7677,22 @@
       ],
       "themes": [
         "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_029",
+      "title": "주님의 마음을 본받는 자",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "축복과 교제"
       ],
       "hymnNo": null,
       "isHymn": true
@@ -7135,12 +7714,28 @@
       "isHymn": true
     },
     {
+      "id": "h_096",
+      "title": "주여 지난 밤 내 꿈에",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "SLOW"
+      ],
+      "themes": [
+        "기도와 간구"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_mvsuxn",
       "title": "주와 같이 길 가는 것",
       "keys": [
+        "D",
         "E",
-        "F",
-        "D"
+        "F"
       ],
       "tempos": [
         "MEDIUM",
@@ -7148,6 +7743,38 @@
       ],
       "themes": [
         "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_064",
+      "title": "주의 곁에 있을 때",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "축복과 교제"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_011",
+      "title": "주의 말씀 듣고서",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "회개와 고백"
       ],
       "hymnNo": null,
       "isHymn": true
@@ -7169,6 +7796,22 @@
       "isHymn": true
     },
     {
+      "id": "h_055",
+      "title": "주의 피로 이룬 샘물",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "회개와 고백"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_33lbku",
       "title": "지금까지 지내온 것",
       "keys": [
@@ -7185,6 +7828,70 @@
       "isHymn": true
     },
     {
+      "id": "h_005",
+      "title": "찬송으로 보답하며",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_034",
+      "title": "찬송하는 소리 있어",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_004",
+      "title": "찬양하라 복되신 구세주 예수",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_058",
+      "title": "참 아름다운 빛을 주신 주",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "MEDIUM"
+      ],
+      "themes": [
+        "경배와 찬양"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
       "id": "b_mg2gix",
       "title": "참 아름다워라",
       "keys": [
@@ -7196,6 +7903,22 @@
       ],
       "themes": [
         "은혜와 사랑"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "h_017",
+      "title": "천성을 향해 가는 성도들아",
+      "keys": [
+        "G",
+        "A"
+      ],
+      "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
       ],
       "hymnNo": null,
       "isHymn": true
@@ -7249,598 +7972,6 @@
       "isHymn": true
     },
     {
-      "id": "h_001",
-      "title": "다 찬양하여라",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_002",
-      "title": "만 입이 내게 있으면",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_004",
-      "title": "찬양하라 복되신 구세주 예수",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_005",
-      "title": "찬송으로 보답하며",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_006",
-      "title": "기뻐하며 경배하세",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_011",
-      "title": "주의 말씀 듣고서",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_014",
-      "title": "우리들이 싸울 길은",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_015",
-      "title": "십자가 군병들아",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_016",
-      "title": "주 믿는 사람 일어나라",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_017",
-      "title": "천성을 향해 가는 성도들아",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_018",
-      "title": "이 눈에 아무 증거 아니뵈어도",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_019",
-      "title": "구 주로 삼은 모든 모든 것",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_020",
-      "title": "할렐루야 찬양하세",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_022",
-      "title": "기쁜 소리 들리니",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_023",
-      "title": "예수 따라가며",
-      "keys": [
-        "F",
-        "G"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_024",
-      "title": "온 세상 위하여",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_025",
-      "title": "영광을 받으신 만군의 주",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_027",
-      "title": "슬픔 걱정 가득 차고",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "기도와 간구"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_028",
-      "title": "나 속죄함을 받은 후",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_029",
-      "title": "주님의 마음을 본받는 자",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "축복과 교제"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_030",
-      "title": "행군나팔 소리에",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_031",
-      "title": "우리들의 싸울 무기는",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_032",
-      "title": "일어나라 주의 백성",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "선교와 승리"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_033",
-      "title": "영화로신 주 이름",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_034",
-      "title": "찬송하는 소리 있어",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_035",
-      "title": "이 날은 주가 정하신",
-      "keys": [
-        "D",
-        "E"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_038",
-      "title": "시온성과 같은 교회",
-      "keys": [
-        "A",
-        "Bb"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "축복과 교제"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_039",
-      "title": "나의 죄를 씻기는",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_044",
-      "title": "너 근심 걱정 말아라",
-      "keys": [
-        "A",
-        "Bb"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "은혜와 사랑"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_053",
-      "title": "나 가나안 땅 귀한 성에",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "축복과 교제"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_055",
-      "title": "주의 피로 이룬 샘물",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_056",
-      "title": "예수 그리스도 세상의 빛",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_058",
-      "title": "참 아름다운 빛을 주신 주",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_060",
-      "title": "주 날개 밑 내가 편안히 쉬네",
-      "keys": [
-        "D",
-        "E"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "은혜와 사랑"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_061",
-      "title": "늘 지켜 주시네",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "은혜와 사랑"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_063",
-      "title": "내 마음에 한 노래 있어",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "은혜와 사랑"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_064",
-      "title": "주의 곁에 있을 때",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "MEDIUM"
-      ],
-      "themes": [
-        "축복과 교제"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
       "id": "h_066",
       "title": "하나님의 은혜 한량없으리",
       "keys": [
@@ -7849,214 +7980,6 @@
       ],
       "tempos": [
         "MEDIUM"
-      ],
-      "themes": [
-        "은혜와 사랑"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_069",
-      "title": "예수님은 누구신가",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "은혜와 사랑"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_073",
-      "title": "강물 같이 흐르는 기쁨",
-      "keys": [
-        "F",
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "은혜와 사랑"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_076",
-      "title": "내 모양 이대로",
-      "keys": [
-        "F",
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_077",
-      "title": "내 모든 시험 무거운 짐을",
-      "keys": [
-        "C",
-        "D"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "기도와 간구"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_078",
-      "title": "오 놀라운 구세주 예수 내 주",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_087",
-      "title": "목마른 사슴이",
-      "keys": [
-        "C",
-        "D"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "기도와 간구"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_089",
-      "title": "주 예수 내가 알기 전",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "은혜와 사랑"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_090",
-      "title": "괴로운 백성들이여",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_091",
-      "title": "만세반석 열리니",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_093",
-      "title": "나 주를 멀리 떠났다",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "회개와 고백"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_095",
-      "title": "온 천하 만물 우러러",
-      "keys": [
-        "D",
-        "E"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "경배와 찬양"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_096",
-      "title": "주여 지난 밤 내 꿈에",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "기도와 간구"
-      ],
-      "hymnNo": null,
-      "isHymn": true
-    },
-    {
-      "id": "h_097",
-      "title": "주 밤새도록 내게 말씀하시네",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "SLOW"
       ],
       "themes": [
         "은혜와 사랑"
@@ -8081,14 +8004,14 @@
       "isHymn": true
     },
     {
-      "id": "h_099",
-      "title": "아침 해 돋을 때",
+      "id": "h_020",
+      "title": "할렐루야 찬양하세",
       "keys": [
         "G",
         "A"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "경배와 찬양"
@@ -8097,17 +8020,34 @@
       "isHymn": true
     },
     {
-      "id": "h_100",
-      "title": "저 장미꽃 위에 이슬",
+      "id": "h_030",
+      "title": "행군나팔 소리에",
       "keys": [
         "G",
         "A"
       ],
       "tempos": [
+        "FAST"
+      ],
+      "themes": [
+        "선교와 승리"
+      ],
+      "hymnNo": null,
+      "isHymn": true
+    },
+    {
+      "id": "b_1hzhddg",
+      "title": "born again",
+      "keys": [
+        "C",
+        "A",
+        "Bb"
+      ],
+      "tempos": [
         "SLOW"
       ],
       "themes": [
-        "축복과 교제"
+        "회개와 고백"
       ],
       "hymnNo": null,
       "isHymn": true
