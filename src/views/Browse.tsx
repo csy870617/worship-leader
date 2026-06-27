@@ -40,7 +40,7 @@ const keyRank = (s: Song) =>
 
 export default function Browse() {
   const [params, setParams] = useSearchParams();
-  const axis = (params.get("axis") as Axis) || "key";
+  const axis = (params.get("axis") as Axis) || "cat";
   const sort = params.get("sort") || "title";
   const q = params.get("q") ?? "";
   const list = (name: string) => (params.get(name) ?? "").split(",").filter(Boolean);
