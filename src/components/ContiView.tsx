@@ -268,6 +268,11 @@ export default function ContiView({
                       <span className="text-sm font-bold text-indigo-300 dark:text-indigo-400/70">{cur.n}</span>
                       <span className="truncate text-sm font-semibold text-slate-500 dark:text-slate-400">{cur.song.title}</span>
                     </div>
+                    {attach[cur.item.id]?.note && (
+                      <p className="mb-1 ml-5 shrink-0 whitespace-pre-wrap text-base text-slate-600 dark:text-slate-300">
+                        {attach[cur.item.id]!.note}
+                      </p>
+                    )}
                     <div className="min-h-0 flex-1">
                       <SheetFigure
                         key={cur.aid}

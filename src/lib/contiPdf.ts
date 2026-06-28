@@ -112,12 +112,21 @@ function buildInfoEl(
   return el;
 }
 
-/** A page that holds a single sheet image (edge to edge) with its annotations. */
-function buildSheetEl(sheet: SheetImg): HTMLDivElement {
+/** A page that holds a single sheet image with its annotations. The song's memo
+ *  repeats on every extra sheet so it stays visible when a song spans pages. */
+function buildSheetEl(sheet: SheetImg, note?: string): HTMLDivElement {
   const el = document.createElement("div");
-  el.style.cssText =
-    `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;font-family:'Pretendard',-apple-system,sans-serif;padding:0;box-sizing:border-box;`;
-  el.innerHTML = sheetOverlay(sheet.url);
+  if (note) {
+    el.style.cssText = BASE_STYLE;
+    el.innerHTML =
+      `<div style="margin:0 0 10px 0;font-size:22px;color:#374151;">${esc(note)}</div>` +
+      sheetOverlay(sheet.url);
+  } else {
+    // no memo → edge-to-edge image (unchanged)
+    el.style.cssText =
+      `position:fixed;left:-99999px;top:0;width:${PX_W}px;background:#ffffff;color:#111827;font-family:'Pretendard',-apple-system,sans-serif;padding:0;box-sizing:border-box;`;
+    el.innerHTML = sheetOverlay(sheet.url);
+  }
   return el;
 }
 
@@ -243,9 +252,10 @@ export async function buildContiPdf(
         console.error("[pdf] info page failed", i, e);
       }
       // remaining sheets: one per page so they're never shrunk together / cut
+      const note = getSongAttach(item.id)?.note;
       for (let k = 1; k < sheets.length; k++) {
         try {
-          await renderPage(buildSheetEl(sheets[k]), true);
+          await renderPage(buildSheetEl(sheets[k], note), true);
         } catch (e) {
           console.error("[pdf] sheet page failed", i, k, e);
         }
