@@ -1,5 +1,5 @@
 import type { Song } from "../types";
-import type { ContiItem, SheetText } from "./useConti";
+import type { ContiItem, SheetStroke, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
 import { getSongAttach } from "./songAttach";
 import { youtubePlaylistUrl } from "./share";
@@ -45,8 +45,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
  * translate(-50%,-50%) exactly — and bypasses html2canvas, which shifts text
  * vertically. Returns the original url when there are no annotations.
  */
-async function compositeSheet(url: string, texts?: SheetText[]): Promise<string> {
-  if (!texts || !texts.length) return url;
+async function compositeSheet(
+  url: string,
+  texts?: SheetText[],
+  strokes?: SheetStroke[]
+): Promise<string> {
+  if ((!texts || !texts.length) && (!strokes || !strokes.length)) return url;
   try {
     const img = await loadImage(url);
     const W = img.naturalWidth || img.width;
@@ -57,9 +61,25 @@ async function compositeSheet(url: string, texts?: SheetText[]): Promise<string>
     canvas.height = H;
     const ctx = canvas.getContext("2d")!;
     ctx.drawImage(img, 0, 0, W, H);
+    // pen / highlighter strokes first, so text sits on top (matches the editor)
+    if (strokes && strokes.length) {
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      for (const s of strokes) {
+        if (!s.points || s.points.length < 2) continue;
+        ctx.globalAlpha = s.highlight ? 0.35 : 1;
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = Math.max(1, s.width * W);
+        ctx.beginPath();
+        ctx.moveTo(s.points[0].x * W, s.points[0].y * H);
+        for (let i = 1; i < s.points.length; i++) ctx.lineTo(s.points[i].x * W, s.points[i].y * H);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    for (const t of texts) {
+    for (const t of texts ?? []) {
       const fs = Math.max(1, Math.round(t.size * W)); // size is a fraction of width (same as the editor)
       ctx.font = `700 ${fs}px Pretendard, system-ui, -apple-system, sans-serif`;
       ctx.fillStyle = t.color;
@@ -171,7 +191,14 @@ export async function buildContiPdf(
       const urls = await Promise.all(att.sheets.map((aid) => loadSheet(aid)));
       for (let idx = 0; idx < att.sheets.length; idx++) {
         const u = urls[idx];
-        if (u) sheets.push({ url: await compositeSheet(u, att.sheetTexts?.[att.sheets[idx]]) });
+        if (u)
+          sheets.push({
+            url: await compositeSheet(
+              u,
+              att.sheetTexts?.[att.sheets[idx]],
+              att.sheetDraws?.[att.sheets[idx]]
+            ),
+          });
       }
     }
     entries.push({ song, item, sheets });

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import type { SheetText } from "../lib/useConti";
+import type { SheetStroke, SheetText } from "../lib/useConti";
 import {
   addSongSheet,
   removeSongSheet,
   replaceSongSheet,
   setSongNote,
   setSongSheets,
+  setSongSheetDraws,
   setSongSheetTexts,
   setSongYoutube,
   useSongAttach,
@@ -25,6 +26,11 @@ const TEXT_SIZES: { label: string; value: number }[] = [
   { label: "보통", value: 0.045 },
   { label: "크게", value: 0.07 },
 ];
+// stroke widths (fraction of image width) for 작게/보통/크게, per tool
+const PEN_WIDTHS = [0.004, 0.008, 0.014];
+const HL_WIDTHS = [0.03, 0.05, 0.08];
+const HL_DEFAULT_COLOR = "#eab308"; // yellow marker
+const PEN_DEFAULT_COLOR = "#ef4444"; // red pen
 const TEXT_PRESET_ROWS = [
   ["Int", "V", "V1", "V2", "PC", "C", "C1", "C2"],
   ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
@@ -265,7 +271,9 @@ export default function SongAttachEditor({
             ids={sheetIds}
             start={viewer}
             texts={sheetTexts}
+            draws={a?.sheetDraws ?? {}}
             onTexts={(aid, list) => setSongSheetTexts(songId, aid, list)}
+            onDraws={(aid, list) => setSongSheetDraws(songId, aid, list)}
             onMenu={(aid) => setSheetMenu(aid)}
             onClose={() => setViewer(null)}
           />
@@ -577,14 +585,18 @@ export function SheetLightbox({
   ids,
   start,
   texts,
+  draws,
   onTexts,
+  onDraws,
   onMenu,
   onClose,
 }: {
   ids: string[];
   start: number;
   texts: Record<string, SheetText[]>;
+  draws?: Record<string, SheetStroke[]>;
   onTexts: (aid: string, list: SheetText[]) => void;
+  onDraws?: (aid: string, list: SheetStroke[]) => void;
   onMenu?: (aid: string) => void;
   onClose: () => void;
 }) {
@@ -593,16 +605,24 @@ export function SheetLightbox({
   const [loading, setLoading] = useState(true);
   const [annos, setAnnos] = useState<SheetText[]>([]);
   const [sel, setSel] = useState<number | null>(null);
-  const [placing, setPlacing] = useState(false);
+  // active annotation tool: text placement, highlighter, freehand pen, or none
+  const [tool, setTool] = useState<"text" | "highlight" | "draw" | null>(null);
   const [pendingText, setPendingText] = useState<string | null>(null);
   const [color, setColor] = useState(TEXT_COLORS[0]);
-  const [size, setSize] = useState(TEXT_SIZES[1].value);
+  const [sizeIdx, setSizeIdx] = useState(1);
   const [boxW, setBoxW] = useState(0);
+  const [boxH, setBoxH] = useState(0);
+  const [strokes, setStrokes] = useState<SheetStroke[]>([]);
+  const [liveStroke, setLiveStroke] = useState<{ x: number; y: number }[] | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const annosRef = useRef<SheetText[]>([]);
+  const strokesRef = useRef<SheetStroke[]>([]);
+  const strokeDragRef = useRef<{ x: number; y: number }[] | null>(null);
   const dragRef = useRef<{ i: number; moved: boolean } | null>(null);
   const many = ids.length > 1;
   const currentId = ids[index];
+  const drawing = tool === "draw" || tool === "highlight";
+  const placing = tool === "text";
 
   const go = (d: number) => setIndex((i) => (i + d + ids.length) % ids.length);
 
@@ -631,11 +651,16 @@ export function SheetLightbox({
     setLoading(true);
     setUrl(null);
     setSel(null);
-    setPlacing(false);
+    setTool(null);
     setPendingText(null);
+    setLiveStroke(null);
+    strokeDragRef.current = null;
     const init = texts[ids[index]] ?? [];
     setAnnos(init);
     annosRef.current = init;
+    const initD = draws?.[ids[index]] ?? [];
+    setStrokes(initD);
+    strokesRef.current = initD;
     loadSheet(ids[index]).then((u) => {
       if (!alive) return;
       setUrl(u ?? null);
@@ -651,7 +676,11 @@ export function SheetLightbox({
 
   const measure = () => {
     const el = boxRef.current;
-    if (el) setBoxW(el.getBoundingClientRect().width);
+    if (el) {
+      const r = el.getBoundingClientRect();
+      setBoxW(r.width);
+      setBoxH(r.height);
+    }
   };
   useEffect(() => {
     measure();
@@ -691,15 +720,35 @@ export function SheetLightbox({
     setAnnos(next);
     onTexts(currentId, next);
   };
+  const commitStrokes = (next: SheetStroke[]) => {
+    strokesRef.current = next;
+    setStrokes(next);
+    onDraws?.(currentId, next);
+  };
+
+  // pick a tool; toggle off if it's already active. Highlighter / pen start with
+  // a sensible default color so they're usable in one tap.
+  const pickTool = (t: "text" | "highlight" | "draw") => {
+    setSel(null);
+    setPendingText(null);
+    if (tool === t) {
+      setTool(null);
+      return;
+    }
+    if (t === "highlight") setColor(HL_DEFAULT_COLOR);
+    else if (t === "draw") setColor(PEN_DEFAULT_COLOR);
+    setTool(t);
+  };
 
   const addPreset = (label: string) => {
     setSel(null);
     setPendingText(label);
-    setPlacing(true);
+    setTool("text");
   };
 
   const onBoxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (drawing) return; // strokes are handled by the pointer handlers
     if (!placing) {
       setSel(null);
       return;
@@ -710,22 +759,63 @@ export function SheetLightbox({
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
     const text = pendingText ?? prompt("텍스트 입력");
-    setPlacing(false);
+    setTool(null);
     setPendingText(null);
     if (text && text.trim()) {
-      const next = [...annosRef.current, { x, y, text: text.trim(), color, size }];
+      const next = [...annosRef.current, { x, y, text: text.trim(), color, size: TEXT_SIZES[sizeIdx].value }];
       commit(next);
       setSel(next.length - 1);
     }
+  };
+
+  // ---- freehand drawing (형광펜 / 그리기) ----
+  const strokeWidth = () => (tool === "highlight" ? HL_WIDTHS : PEN_WIDTHS)[sizeIdx];
+  const ptInBox = (clientX: number, clientY: number) => {
+    const r = boxRef.current!.getBoundingClientRect();
+    return {
+      x: Math.min(1, Math.max(0, (clientX - r.left) / r.width)),
+      y: Math.min(1, Math.max(0, (clientY - r.top) / r.height)),
+    };
+  };
+  const onBoxPointerDown = (e: React.PointerEvent) => {
+    if (!drawing) return;
+    e.stopPropagation();
+    boxRef.current?.setPointerCapture?.(e.pointerId);
+    const p = ptInBox(e.clientX, e.clientY);
+    strokeDragRef.current = [p];
+    setLiveStroke([p]);
+  };
+  const onBoxPointerMove = (e: React.PointerEvent) => {
+    if (!drawing || !strokeDragRef.current) return;
+    const p = ptInBox(e.clientX, e.clientY);
+    const next = [...strokeDragRef.current, p];
+    strokeDragRef.current = next;
+    setLiveStroke(next);
+  };
+  const onBoxPointerUp = (e: React.PointerEvent) => {
+    if (!strokeDragRef.current) return;
+    boxRef.current?.releasePointerCapture?.(e.pointerId);
+    const pts = strokeDragRef.current;
+    strokeDragRef.current = null;
+    setLiveStroke(null);
+    if (pts.length >= 2) {
+      const stroke: SheetStroke = { points: pts, color, width: strokeWidth() };
+      if (tool === "highlight") stroke.highlight = true;
+      commitStrokes([...strokesRef.current, stroke]);
+    }
+  };
+  const undoStroke = () => {
+    if (!strokesRef.current.length) return;
+    commitStrokes(strokesRef.current.slice(0, -1));
   };
 
   const applyColor = (c: string) => {
     setColor(c);
     if (sel != null) commit(annos.map((a, i) => (i === sel ? { ...a, color: c } : a)));
   };
-  const applySize = (s: number) => {
-    setSize(s);
-    if (sel != null) commit(annos.map((a, i) => (i === sel ? { ...a, size: s } : a)));
+  const applySize = (idx: number) => {
+    setSizeIdx(idx);
+    if (sel != null) commit(annos.map((a, i) => (i === sel ? { ...a, size: TEXT_SIZES[idx].value } : a)));
   };
   const editSel = () => {
     if (sel == null) return;
@@ -766,10 +856,46 @@ export function SheetLightbox({
           <div
             ref={boxRef}
             onClick={onBoxClick}
+            onPointerDown={onBoxPointerDown}
+            onPointerMove={onBoxPointerMove}
+            onPointerUp={onBoxPointerUp}
+            onPointerCancel={onBoxPointerUp}
             onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(currentId); } : undefined}
-            className={"relative inline-block " + (placing ? "cursor-crosshair" : "")}
+            style={drawing ? { touchAction: "none" } : undefined}
+            className={"relative inline-block " + (placing || drawing ? "cursor-crosshair" : "")}
           >
-            <img src={url} alt="악보" onLoad={measure} className="block max-h-[62vh] max-w-full" />
+            <img src={url} alt="악보" onLoad={measure} draggable={false} className="block max-h-[62vh] max-w-full" />
+            {(strokes.length > 0 || liveStroke) && boxW > 0 && (
+              <svg
+                width={boxW}
+                height={boxH}
+                className="pointer-events-none absolute left-0 top-0"
+              >
+                {strokes.map((s, i) => (
+                  <polyline
+                    key={i}
+                    points={s.points.map((p) => `${p.x * boxW},${p.y * boxH}`).join(" ")}
+                    fill="none"
+                    stroke={s.color}
+                    strokeWidth={s.width * boxW}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity={s.highlight ? 0.35 : 1}
+                  />
+                ))}
+                {liveStroke && (
+                  <polyline
+                    points={liveStroke.map((p) => `${p.x * boxW},${p.y * boxH}`).join(" ")}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={strokeWidth() * boxW}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity={tool === "highlight" ? 0.35 : 1}
+                  />
+                )}
+              </svg>
+            )}
             {many && (
               <>
                 <button
@@ -833,6 +959,7 @@ export function SheetLightbox({
                   whiteSpace: "nowrap",
                   cursor: "move",
                   touchAction: "none",
+                  pointerEvents: drawing ? "none" : "auto",
                   padding: "1px 3px",
                   borderRadius: 4,
                   outline: sel === i ? "2px solid #6366f1" : "none",
@@ -854,16 +981,37 @@ export function SheetLightbox({
             className="w-full max-w-2xl space-y-2 rounded-xl bg-black/60 p-3 backdrop-blur"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <button
-                onClick={() => { setSel(null); setPendingText(null); setPlacing((p) => !p); }}
+                onClick={() => pickTool("text")}
                 className={
                   "rounded-full px-3 py-1.5 text-sm font-semibold " +
-                  (placing && !pendingText ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
+                  (tool === "text" && !pendingText ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
                 }
               >
-                {placing ? "위치를 탭하세요" : "＋ 텍스트"}
+                {tool === "text" ? "위치를 탭하세요" : "＋ 텍스트"}
               </button>
+              <button
+                onClick={() => pickTool("highlight")}
+                className={
+                  "rounded-full px-3 py-1.5 text-sm font-semibold " +
+                  (tool === "highlight" ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
+                }
+              >
+                형광펜
+              </button>
+              <button
+                onClick={() => pickTool("draw")}
+                className={
+                  "rounded-full px-3 py-1.5 text-sm font-semibold " +
+                  (tool === "draw" ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
+                }
+              >
+                그리기
+              </button>
+              {drawing && strokes.length > 0 && (
+                <button onClick={undoStroke} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">되돌리기</button>
+              )}
               {sel != null && (
                 <>
                   <button onClick={editSel} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">수정</button>
@@ -890,13 +1038,13 @@ export function SheetLightbox({
                 ))}
               </div>
               <div className="flex items-center gap-1">
-                {TEXT_SIZES.map((s) => (
+                {TEXT_SIZES.map((s, i) => (
                   <button
                     key={s.value}
-                    onClick={() => applySize(s.value)}
+                    onClick={() => applySize(i)}
                     className={
                       "rounded-md px-2 py-1 text-xs font-semibold " +
-                      (size === s.value ? "bg-white text-slate-900" : "bg-white/15 text-white")
+                      (sizeIdx === i ? "bg-white text-slate-900" : "bg-white/15 text-white")
                     }
                   >
                     {s.label}

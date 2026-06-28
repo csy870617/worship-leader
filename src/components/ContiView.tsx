@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
-import type { ContiItem, SheetText } from "../lib/useConti";
-import { removeSongSheet, replaceSongSheet, setSongSheetTexts, useSongAttach } from "../lib/songAttach";
+import type { ContiItem, SheetStroke, SheetText } from "../lib/useConti";
+import { removeSongSheet, replaceSongSheet, setSongSheetDraws, setSongSheetTexts, useSongAttach } from "../lib/songAttach";
 import { youtubePlaylistUrl, openYouTube } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
@@ -256,6 +256,7 @@ export default function ContiView({
                           key={cur.aid}
                           aid={cur.aid}
                           texts={attach[cur.item.id]?.sheetTexts?.[cur.aid] ?? []}
+                          strokes={attach[cur.item.id]?.sheetDraws?.[cur.aid] ?? []}
                           fit
                           onMenu={() => setSheetMenu({ songId: cur.item.id, aid: cur.aid! })}
                         />
@@ -278,6 +279,7 @@ export default function ContiView({
                         key={cur.aid}
                         aid={cur.aid}
                         texts={attach[cur.item.id]?.sheetTexts?.[cur.aid] ?? []}
+                        strokes={attach[cur.item.id]?.sheetDraws?.[cur.aid] ?? []}
                         fit
                         onMenu={() => setSheetMenu({ songId: cur.item.id, aid: cur.aid })}
                       />
@@ -378,7 +380,9 @@ export default function ContiView({
           ids={[textTarget.aid]}
           start={0}
           texts={{ [textTarget.aid]: attach[textTarget.songId]?.sheetTexts?.[textTarget.aid] ?? [] }}
+          draws={{ [textTarget.aid]: attach[textTarget.songId]?.sheetDraws?.[textTarget.aid] ?? [] }}
           onTexts={(aid, list) => setSongSheetTexts(textTarget.songId, aid, list)}
+          onDraws={(aid, list) => setSongSheetDraws(textTarget.songId, aid, list)}
           onClose={() => setTextTarget(null)}
         />
       )}
@@ -420,6 +424,7 @@ function SongBlock({
           key={aid}
           aid={aid}
           texts={a?.sheetTexts?.[aid] ?? []}
+          strokes={a?.sheetDraws?.[aid] ?? []}
           onMenu={onMenu ? () => onMenu(aid) : undefined}
         />
       ))}
@@ -430,17 +435,20 @@ function SongBlock({
 function SheetFigure({
   aid,
   texts,
+  strokes = [],
   fit = false,
   onMenu,
 }: {
   aid: string;
   texts: SheetText[];
+  strokes?: SheetStroke[];
   fit?: boolean;
   onMenu?: () => void;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [needsSync, setNeedsSync] = useState(false);
   const [w, setW] = useState(0);
+  const [h, setH] = useState(0);
   const [box, setBox] = useState<{ l: number; t: number; w: number; h: number } | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -466,6 +474,7 @@ function SheetFigure({
       setBox({ l: ir.left - cr.left, t: ir.top - cr.top, w: ir.width, h: ir.height });
     } else {
       setW(img.clientWidth);
+      setH(img.clientHeight);
     }
   };
   useEffect(() => {
@@ -495,6 +504,24 @@ function SheetFigure({
       setUrl(u);
     }
   };
+
+  const strokeSvg = (width: number, height: number) =>
+    strokes.length && width && height ? (
+      <svg width={width} height={height} className="pointer-events-none absolute left-0 top-0">
+        {strokes.map((s, i) => (
+          <polyline
+            key={i}
+            points={s.points.map((p) => `${p.x * width},${p.y * height}`).join(" ")}
+            fill="none"
+            stroke={s.color}
+            strokeWidth={s.width * width}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={s.highlight ? 0.35 : 1}
+          />
+        ))}
+      </svg>
+    ) : null;
 
   const overlay = (width: number) =>
     texts.map((t, i) => (
@@ -529,6 +556,7 @@ function SheetFigure({
         />
         {box && (
           <div className="pointer-events-none absolute" style={{ left: box.l, top: box.t, width: box.w, height: box.h }}>
+            {strokeSvg(box.w, box.h)}
             {overlay(box.w)}
           </div>
         )}
@@ -546,6 +574,7 @@ function SheetFigure({
           onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(); } : undefined}
           className="block w-full"
         />
+        {strokeSvg(w, h)}
         {overlay(w)}
       </div>
     );

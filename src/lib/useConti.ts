@@ -10,6 +10,12 @@ export interface SheetText {
   color: string; // hex
   size: number; // font size as a fraction of image width
 }
+export interface SheetStroke {
+  points: { x: number; y: number }[]; // 0..1 — x by image width, y by image height
+  color: string; // hex
+  width: number; // stroke width as a fraction of image width
+  highlight?: boolean; // semi-transparent marker (형광펜) vs. opaque pen (그리기)
+}
 export interface ContiItem {
   id: string;
   note?: string;

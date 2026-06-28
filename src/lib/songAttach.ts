@@ -3,7 +3,7 @@
 // into any conti and survive remove/re-add. Persisted to localStorage and
 // synced to the cloud like the rest of the user's data.
 import { useSyncExternalStore } from "react";
-import type { SheetText } from "./useConti";
+import type { SheetStroke, SheetText } from "./useConti";
 import { getContiState, setContiState } from "./useConti";
 
 export interface SongAttach {
@@ -11,6 +11,7 @@ export interface SongAttach {
   youtube?: string;
   sheets?: string[]; // attachment ids (Drive fileId or local id)
   sheetTexts?: Record<string, SheetText[]>; // text annotations per sheet
+  sheetDraws?: Record<string, SheetStroke[]>; // pen / highlighter strokes per sheet
 }
 type Store = Record<string, SongAttach>;
 const LS = "wl.songAttach";
@@ -40,6 +41,31 @@ function sanitizeAttach(a: any): SongAttach | null {
       if (arr.length) st[k] = arr;
     }
     if (Object.keys(st).length) out.sheetTexts = st;
+  }
+  if (a.sheetDraws && typeof a.sheetDraws === "object" && !Array.isArray(a.sheetDraws)) {
+    const sd: Record<string, SheetStroke[]> = {};
+    for (const [k, v] of Object.entries(a.sheetDraws)) {
+      if (!Array.isArray(v)) continue;
+      const arr = (v as any[])
+        .map((s): SheetStroke | null => {
+          const points = Array.isArray(s?.points)
+            ? s.points
+                .filter((p: any) => p && typeof p.x === "number" && typeof p.y === "number")
+                .map((p: any) => ({ x: p.x, y: p.y }))
+            : [];
+          if (points.length < 2) return null;
+          const stroke: SheetStroke = {
+            points,
+            color: typeof s.color === "string" ? s.color : "#eab308",
+            width: typeof s.width === "number" ? s.width : 0.01,
+          };
+          if (s.highlight === true) stroke.highlight = true;
+          return stroke;
+        })
+        .filter((s): s is SheetStroke => s !== null);
+      if (arr.length) sd[k] = arr;
+    }
+    if (Object.keys(sd).length) out.sheetDraws = sd;
   }
   return Object.keys(out).length ? out : null;
 }
@@ -127,7 +153,9 @@ export function removeSongSheet(id: string, aid: string) {
     const sheets = (a.sheets ?? []).filter((x) => x !== aid);
     const st = { ...(a.sheetTexts ?? {}) };
     delete st[aid];
-    return { ...a, sheets, sheetTexts: st };
+    const sd = { ...(a.sheetDraws ?? {}) };
+    delete sd[aid];
+    return { ...a, sheets, sheetTexts: st, sheetDraws: sd };
   });
 }
 export function replaceSongSheet(
@@ -155,7 +183,22 @@ export function replaceSongSheet(
         .filter((t) => t.x >= 0 && t.x <= 1 && t.y >= 0 && t.y <= 1);
       if (mapped.length) st[newAid] = mapped;
     }
-    return { ...a, sheets, sheetTexts: st };
+    // Remap pen / highlighter strokes the same way; keep a stroke if any of its
+    // points still falls inside the new frame.
+    const sd = { ...(a.sheetDraws ?? {}) };
+    const oldD = sd[oldAid];
+    delete sd[oldAid];
+    if (crop && crop.w > 0 && crop.h > 0 && oldD && oldD.length) {
+      const mappedD = oldD
+        .map((s) => ({
+          ...s,
+          points: s.points.map((p) => ({ x: (p.x - crop.x) / crop.w, y: (p.y - crop.y) / crop.h })),
+          width: s.width / crop.w,
+        }))
+        .filter((s) => s.points.some((p) => p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1));
+      if (mappedD.length) sd[newAid] = mappedD;
+    }
+    return { ...a, sheets, sheetTexts: st, sheetDraws: sd };
   });
 }
 export function setSongSheetTexts(id: string, aid: string, list: SheetText[]) {
@@ -164,6 +207,14 @@ export function setSongSheetTexts(id: string, aid: string, list: SheetText[]) {
     if (list.length) st[aid] = list;
     else delete st[aid];
     return { ...a, sheetTexts: st };
+  });
+}
+export function setSongSheetDraws(id: string, aid: string, list: SheetStroke[]) {
+  update(id, (a) => {
+    const sd = { ...(a.sheetDraws ?? {}) };
+    if (list.length) sd[aid] = list;
+    else delete sd[aid];
+    return { ...a, sheetDraws: sd };
   });
 }
 
