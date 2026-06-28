@@ -25,6 +25,7 @@ export default function Conti() {
   const {
     conti, remove, setKey, clear, replace,
     contis, activeId, active, createConti, renameConti, deleteConti, setActive,
+    contiNote, setContiNote,
   } = useConti();
   const attach = useSongAttach();
   const { songById } = useSongs();
@@ -564,9 +565,32 @@ export default function Conti() {
         </div>
       )}
 
+      {/* 묵상노트 — free-form meditation memo, sits between the song list and actions */}
+      {rows.length > 0 && (
+        <div className="mt-6 px-4">
+          <label
+            htmlFor="conti-meditation-note"
+            className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.5C10.5 5 8.5 4.5 5.5 4.5v13c3 0 5 .5 6.5 2 1.5-1.5 3.5-2 6.5-2v-13c-3 0-5 .5-6.5 2Zm0 0V19" />
+            </svg>
+            묵상노트
+          </label>
+          <textarea
+            id="conti-meditation-note"
+            value={contiNote}
+            onChange={(e) => setContiNote(e.target.value)}
+            rows={6}
+            placeholder="오늘의 묵상을 기록하세요"
+            className="min-h-32 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm leading-relaxed text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          />
+        </div>
+      )}
+
       {/* footer: grouped actions */}
       {rows.length > 0 && (
-        <div className="mt-8 space-y-2 px-4">
+        <div className="mt-4 space-y-2 px-4">
           {/* use now: view + playlist */}
           <div className="flex gap-2">
             <button

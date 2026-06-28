@@ -28,6 +28,7 @@ export interface Conti {
   id: string;
   name: string;
   items: ContiItem[];
+  note?: string; // 묵상노트 — free-form meditation memo for this conti
 }
 interface State {
   contis: Conti[];
@@ -79,11 +80,13 @@ function sanitizeItems(arr: unknown): ContiItem[] {
 }
 function sanitizeConti(c: any): Conti | null {
   if (!c || typeof c.id !== "string") return null;
-  return {
+  const out: Conti = {
     id: c.id,
     name: typeof c.name === "string" && c.name ? c.name : "콘티",
     items: sanitizeItems(c.items),
   };
+  if (typeof c.note === "string" && c.note) out.note = c.note;
+  return out;
 }
 
 function load(): State {
@@ -270,6 +273,11 @@ export function useConti() {
       contis: state.contis.map((c) => (c.id === id ? { ...c, name: name.trim() || c.name } : c)),
     });
   }, []);
+  // 묵상노트 — store the meditation memo on the active conti
+  const setContiNote = useCallback((note: string) => {
+    const a = active();
+    commit({ ...state, contis: state.contis.map((c) => (c.id === a.id ? { ...c, note } : c)) });
+  }, []);
   const deleteConti = useCallback((id: string) => {
     let contis = state.contis.filter((c) => c.id !== id);
     if (!contis.length) contis = [{ id: newId(), name: "콘티 1", items: [] }];
@@ -285,6 +293,8 @@ export function useConti() {
     activeId: s.activeId,
     active: cur,
     conti: cur.items,
+    contiNote: cur.note ?? "",
+    setContiNote,
     has,
     add,
     remove,
