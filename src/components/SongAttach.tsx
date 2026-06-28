@@ -984,33 +984,57 @@ export function SheetLightbox({
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 onClick={() => pickTool("text")}
+                aria-label="텍스트 추가"
+                title="텍스트 추가"
                 className={
-                  "rounded-full px-3 py-1.5 text-sm font-semibold " +
+                  "flex h-9 w-9 items-center justify-center rounded-full " +
                   (tool === "text" && !pendingText ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
                 }
               >
-                {tool === "text" ? "위치를 탭하세요" : "＋ 텍스트"}
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 6.5V5h14v1.5M12 5v14m-3 0h6" />
+                </svg>
               </button>
               <button
                 onClick={() => pickTool("highlight")}
+                aria-label="형광펜"
+                title="형광펜"
                 className={
-                  "rounded-full px-3 py-1.5 text-sm font-semibold " +
+                  "flex h-9 w-9 items-center justify-center rounded-full " +
                   (tool === "highlight" ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
                 }
               >
-                형광펜
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.3 4.6 19.4 8.7M7.4 16.5l-3.4 1 1-3.4L15.3 4.6a1.6 1.6 0 0 1 2.3 0l1.8 1.8a1.6 1.6 0 0 1 0 2.3L7.4 16.5Z" />
+                  <path strokeLinecap="round" d="M4 20.5h16" />
+                </svg>
               </button>
               <button
                 onClick={() => pickTool("draw")}
+                aria-label="그리기"
+                title="그리기"
                 className={
-                  "rounded-full px-3 py-1.5 text-sm font-semibold " +
+                  "flex h-9 w-9 items-center justify-center rounded-full " +
                   (tool === "draw" ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
                 }
               >
-                그리기
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.5 3.5 4 4L8 20l-4 .5.5-4L16.5 3.5Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m13.5 6.5 4 4" />
+                </svg>
               </button>
               {drawing && strokes.length > 0 && (
-                <button onClick={undoStroke} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">되돌리기</button>
+                <button
+                  onClick={undoStroke}
+                  aria-label="되돌리기"
+                  title="되돌리기"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white"
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 14 4 9l5-5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 9h11a5 5 0 0 1 0 10h-3" />
+                  </svg>
+                </button>
               )}
               {sel != null && (
                 <>
@@ -1022,6 +1046,11 @@ export function SheetLightbox({
                 <span className="ml-1 text-xs font-semibold text-white/70">{index + 1} / {ids.length}</span>
               )}
             </div>
+            {(placing || drawing) && (
+              <p className="text-center text-xs font-medium text-white/70">
+                {placing ? "악보를 탭해 텍스트를 넣으세요" : "악보 위를 드래그해 그리세요"}
+              </p>
+            )}
             <div className="flex items-center justify-center gap-3">
               <div className="flex items-center gap-1.5">
                 {TEXT_COLORS.map((c) => (
