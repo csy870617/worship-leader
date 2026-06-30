@@ -34,6 +34,9 @@ export default function Conti() {
   const [toast, setToast] = useState<string | null>(null);
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [pdfBusy, setPdfBusy] = useState(false);
+  // which step of the 콘티 공유 flow is running, so the button can show a
+  // persistent "working…" state through the slow Drive upload (never frozen)
+  const [shareStage, setShareStage] = useState<null | "pdf" | "drive">(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [shareReady, setShareReady] = useState<File | null>(null);
@@ -237,7 +240,8 @@ export default function Conti() {
   const shareViaDrive = async (file: File) => {
     setShareReady(null);
     setShareErr(null);
-    flash("드라이브에 올리는 중…");
+    // the in-progress indication is shown on the share button (shareStage),
+    // which stays visible for the whole upload instead of a toast that fades
     try {
       const link = await uploadSharedFile(file, file.name || `${active.name}.pdf`);
       setDriveLink(link);
@@ -627,44 +631,60 @@ export default function Conti() {
                 setShareReady(null);
                 setShareErr(null);
                 setPdfBusy(true);
-                flash("PDF를 만드는 중…");
-                let built;
+                setShareStage("pdf");
                 try {
-                  built = await buildContiPdf(active.name, conti, songById);
-                } catch {
-                  built = null;
-                } finally {
-                  setPdfBusy(false);
-                }
-                if (!built) {
-                  flash("PDF 생성에 실패했어요");
-                  return;
-                }
-                // try to share the PDF file directly; if it's blocked (installed
-                // PWA, lost user-activation, or unsupported) flow straight into
-                // the drive-link share — no extra tap.
-                try {
-                  if (navigator.canShare?.({ files: [built.file] })) {
-                    await navigator.share({ files: [built.file] });
-                    setToast(null);
+                  let built;
+                  try {
+                    built = await buildContiPdf(active.name, conti, songById);
+                  } catch {
+                    built = null;
+                  }
+                  if (!built) {
+                    flash("PDF 생성에 실패했어요");
                     return;
                   }
-                } catch (e) {
-                  const name = (e as { name?: string })?.name;
-                  if (name === "AbortError") return; // user dismissed the share sheet
-                  // any other error → fall through to the drive flow
-                }
-                if (driveEnabled()) {
-                  await shareViaDrive(built.file);
-                } else {
-                  // no Drive: show the text-share fallback screen
-                  setShareReady(built.file);
-                  setShareErr("unsupported");
+                  // try to share the PDF file directly; if it's blocked (installed
+                  // PWA, lost user-activation, or unsupported) flow straight into
+                  // the drive-link share — no extra tap.
+                  try {
+                    if (navigator.canShare?.({ files: [built.file] })) {
+                      await navigator.share({ files: [built.file] });
+                      setToast(null);
+                      return;
+                    }
+                  } catch (e) {
+                    const name = (e as { name?: string })?.name;
+                    if (name === "AbortError") return; // user dismissed the share sheet
+                    // any other error → fall through to the drive flow
+                  }
+                  if (driveEnabled()) {
+                    // the Drive upload can take a few seconds — switch the button
+                    // to a clear "uploading" state so it never looks frozen
+                    setShareStage("drive");
+                    await shareViaDrive(built.file);
+                  } else {
+                    // no Drive: show the text-share fallback screen
+                    setShareReady(built.file);
+                    setShareErr("unsupported");
+                  }
+                } finally {
+                  setPdfBusy(false);
+                  setShareStage(null);
                 }
               }}
               className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 active:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:active:bg-slate-800"
             >
-              {pdfBusy ? "만드는 중…" : "콘티 공유"}
+              {shareStage ? (
+                <span className="flex items-center justify-center gap-1.5">
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <circle className="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-90" d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  </svg>
+                  {shareStage === "drive" ? "드라이브에 올리는 중…" : "만드는 중…"}
+                </span>
+              ) : (
+                "콘티 공유"
+              )}
             </button>
             <button
               disabled={pdfBusy}
