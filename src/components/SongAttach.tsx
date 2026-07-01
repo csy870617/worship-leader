@@ -18,6 +18,7 @@ import {
   saveSheetFromFile,
 } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
+import { copyText } from "../lib/share";
 import { registerBack, useBackDismiss } from "../lib/backStack";
 
 const TEXT_COLORS = ["#ef4444", "#000000", "#ffffff", "#2563eb", "#16a34a", "#eab308"];
@@ -31,6 +32,9 @@ const PEN_WIDTHS = [0.004, 0.008, 0.014];
 const HL_WIDTHS = [0.03, 0.05, 0.08];
 const HL_DEFAULT_COLOR = "#eab308"; // yellow marker
 const PEN_DEFAULT_COLOR = "#ef4444"; // red pen
+
+// one undo/redo history entry — the full annotation state of a single sheet
+type Snapshot = { annos: SheetText[]; strokes: SheetStroke[] };
 const TEXT_PRESET_ROWS = [
   ["Int", "V", "V1", "V2", "PC", "C", "C1", "C2"],
   ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
@@ -609,16 +613,29 @@ export function SheetLightbox({
   const [tool, setTool] = useState<"text" | "highlight" | "draw" | null>(null);
   const [pendingText, setPendingText] = useState<string | null>(null);
   const [color, setColor] = useState(TEXT_COLORS[0]);
-  const [sizeIdx, setSizeIdx] = useState(1);
+  const [sizeIdx, setSizeIdx] = useState(0); // 기본 글자 크기 '작게'
   const [boxW, setBoxW] = useState(0);
   const [boxH, setBoxH] = useState(0);
   const [strokes, setStrokes] = useState<SheetStroke[]>([]);
   const [liveStroke, setLiveStroke] = useState<{ x: number; y: number }[] | null>(null);
+  // in-place text input: type directly on the sheet at (x,y). i=null → new text,
+  // i>=0 → editing an existing annotation.
+  const [editing, setEditing] = useState<{ i: number | null; x: number; y: number; value: string } | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  const [hasCopied, setHasCopied] = useState(false); // a text was copied → show 붙여넣기
   const boxRef = useRef<HTMLDivElement>(null);
+  const editRef = useRef<HTMLInputElement>(null);
   const annosRef = useRef<SheetText[]>([]);
   const strokesRef = useRef<SheetStroke[]>([]);
   const strokeDragRef = useRef<{ x: number; y: number }[] | null>(null);
   const dragRef = useRef<{ i: number; moved: boolean } | null>(null);
+  // combined undo/redo stack for the current sheet (text + strokes)
+  const historyRef = useRef<Snapshot[]>([{ annos: [], strokes: [] }]);
+  const histIndexRef = useRef(0);
+  const copiedTextRef = useRef<string | null>(null);
+  const editingRef = useRef<typeof editing>(null);
+  editingRef.current = editing;
   const many = ids.length > 1;
   const currentId = ids[index];
   const drawing = tool === "draw" || tool === "highlight";
@@ -654,6 +671,7 @@ export function SheetLightbox({
     setTool(null);
     setPendingText(null);
     setLiveStroke(null);
+    setEditing(null);
     strokeDragRef.current = null;
     const init = texts[ids[index]] ?? [];
     setAnnos(init);
@@ -661,6 +679,11 @@ export function SheetLightbox({
     const initD = draws?.[ids[index]] ?? [];
     setStrokes(initD);
     strokesRef.current = initD;
+    // start a fresh undo/redo history from the loaded state
+    historyRef.current = [{ annos: init, strokes: initD }];
+    histIndexRef.current = 0;
+    setCanUndo(false);
+    setCanRedo(false);
     loadSheet(ids[index]).then((u) => {
       if (!alive) return;
       setUrl(u ?? null);
@@ -690,6 +713,7 @@ export function SheetLightbox({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (editingRef.current) return; // let the in-place input keep focus/keys
       if (e.key === "Escape") close();
       else if (e.key === "ArrowRight" && many) go(1);
       else if (e.key === "ArrowLeft" && many) go(-1);
@@ -707,7 +731,7 @@ export function SheetLightbox({
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       e.preventDefault();
-      commit(annosRef.current.filter((_, i) => i !== sel));
+      pushState(annosRef.current.filter((_, i) => i !== sel), strokesRef.current);
       setSel(null);
     };
     window.addEventListener("keydown", onKey);
@@ -715,15 +739,61 @@ export function SheetLightbox({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sel, currentId]);
 
-  const commit = (next: SheetText[]) => {
-    annosRef.current = next;
-    setAnnos(next);
-    onTexts(currentId, next);
+  // ---- undo / redo: Ctrl/Cmd+Z, Ctrl+Shift+Z or Ctrl+Y (ignored while typing) ----
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      const k = e.key.toLowerCase();
+      if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if ((k === "z" && e.shiftKey) || k === "y") { e.preventDefault(); redo(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentId]);
+
+  // write the given state to the store + local refs (no history entry)
+  const writeState = (nextAnnos: SheetText[], nextStrokes: SheetStroke[]) => {
+    annosRef.current = nextAnnos;
+    strokesRef.current = nextStrokes;
+    setAnnos(nextAnnos);
+    setStrokes(nextStrokes);
+    onTexts(currentId, nextAnnos);
+    onDraws?.(currentId, nextStrokes);
   };
-  const commitStrokes = (next: SheetStroke[]) => {
-    strokesRef.current = next;
-    setStrokes(next);
-    onDraws?.(currentId, next);
+  // commit an edit AND record it on the undo stack (drops any redo tail)
+  const pushState = (nextAnnos: SheetText[], nextStrokes: SheetStroke[]) => {
+    writeState(nextAnnos, nextStrokes);
+    const hist = historyRef.current.slice(0, histIndexRef.current + 1);
+    hist.push({ annos: nextAnnos, strokes: nextStrokes });
+    historyRef.current = hist;
+    histIndexRef.current = hist.length - 1;
+    setCanUndo(true);
+    setCanRedo(false);
+  };
+  const undo = () => {
+    if (histIndexRef.current <= 0) return;
+    editingRef.current = null;
+    setEditing(null);
+    setSel(null);
+    histIndexRef.current -= 1;
+    const s = historyRef.current[histIndexRef.current];
+    writeState(s.annos, s.strokes);
+    setCanUndo(histIndexRef.current > 0);
+    setCanRedo(true);
+  };
+  const redo = () => {
+    if (histIndexRef.current >= historyRef.current.length - 1) return;
+    editingRef.current = null;
+    setEditing(null);
+    setSel(null);
+    histIndexRef.current += 1;
+    const s = historyRef.current[histIndexRef.current];
+    writeState(s.annos, s.strokes);
+    setCanUndo(true);
+    setCanRedo(histIndexRef.current < historyRef.current.length - 1);
   };
 
   // pick a tool; toggle off if it's already active. Highlighter / pen start with
@@ -749,6 +819,7 @@ export function SheetLightbox({
   const onBoxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (drawing) return; // strokes are handled by the pointer handlers
+    if (editingRef.current) return; // a tap outside the input blurs it → commits
     if (!placing) {
       setSel(null);
       return;
@@ -758,13 +829,48 @@ export function SheetLightbox({
     const rect = el.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-    const text = pendingText ?? prompt("텍스트 입력");
-    setTool(null);
-    setPendingText(null);
-    if (text && text.trim()) {
-      const next = [...annosRef.current, { x, y, text: text.trim(), color, size: TEXT_SIZES[sizeIdx].value }];
-      commit(next);
+    if (pendingText) {
+      // preset / pasted label → drop it straight down
+      const label = pendingText;
+      setTool(null);
+      setPendingText(null);
+      const next = [...annosRef.current, { x, y, text: label, color, size: TEXT_SIZES[sizeIdx].value }];
+      pushState(next, strokesRef.current);
       setSel(next.length - 1);
+    } else {
+      // free text → open an in-place input right where you tapped, and focus it
+      // within this tap gesture so the mobile keyboard reliably opens
+      setTool(null);
+      setSel(null);
+      editingRef.current = { i: null, x, y, value: "" };
+      setEditing({ i: null, x, y, value: "" });
+      editRef.current?.focus();
+    }
+  };
+
+  // finish the in-place editor: create / update / delete the annotation. Reads
+  // the ref (not state) so a blur+Enter race can't commit the same edit twice.
+  const commitEditing = () => {
+    const ed = editingRef.current;
+    if (!ed) return;
+    editingRef.current = null;
+    setEditing(null);
+    const text = ed.value.trim();
+    if (ed.i == null) {
+      if (text) {
+        const next = [...annosRef.current, { x: ed.x, y: ed.y, text, color, size: TEXT_SIZES[sizeIdx].value }];
+        pushState(next, strokesRef.current);
+        setSel(next.length - 1);
+      }
+      return;
+    }
+    const cur = annosRef.current[ed.i];
+    if (!cur) return;
+    if (!text) {
+      pushState(annosRef.current.filter((_, i) => i !== ed.i), strokesRef.current);
+      setSel(null);
+    } else if (text !== cur.text) {
+      pushState(annosRef.current.map((a, i) => (i === ed.i ? { ...a, text } : a)), strokesRef.current);
     }
   };
 
@@ -801,37 +907,59 @@ export function SheetLightbox({
     if (pts.length >= 2) {
       const stroke: SheetStroke = { points: pts, color, width: strokeWidth() };
       if (tool === "highlight") stroke.highlight = true;
-      commitStrokes([...strokesRef.current, stroke]);
+      pushState(annosRef.current, [...strokesRef.current, stroke]);
     }
-  };
-  const undoStroke = () => {
-    if (!strokesRef.current.length) return;
-    commitStrokes(strokesRef.current.slice(0, -1));
   };
 
   const applyColor = (c: string) => {
     setColor(c);
-    if (sel != null) commit(annos.map((a, i) => (i === sel ? { ...a, color: c } : a)));
+    if (sel != null) pushState(annos.map((a, i) => (i === sel ? { ...a, color: c } : a)), strokesRef.current);
   };
   const applySize = (idx: number) => {
     setSizeIdx(idx);
-    if (sel != null) commit(annos.map((a, i) => (i === sel ? { ...a, size: TEXT_SIZES[idx].value } : a)));
+    if (sel != null) pushState(annos.map((a, i) => (i === sel ? { ...a, size: TEXT_SIZES[idx].value } : a)), strokesRef.current);
   };
   const editSel = () => {
     if (sel == null) return;
-    const t = prompt("텍스트 수정", annos[sel].text);
-    if (t == null) return;
-    if (!t.trim()) {
-      commit(annos.filter((_, i) => i !== sel));
-      setSel(null);
-    } else {
-      commit(annos.map((a, i) => (i === sel ? { ...a, text: t.trim() } : a)));
-    }
+    const a = annosRef.current[sel];
+    if (!a) return;
+    const ed = { i: sel, x: a.x, y: a.y, value: a.text };
+    setSel(null);
+    editingRef.current = ed;
+    setEditing(ed); // in-place edit
+    editRef.current?.focus();
   };
   const delSel = () => {
     if (sel == null) return;
-    commit(annos.filter((_, i) => i !== sel));
+    pushState(annos.filter((_, i) => i !== sel), strokesRef.current);
     setSel(null);
+  };
+  // copy the selected text to the clipboard (+ a local fallback) so it can be
+  // pasted back onto the sheet or into another app
+  const copySel = () => {
+    if (sel == null) return;
+    const t = annosRef.current[sel]?.text ?? "";
+    if (!t) return;
+    copiedTextRef.current = t;
+    setHasCopied(true);
+    void copyText(t);
+  };
+  // paste: arm placement with the copied text (prefers the system clipboard);
+  // the next tap on the sheet drops it
+  const pasteText = async () => {
+    let t = copiedTextRef.current;
+    try {
+      const sys = await navigator.clipboard?.readText?.();
+      if (sys && sys.trim()) t = sys.trim();
+    } catch {
+      /* clipboard blocked → fall back to the locally copied text */
+    }
+    if (!t) return;
+    copiedTextRef.current = t;
+    setHasCopied(true);
+    setSel(null);
+    setPendingText(t);
+    setTool("text");
   };
 
   return (
@@ -918,7 +1046,8 @@ export function SheetLightbox({
                 </button>
               </>
             )}
-            {annos.map((a, i) => (
+            {annos.map((a, i) =>
+              editing?.i === i ? null : (
               <span
                 key={i}
                 onPointerDown={(e) => {
@@ -944,7 +1073,7 @@ export function SheetLightbox({
                   const d = dragRef.current;
                   dragRef.current = null;
                   (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
-                  if (d?.moved) onTexts(currentId, annosRef.current);
+                  if (d?.moved) pushState(annosRef.current, strokesRef.current);
                 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
@@ -959,7 +1088,7 @@ export function SheetLightbox({
                   whiteSpace: "nowrap",
                   cursor: "move",
                   touchAction: "none",
-                  pointerEvents: drawing ? "none" : "auto",
+                  pointerEvents: drawing || editing ? "none" : "auto",
                   padding: "1px 3px",
                   borderRadius: 4,
                   outline: sel === i ? "2px solid #6366f1" : "none",
@@ -970,6 +1099,51 @@ export function SheetLightbox({
                 {a.text}
               </span>
             ))}
+            {/* in-place text input — always mounted so it can be focused within
+                the tap gesture (mobile keyboard); parked off-screen when idle */}
+            <input
+              ref={editRef}
+              value={editing?.value ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (editingRef.current) editingRef.current = { ...editingRef.current, value: v };
+                setEditing((ed) => (ed ? { ...ed, value: v } : ed));
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); commitEditing(); editRef.current?.blur(); }
+                else if (e.key === "Escape") { e.preventDefault(); editingRef.current = null; setEditing(null); editRef.current?.blur(); }
+              }}
+              onBlur={commitEditing}
+              placeholder="입력"
+              enterKeyHint="done"
+              style={
+                editing && boxW
+                  ? {
+                      position: "absolute",
+                      left: `${editing.x * 100}%`,
+                      top: `${editing.y * 100}%`,
+                      transform: "translate(-50%, -50%)",
+                      color: editing.i != null ? annos[editing.i]?.color ?? color : color,
+                      fontSize:
+                        (editing.i != null ? annos[editing.i]?.size ?? TEXT_SIZES[sizeIdx].value : TEXT_SIZES[sizeIdx].value) *
+                        boxW,
+                      fontWeight: 700,
+                      lineHeight: 1.1,
+                      textAlign: "center",
+                      background: "rgba(255,255,255,0.92)",
+                      border: "1px solid #6366f1",
+                      borderRadius: 4,
+                      padding: "1px 4px",
+                      outline: "none",
+                      width: `${Math.max(4, (editing.value.length || 2) + 1)}ch`,
+                      caretColor: "#6366f1",
+                      zIndex: 20,
+                    }
+                  : { position: "absolute", left: -9999, top: 0, width: 1, height: 1, opacity: 0, pointerEvents: "none" }
+              }
+            />
           </div>
         ) : (
           <span className="text-sm text-white/70">악보를 불러올 수 없어요</span>
@@ -1023,21 +1197,37 @@ export function SheetLightbox({
                   <path strokeLinecap="round" strokeLinejoin="round" d="m13.5 6.5 4 4" />
                 </svg>
               </button>
-              {drawing && strokes.length > 0 && (
-                <button
-                  onClick={undoStroke}
-                  aria-label="되돌리기"
-                  title="되돌리기"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white"
-                >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 14 4 9l5-5" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 9h11a5 5 0 0 1 0 10h-3" />
-                  </svg>
-                </button>
+              {/* undo / redo — covers every sheet edit (text + strokes) */}
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                aria-label="되돌리기(이전)"
+                title="되돌리기"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white disabled:opacity-30"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 14 4 9l5-5" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 9h11a5 5 0 0 1 0 10h-3" />
+                </svg>
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                aria-label="다시 실행(앞으로)"
+                title="다시 실행"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white disabled:opacity-30"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 14l5-5-5-5" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 9H9a5 5 0 0 0 0 10h3" />
+                </svg>
+              </button>
+              {hasCopied && sel == null && !placing && (
+                <button onClick={pasteText} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">붙여넣기</button>
               )}
               {sel != null && (
                 <>
+                  <button onClick={copySel} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">복사</button>
                   <button onClick={editSel} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">수정</button>
                   <button onClick={delSel} className="rounded-full bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white">삭제</button>
                 </>
