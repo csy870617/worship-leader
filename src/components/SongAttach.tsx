@@ -634,8 +634,15 @@ export function SheetLightbox({
   const historyRef = useRef<Snapshot[]>([{ annos: [], strokes: [] }]);
   const histIndexRef = useRef(0);
   const copiedTextRef = useRef<string | null>(null);
+  const copiedPosRef = useRef<{ x: number; y: number } | null>(null);
   const editingRef = useRef<typeof editing>(null);
   editingRef.current = editing;
+  // mirror frequently-changing values into refs so keyboard handlers (whose
+  // effects don't re-subscribe on every change) always read the latest
+  const colorRef = useRef(color);
+  colorRef.current = color;
+  const sizeIdxRef = useRef(sizeIdx);
+  sizeIdxRef.current = sizeIdx;
   const many = ids.length > 1;
   const currentId = ids[index];
   const drawing = tool === "draw" || tool === "highlight";
@@ -723,16 +730,28 @@ export function SheetLightbox({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [many, ids.length]);
 
-  // delete the selected text with the keyboard (PC)
+  // keyboard actions on the selected text (PC): delete, copy, cut, edit
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (sel == null) return;
-      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      if (sel == null || editingRef.current) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
-      e.preventDefault();
-      pushState(annosRef.current.filter((_, i) => i !== sel), strokesRef.current);
-      setSel(null);
+      const mod = e.ctrlKey || e.metaKey;
+      const k = e.key.toLowerCase();
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        pushState(annosRef.current.filter((_, i) => i !== sel), strokesRef.current);
+        setSel(null);
+      } else if (mod && k === "c") {
+        e.preventDefault();
+        copySel();
+      } else if (mod && k === "x") {
+        e.preventDefault();
+        cutSel();
+      } else if (!mod && (e.key === "Enter" || e.key === "F2")) {
+        e.preventDefault();
+        editSel();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -748,6 +767,7 @@ export function SheetLightbox({
       const k = e.key.toLowerCase();
       if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
       else if ((k === "z" && e.shiftKey) || k === "y") { e.preventDefault(); redo(); }
+      else if (k === "v") { e.preventDefault(); void pasteViaKeyboard(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -938,11 +958,43 @@ export function SheetLightbox({
   // pasted back onto the sheet or into another app
   const copySel = () => {
     if (sel == null) return;
-    const t = annosRef.current[sel]?.text ?? "";
+    const a = annosRef.current[sel];
+    const t = a?.text ?? "";
+    if (!t) return;
+    copiedTextRef.current = t;
+    copiedPosRef.current = { x: a.x, y: a.y };
+    setHasCopied(true);
+    void copyText(t);
+  };
+  const cutSel = () => {
+    if (sel == null) return;
+    copySel();
+    pushState(annosRef.current.filter((_, i) => i !== sel), strokesRef.current);
+    setSel(null);
+  };
+  // keyboard paste (Ctrl/Cmd+V): drop the copied text immediately, slightly
+  // offset from the source, and select it — no tap needed
+  const pasteViaKeyboard = async () => {
+    let t = copiedTextRef.current;
+    try {
+      const sys = await navigator.clipboard?.readText?.();
+      if (sys && sys.trim()) t = sys.trim();
+    } catch {
+      /* clipboard blocked → use the locally copied text */
+    }
     if (!t) return;
     copiedTextRef.current = t;
     setHasCopied(true);
-    void copyText(t);
+    const base = copiedPosRef.current;
+    const x = base ? Math.min(0.95, Math.max(0.05, base.x + 0.05)) : 0.5;
+    const y = base ? Math.min(0.95, Math.max(0.05, base.y + 0.05)) : 0.5;
+    const next = [
+      ...annosRef.current,
+      { x, y, text: t, color: colorRef.current, size: TEXT_SIZES[sizeIdxRef.current].value },
+    ];
+    pushState(next, strokesRef.current);
+    setSel(next.length - 1);
+    copiedPosRef.current = { x, y }; // cascade further pastes
   };
   // paste: arm placement with the copied text (prefers the system clipboard);
   // the next tap on the sheet drops it
@@ -1202,7 +1254,7 @@ export function SheetLightbox({
                 onClick={undo}
                 disabled={!canUndo}
                 aria-label="되돌리기(이전)"
-                title="되돌리기"
+                title="되돌리기 (Ctrl+Z)"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white disabled:opacity-30"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
@@ -1214,7 +1266,7 @@ export function SheetLightbox({
                 onClick={redo}
                 disabled={!canRedo}
                 aria-label="다시 실행(앞으로)"
-                title="다시 실행"
+                title="다시 실행 (Ctrl+Shift+Z)"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white disabled:opacity-30"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
@@ -1223,13 +1275,13 @@ export function SheetLightbox({
                 </svg>
               </button>
               {hasCopied && sel == null && !placing && (
-                <button onClick={pasteText} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">붙여넣기</button>
+                <button onClick={pasteText} title="붙여넣기 (Ctrl+V)" className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">붙여넣기</button>
               )}
               {sel != null && (
                 <>
-                  <button onClick={copySel} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">복사</button>
-                  <button onClick={editSel} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">수정</button>
-                  <button onClick={delSel} className="rounded-full bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white">삭제</button>
+                  <button onClick={copySel} title="복사 (Ctrl+C)" className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">복사</button>
+                  <button onClick={editSel} title="수정 (Enter)" className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">수정</button>
+                  <button onClick={delSel} title="삭제 (Delete)" className="rounded-full bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white">삭제</button>
                 </>
               )}
               {many && (
