@@ -633,8 +633,11 @@ export function SheetLightbox({
   // combined undo/redo stack for the current sheet (text + strokes)
   const historyRef = useRef<Snapshot[]>([{ annos: [], strokes: [] }]);
   const histIndexRef = useRef(0);
-  const copiedTextRef = useRef<string | null>(null);
-  const copiedPosRef = useRef<{ x: number; y: number } | null>(null);
+  // the copied text keeps its full style (text + color + size) and source
+  // position so paste reproduces it exactly
+  const copiedRef = useRef<{ text: string; color: string; size: number; x: number; y: number } | null>(null);
+  // style to apply when a pasted label is dropped by tapping (null → use current)
+  const pendingStyleRef = useRef<{ color: string; size: number } | null>(null);
   const editingRef = useRef<typeof editing>(null);
   editingRef.current = editing;
   // mirror frequently-changing values into refs so keyboard handlers (whose
@@ -821,6 +824,7 @@ export function SheetLightbox({
   const pickTool = (t: "text" | "highlight" | "draw") => {
     setSel(null);
     setPendingText(null);
+    pendingStyleRef.current = null;
     if (tool === t) {
       setTool(null);
       return;
@@ -832,6 +836,7 @@ export function SheetLightbox({
 
   const addPreset = (label: string) => {
     setSel(null);
+    pendingStyleRef.current = null; // presets use the current color/size
     setPendingText(label);
     setTool("text");
   };
@@ -850,11 +855,16 @@ export function SheetLightbox({
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
     if (pendingText) {
-      // preset / pasted label → drop it straight down
+      // preset / pasted label → drop it straight down. A pasted label keeps its
+      // original color+size; presets use the current selection.
       const label = pendingText;
+      const style = pendingStyleRef.current;
+      const useColor = style ? style.color : color;
+      const useSize = style ? style.size : TEXT_SIZES[sizeIdx].value;
       setTool(null);
       setPendingText(null);
-      const next = [...annosRef.current, { x, y, text: label, color, size: TEXT_SIZES[sizeIdx].value }];
+      pendingStyleRef.current = null;
+      const next = [...annosRef.current, { x, y, text: label, color: useColor, size: useSize }];
       pushState(next, strokesRef.current);
       setSel(next.length - 1);
     } else {
@@ -959,12 +969,11 @@ export function SheetLightbox({
   const copySel = () => {
     if (sel == null) return;
     const a = annosRef.current[sel];
-    const t = a?.text ?? "";
-    if (!t) return;
-    copiedTextRef.current = t;
-    copiedPosRef.current = { x: a.x, y: a.y };
+    if (!a?.text) return;
+    // capture the whole styled annotation, not just the text
+    copiedRef.current = { text: a.text, color: a.color, size: a.size, x: a.x, y: a.y };
     setHasCopied(true);
-    void copyText(t);
+    void copyText(a.text);
   };
   const cutSel = () => {
     if (sel == null) return;
@@ -972,45 +981,50 @@ export function SheetLightbox({
     pushState(annosRef.current.filter((_, i) => i !== sel), strokesRef.current);
     setSel(null);
   };
-  // keyboard paste (Ctrl/Cmd+V): drop the copied text immediately, slightly
-  // offset from the source, and select it — no tap needed
+  // keyboard paste (Ctrl/Cmd+V): drop the copied text — with its original color
+  // and size — slightly offset from the source, and select it. No tap needed.
   const pasteViaKeyboard = async () => {
-    let t = copiedTextRef.current;
-    try {
-      const sys = await navigator.clipboard?.readText?.();
-      if (sys && sys.trim()) t = sys.trim();
-    } catch {
-      /* clipboard blocked → use the locally copied text */
+    const c = copiedRef.current;
+    let text = c?.text ?? null;
+    let color = c?.color ?? colorRef.current;
+    let size = c?.size ?? TEXT_SIZES[sizeIdxRef.current].value;
+    if (!text) {
+      // nothing copied in-app → allow plain text from the system clipboard
+      try {
+        const sys = await navigator.clipboard?.readText?.();
+        if (sys && sys.trim()) text = sys.trim();
+      } catch {
+        /* clipboard blocked */
+      }
     }
-    if (!t) return;
-    copiedTextRef.current = t;
+    if (!text) return;
     setHasCopied(true);
-    const base = copiedPosRef.current;
-    const x = base ? Math.min(0.95, Math.max(0.05, base.x + 0.05)) : 0.5;
-    const y = base ? Math.min(0.95, Math.max(0.05, base.y + 0.05)) : 0.5;
-    const next = [
-      ...annosRef.current,
-      { x, y, text: t, color: colorRef.current, size: TEXT_SIZES[sizeIdxRef.current].value },
-    ];
+    const x = c ? Math.min(0.95, Math.max(0.05, c.x + 0.05)) : 0.5;
+    const y = c ? Math.min(0.95, Math.max(0.05, c.y + 0.05)) : 0.5;
+    const next = [...annosRef.current, { x, y, text, color, size }];
     pushState(next, strokesRef.current);
     setSel(next.length - 1);
-    copiedPosRef.current = { x, y }; // cascade further pastes
+    if (c) copiedRef.current = { ...c, x, y }; // cascade repeated pastes
   };
-  // paste: arm placement with the copied text (prefers the system clipboard);
-  // the next tap on the sheet drops it
+  // paste: arm placement with the copied text and its original style; the next
+  // tap on the sheet drops it. Falls back to the system clipboard (plain text).
   const pasteText = async () => {
-    let t = copiedTextRef.current;
-    try {
-      const sys = await navigator.clipboard?.readText?.();
-      if (sys && sys.trim()) t = sys.trim();
-    } catch {
-      /* clipboard blocked → fall back to the locally copied text */
+    const c = copiedRef.current;
+    let text = c?.text ?? null;
+    let style = c ? { color: c.color, size: c.size } : null;
+    if (!text) {
+      try {
+        const sys = await navigator.clipboard?.readText?.();
+        if (sys && sys.trim()) { text = sys.trim(); style = null; }
+      } catch {
+        /* clipboard blocked */
+      }
     }
-    if (!t) return;
-    copiedTextRef.current = t;
+    if (!text) return;
     setHasCopied(true);
     setSel(null);
-    setPendingText(t);
+    pendingStyleRef.current = style; // null → use the current color/size
+    setPendingText(text);
     setTool("text");
   };
 
