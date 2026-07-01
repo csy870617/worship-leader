@@ -94,7 +94,10 @@ export default function Conti() {
     setSongNote(songId, next);
   };
 
-  useEffect(() => () => window.removeEventListener("touchmove", preventScroll), []);
+  useEffect(() => () => {
+    window.removeEventListener("touchmove", preventScroll);
+    cancelLP();
+  }, []);
 
   const indexFromY = (y: number) => {
     const list = listRef.current;
@@ -129,7 +132,20 @@ export default function Conti() {
     setDragId(null);
     setDragOrder(null);
     window.removeEventListener("touchmove", preventScroll);
-    if (order && order.some((it, i) => it.id !== conti[i]?.id)) replace(order);
+    if (!order) return;
+    // re-apply the drag's ordering to the *current* conti instead of
+    // committing the drag-start snapshot verbatim — otherwise a change synced
+    // in from another device mid-drag would be silently reverted on drop
+    const rank = new Map(order.map((it, i) => [it.id, i]));
+    const next = conti.slice().sort((a, b) => {
+      const ra = rank.get(a.id);
+      const rb = rank.get(b.id);
+      if (ra != null && rb != null) return ra - rb;
+      if (ra != null) return -1;
+      if (rb != null) return 1;
+      return 0;
+    });
+    if (next.some((it, i) => it.id !== conti[i]?.id)) replace(next);
   };
   // drag handle (grip) — starts the reorder immediately, works on touch
   const onHandleDown = (e: React.PointerEvent, id: string) => {

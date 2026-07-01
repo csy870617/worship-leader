@@ -89,7 +89,13 @@ export async function saveSheetFromFile(file: File, title: string): Promise<stri
   if (driveEnabled()) {
     const stamp = new Date().toISOString().slice(0, 10);
     const fileId = await uploadSheet(dataUrl, `${(title || "악보").trim()} ${stamp}.jpg`);
-    await putSheetAt(fileId, dataUrl);
+    // the Drive upload already succeeded — a local cache-write failure (quota,
+    // private browsing) shouldn't discard that and fail the whole attach
+    try {
+      await putSheetAt(fileId, dataUrl);
+    } catch (e) {
+      console.warn("[attachments] local cache write failed", e);
+    }
     return fileId;
   }
   return putSheet(dataUrl);
@@ -102,7 +108,12 @@ export async function loadSheet(id: string): Promise<string | undefined> {
   if (driveEnabled()) {
     try {
       const dataUrl = await downloadSheet(id, false);
-      await putSheetAt(id, dataUrl);
+      // a cache-write failure shouldn't discard a download that already succeeded
+      try {
+        await putSheetAt(id, dataUrl);
+      } catch (e) {
+        console.warn("[attachments] local cache write failed", e);
+      }
       return dataUrl;
     } catch {
       return undefined; // not cached and silent fetch failed → needs consent
@@ -113,14 +124,31 @@ export async function loadSheet(id: string): Promise<string | undefined> {
 
 /** Force a Drive fetch with interactive consent (call from a user gesture). */
 export async function fetchSheetInteractive(id: string): Promise<string | undefined> {
+  const r = await fetchSheetInteractiveResult(id);
+  return r.url;
+}
+
+/**
+ * Same as fetchSheetInteractive, but also reports whether the failure is a
+ * permanent 404 (file deleted on Drive outside the app) vs. a transient/auth
+ * failure — so the UI can stop offering a retry for a sheet that will never
+ * come back instead of looping on "sign in again".
+ */
+export async function fetchSheetInteractiveResult(
+  id: string
+): Promise<{ url: string | undefined; missing: boolean }> {
   const cached = await getSheet(id);
-  if (cached) return cached;
+  if (cached) return { url: cached, missing: false };
   try {
     const dataUrl = await downloadSheet(id, true);
-    await putSheetAt(id, dataUrl);
-    return dataUrl;
-  } catch {
-    return undefined;
+    try {
+      await putSheetAt(id, dataUrl);
+    } catch (e) {
+      console.warn("[attachments] local cache write failed", e);
+    }
+    return { url: dataUrl, missing: false };
+  } catch (e) {
+    return { url: undefined, missing: (e as { status?: number })?.status === 404 };
   }
 }
 

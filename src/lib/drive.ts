@@ -227,7 +227,13 @@ export async function downloadSheet(fileId: string, interactive = false): Promis
     `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`,
     { headers: { Authorization: `Bearer ${t}` } }
   );
-  if (!r.ok) throw new Error("드라이브 다운로드 실패");
+  if (!r.ok) {
+    // surface the HTTP status so callers can tell a permanent 404 (file
+    // deleted on Drive) apart from a transient/auth failure worth retrying
+    const err = new Error("드라이브 다운로드 실패") as Error & { status?: number };
+    err.status = r.status;
+    throw err;
+  }
   return blobToDataUrl(await r.blob());
 }
 

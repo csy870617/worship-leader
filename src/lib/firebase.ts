@@ -58,18 +58,27 @@ if (isFirebaseConfigured) {
   // token it already has and sign in with it so users skip this app's own
   // login screen.
   const FAITHS_ORIGIN = "https://csy870617.github.io";
+  // tracks the listener from the most recent request so repeated sign-out
+  // events (when the parent never replies) don't accumulate duplicate handlers
+  let pendingSsoListener: ((e: MessageEvent) => void) | null = null;
   onAuthStateChanged(auth, (user) => {
     if (user) return;
     if (window.parent === window) return;
+    if (pendingSsoListener) {
+      window.removeEventListener("message", pendingSsoListener);
+      pendingSsoListener = null;
+    }
     const onMsg = (e: MessageEvent) => {
       if (e.origin !== FAITHS_ORIGIN) return;
       if (!e.data || e.data.type !== "faiths-google-idtoken" || !e.data.idToken) return;
       window.removeEventListener("message", onMsg);
+      pendingSsoListener = null;
       const cred = GoogleAuthProvider.credential(e.data.idToken);
       signInWithCredential(auth!, cred).catch((err) =>
         console.log("FAITHS SSO 실패:", err?.code || err?.message || String(err)),
       );
     };
+    pendingSsoListener = onMsg;
     window.addEventListener("message", onMsg);
     window.parent.postMessage({ type: "faiths-request-idtoken" }, FAITHS_ORIGIN);
   });

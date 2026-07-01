@@ -13,6 +13,7 @@ import {
 } from "../lib/songAttach";
 import {
   fetchSheetInteractive,
+  fetchSheetInteractiveResult,
   loadSheet,
   removeSheetEverywhere,
   saveSheetFromFile,
@@ -116,7 +117,20 @@ export default function SongAttachEditor({
     dragOrderRef.current = null;
     setDragAid(null);
     setDragOrder(null);
-    if (order && order.some((x, i) => x !== sheetIds[i])) setSongSheets(songId, order);
+    if (!order) return;
+    // re-apply the drag's ordering to the *current* sheetIds instead of
+    // committing the drag-start snapshot verbatim — otherwise a sheet
+    // added/removed by a concurrent sync mid-drag would be silently reverted
+    const rank = new Map(order.map((id, i) => [id, i]));
+    const next = sheetIds.slice().sort((a, b) => {
+      const ra = rank.get(a);
+      const rb = rank.get(b);
+      if (ra != null && rb != null) return ra - rb;
+      if (ra != null) return -1;
+      if (rb != null) return 1;
+      return 0;
+    });
+    if (next.some((x, i) => x !== sheetIds[i])) setSongSheets(songId, next);
   };
 
   const startRecrop = async (aid: string) => {
@@ -523,17 +537,21 @@ function SheetThumb({
   onRemove: () => void;
 }) {
   const [url, setUrl] = useState<string | null>(null);
-  const [state, setState] = useState<"loading" | "ready" | "needsSync">("loading");
+  // "unavailable" = no local cache and Drive isn't usable right now (signed
+  // out, or the file is genuinely gone) — shown as a tappable retry instead
+  // of a permanent placeholder
+  const [state, setState] = useState<"loading" | "ready" | "needsSync" | "unavailable">("loading");
 
   useEffect(() => {
     let alive = true;
+    setState("loading");
     loadSheet(aid).then((u) => {
       if (!alive) return;
       if (u) {
         setUrl(u);
         setState("ready");
       } else {
-        setState(driveEnabled() ? "needsSync" : "loading");
+        setState(driveEnabled() ? "needsSync" : "unavailable");
       }
     });
     return () => {
@@ -541,14 +559,25 @@ function SheetThumb({
     };
   }, [aid]);
 
-  const sync = async () => {
+  const retry = async () => {
     setState("loading");
-    const u = await fetchSheetInteractive(aid);
+    const u = await loadSheet(aid);
     if (u) {
       setUrl(u);
       setState("ready");
     } else {
-      setState("needsSync");
+      setState(driveEnabled() ? "needsSync" : "unavailable");
+    }
+  };
+
+  const sync = async () => {
+    setState("loading");
+    const r = await fetchSheetInteractiveResult(aid);
+    if (r.url) {
+      setUrl(r.url);
+      setState("ready");
+    } else {
+      setState(r.missing ? "unavailable" : "needsSync");
     }
   };
 
@@ -568,6 +597,14 @@ function SheetThumb({
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v9m0 0 3.75-3.75M12 13.5 8.25 9.75M4.5 16.5v1.875A1.125 1.125 0 0 0 5.625 19.5h12.75a1.125 1.125 0 0 0 1.125-1.125V16.5" />
           </svg>
           불러오기
+        </button>
+      ) : state === "unavailable" ? (
+        <button
+          onClick={retry}
+          className="flex h-full w-full items-center justify-center text-[10px] text-slate-400"
+          title="다시 시도"
+        >
+          …
         </button>
       ) : (
         <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">…</div>
@@ -915,6 +952,7 @@ export function SheetLightbox({
   };
   const onBoxPointerDown = (e: React.PointerEvent) => {
     if (!drawing) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return; // ignore right/middle click
     e.stopPropagation();
     boxRef.current?.setPointerCapture?.(e.pointerId);
     const p = ptInBox(e.clientX, e.clientY);

@@ -11,6 +11,34 @@ function safeName(name: string) {
   return name.replace(/[\\/:*?"<>|]/g, "_").trim() || "conti";
 }
 
+// bound a promise so a stalled sheet download (dropped connection, expired
+// token) can't hang the whole export/share flow forever — degrade to
+// `onTimeout` instead
+function withTimeout<T>(p: Promise<T>, ms: number, onTimeout: T): Promise<T> {
+  return new Promise((resolve) => {
+    let done = false;
+    const t = setTimeout(() => {
+      if (!done) {
+        done = true;
+        resolve(onTimeout);
+      }
+    }, ms);
+    p.then((v) => {
+      if (!done) {
+        done = true;
+        clearTimeout(t);
+        resolve(v);
+      }
+    }).catch(() => {
+      if (!done) {
+        done = true;
+        clearTimeout(t);
+        resolve(onTimeout);
+      }
+    });
+  });
+}
+
 // Letter size in mm
 const PAGE_W = 215.9;
 const PAGE_H = 279.4;
@@ -188,7 +216,9 @@ export async function buildContiPdf(
     const att = getSongAttach(item.id);
     const sheets: SheetImg[] = [];
     if (att?.sheets?.length) {
-      const urls = await Promise.all(att.sheets.map((aid) => loadSheet(aid)));
+      const urls = await Promise.all(
+        att.sheets.map((aid) => withTimeout(loadSheet(aid), 15000, undefined))
+      );
       for (let idx = 0; idx < att.sheets.length; idx++) {
         const u = urls[idx];
         if (u)

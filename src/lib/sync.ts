@@ -244,9 +244,13 @@ async function onLogin(user: User) {
     const meta = getMeta();
 
     if (!remote) {
+      // mark dirty before pushing so a failed/offline push doesn't leave sync
+      // meta permanently unset (which would silently disable dirty-tracking)
+      if (!meta) saveMeta(user.uid, 0, true);
       await pushNow(); // seed the cloud from local
     } else if (!meta) {
       // first sync ever on this device → union so pre-login local survives
+      saveMeta(user.uid, 0, true);
       applyDoc(mergeUnion(snapshotLocal(), remote));
       await pushNow();
     } else if (meta.uid !== user.uid) {
