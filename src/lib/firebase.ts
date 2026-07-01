@@ -6,6 +6,7 @@ import {
   getAuth,
   getRedirectResult,
   onAuthStateChanged,
+  signInWithCredential,
   signInWithPopup,
   signInWithRedirect,
   signOut,
@@ -51,6 +52,27 @@ if (isFirebaseConfigured) {
   db = getFirestore(app);
   // complete any redirect-based sign-in and surface its errors
   getRedirectResult(auth).catch((e) => setError(e?.code || e?.message || String(e)));
+
+  // FAITHS SSO: when opened inside the FAITHS in-app browser (same-origin
+  // iframe) and not already signed in, ask the parent for the Google ID
+  // token it already has and sign in with it so users skip this app's own
+  // login screen.
+  const FAITHS_ORIGIN = "https://csy870617.github.io";
+  onAuthStateChanged(auth, (user) => {
+    if (user) return;
+    if (window.parent === window) return;
+    const onMsg = (e: MessageEvent) => {
+      if (e.origin !== FAITHS_ORIGIN) return;
+      if (!e.data || e.data.type !== "faiths-google-idtoken" || !e.data.idToken) return;
+      window.removeEventListener("message", onMsg);
+      const cred = GoogleAuthProvider.credential(e.data.idToken);
+      signInWithCredential(auth!, cred).catch((err) =>
+        console.log("FAITHS SSO 실패:", err?.code || err?.message || String(err)),
+      );
+    };
+    window.addEventListener("message", onMsg);
+    window.parent.postMessage({ type: "faiths-request-idtoken" }, FAITHS_ORIGIN);
+  });
 }
 
 export { auth, db };
