@@ -17,7 +17,7 @@ const preventScroll = (e: TouchEvent) => e.preventDefault();
 
 // quick-insert chips for the song memo (two rows, like the sheet presets)
 const MEMO_PRESET_ROWS = [
-  ["Int", "V", "V1", "V2", "PC", "C", "C1", "C2"],
+  ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
   ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
 ];
 

@@ -37,7 +37,7 @@ const PEN_DEFAULT_COLOR = "#ef4444"; // red pen
 // one undo/redo history entry — the full annotation state of a single sheet
 type Snapshot = { annos: SheetText[]; strokes: SheetStroke[] };
 const TEXT_PRESET_ROWS = [
-  ["Int", "V", "V1", "V2", "PC", "C", "C1", "C2"],
+  ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
   ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
 ];
 
