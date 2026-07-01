@@ -1289,13 +1289,52 @@ export function SheetLightbox({
                 </svg>
               </button>
               {hasCopied && sel == null && !placing && (
-                <button onClick={pasteText} title="붙여넣기 (Ctrl+V)" className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">붙여넣기</button>
+                <button
+                  onClick={pasteText}
+                  aria-label="붙여넣기"
+                  title="붙여넣기 (Ctrl+V)"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white"
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1H9V5Z" />
+                  </svg>
+                </button>
               )}
               {sel != null && (
                 <>
-                  <button onClick={copySel} title="복사 (Ctrl+C)" className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">복사</button>
-                  <button onClick={editSel} title="수정 (Enter)" className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white">수정</button>
-                  <button onClick={delSel} title="삭제 (Delete)" className="rounded-full bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white">삭제</button>
+                  <button
+                    onClick={copySel}
+                    aria-label="복사"
+                    title="복사 (Ctrl+C)"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white"
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 15a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={editSel}
+                    aria-label="수정"
+                    title="수정 (Enter)"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white"
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={delSel}
+                    aria-label="삭제"
+                    title="삭제 (Delete)"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-600 text-white"
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7m-7 0 .7 11a2 2 0 0 0 2 1.9h2.6a2 2 0 0 0 2-1.9L17 7" />
+                    </svg>
+                  </button>
                 </>
               )}
               {many && (
