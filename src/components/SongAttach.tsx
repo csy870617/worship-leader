@@ -990,15 +990,18 @@ export function SheetLightbox({
     setSizeIdx(idx);
     if (sel != null) pushState(annos.map((a, i) => (i === sel ? { ...a, size: TEXT_SIZES[idx].value } : a)), strokesRef.current);
   };
-  const editSel = () => {
-    if (sel == null) return;
-    const a = annosRef.current[sel];
+  const editAt = (i: number) => {
+    const a = annosRef.current[i];
     if (!a) return;
-    const ed = { i: sel, x: a.x, y: a.y, value: a.text };
+    const ed = { i, x: a.x, y: a.y, value: a.text };
     setSel(null);
     editingRef.current = ed;
     setEditing(ed); // in-place edit
     editRef.current?.focus();
+  };
+  const editSel = () => {
+    if (sel == null) return;
+    editAt(sel);
   };
   const delSel = () => {
     if (sel == null) return;
@@ -1191,6 +1194,10 @@ export function SheetLightbox({
                   if (d?.moved) pushState(annosRef.current, strokesRef.current);
                 }}
                 onClick={(e) => e.stopPropagation()}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  editAt(i);
+                }}
                 style={{
                   position: "absolute",
                   left: `${a.x * 100}%`,
@@ -1361,17 +1368,6 @@ export function SheetLightbox({
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 9h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 15a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={editSel}
-                    aria-label="수정"
-                    title="수정 (Enter)"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white"
-                  >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" />
                     </svg>
                   </button>
                   <button
