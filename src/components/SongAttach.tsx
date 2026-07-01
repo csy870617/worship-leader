@@ -290,6 +290,7 @@ export default function SongAttachEditor({
             start={viewer}
             texts={sheetTexts}
             draws={a?.sheetDraws ?? {}}
+            note={a?.note}
             onTexts={(aid, list) => setSongSheetTexts(songId, aid, list)}
             onDraws={(aid, list) => setSongSheetDraws(songId, aid, list)}
             onMenu={(aid) => setSheetMenu(aid)}
@@ -627,6 +628,7 @@ export function SheetLightbox({
   start,
   texts,
   draws,
+  note,
   onTexts,
   onDraws,
   onMenu,
@@ -636,6 +638,7 @@ export function SheetLightbox({
   start: number;
   texts: Record<string, SheetText[]>;
   draws?: Record<string, SheetStroke[]>;
+  note?: string;
   onTexts: (aid: string, list: SheetText[]) => void;
   onDraws?: (aid: string, list: SheetStroke[]) => void;
   onMenu?: (aid: string) => void;
@@ -1082,6 +1085,14 @@ export function SheetLightbox({
       </button>
 
       <div className="my-auto flex flex-col items-center gap-3">
+        {note && (
+          <p
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-full whitespace-pre-wrap text-center text-sm text-white/80"
+          >
+            {note}
+          </p>
+        )}
         {loading ? (
           <span className="text-sm text-white/70">불러오는 중…</span>
         ) : url ? (
