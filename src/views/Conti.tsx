@@ -15,6 +15,9 @@ import ContiView from "../components/ContiView";
 // block page scrolling while a row is being dragged (added/removed on demand)
 const preventScroll = (e: TouchEvent) => e.preventDefault();
 
+// remember the 묵상노트 textarea's user-resized height across visits (device-local)
+const NOTE_HEIGHT_KEY = "wl.contiNoteHeight";
+
 // quick-insert chips for the song memo (two rows, like the sheet presets)
 const MEMO_PRESET_ROWS = [
   ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
@@ -63,6 +66,7 @@ export default function Conti() {
   const lpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lpStart = useRef<{ x: number; y: number } | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
 
   // remember the focused memo input so preset chips can insert at its cursor
   const memoElRef = useRef<HTMLInputElement | null>(null);
@@ -202,6 +206,28 @@ export default function Conti() {
     () => displayItems.map((it) => ({ ...it, song: songById.get(it.id)! })).filter((r) => r.song),
     [displayItems, songById]
   );
+
+  // apply and persist the 묵상노트 box's user-resized height across visits
+  useEffect(() => {
+    const el = noteRef.current;
+    if (!el) return;
+    const saved = localStorage.getItem(NOTE_HEIGHT_KEY);
+    if (saved) el.style.height = saved;
+    const ro = new ResizeObserver(() => {
+      const h = `${el.offsetHeight}px`;
+      if (localStorage.getItem(NOTE_HEIGHT_KEY) !== h) {
+        try {
+          localStorage.setItem(NOTE_HEIGHT_KEY, h);
+        } catch {
+          /* ignore quota errors — height just won't persist */
+        }
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+    // re-run once the textarea actually mounts (it's conditional on rows.length)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows.length > 0]);
 
   const playlistUrl = useMemo(
     () => youtubePlaylistUrl(conti.map((c) => attach[c.id]?.youtube)),
@@ -598,6 +624,7 @@ export default function Conti() {
             묵상노트
           </label>
           <textarea
+            ref={noteRef}
             id="conti-meditation-note"
             value={contiNote}
             onChange={(e) => setContiNote(e.target.value)}
