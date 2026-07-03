@@ -229,6 +229,27 @@ export default function Conti() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows.length > 0]);
 
+  // drag the handle under the 묵상노트 to resize it on touch devices, where the
+  // CSS resize corner doesn't work; the ResizeObserver above persists the result
+  const noteResizeRef = useRef<{ y: number; h: number } | null>(null);
+  const onNoteHandleDown = (e: React.PointerEvent) => {
+    const el = noteRef.current;
+    if (!el) return;
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    noteResizeRef.current = { y: e.clientY, h: el.offsetHeight };
+  };
+  const onNoteHandleMove = (e: React.PointerEvent) => {
+    const s = noteResizeRef.current;
+    const el = noteRef.current;
+    if (!s || !el) return;
+    el.style.height = `${Math.max(80, s.h + e.clientY - s.y)}px`;
+  };
+  const onNoteHandleUp = (e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    noteResizeRef.current = null;
+  };
+
   const playlistUrl = useMemo(
     () => youtubePlaylistUrl(conti.map((c) => attach[c.id]?.youtube)),
     [conti, attach]
@@ -632,6 +653,20 @@ export default function Conti() {
             placeholder="오늘의 묵상을 기록하세요"
             className="min-h-32 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm leading-relaxed text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           />
+          {/* touch-friendly resize handle: CSS resize only works with a mouse,
+              so mobile drags this bar instead (height persists the same way) */}
+          <div
+            onPointerDown={onNoteHandleDown}
+            onPointerMove={onNoteHandleMove}
+            onPointerUp={onNoteHandleUp}
+            onPointerCancel={onNoteHandleUp}
+            role="separator"
+            aria-label="메모 크기 조절"
+            style={{ touchAction: "none" }}
+            className="mx-auto flex h-6 w-24 cursor-ns-resize items-center justify-center"
+          >
+            <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-600" />
+          </div>
         </div>
       )}
 
