@@ -669,7 +669,11 @@ export function SheetLightbox({
   const annosRef = useRef<SheetText[]>([]);
   const strokesRef = useRef<SheetStroke[]>([]);
   const strokeDragRef = useRef<{ x: number; y: number }[] | null>(null);
-  const dragRef = useRef<{ i: number; moved: boolean } | null>(null);
+  // drag state for a text label: start pointer position + the label's original
+  // spot, so movement is slop-gated and applied as a delta (no jump-to-finger)
+  const dragRef = useRef<{ i: number; moved: boolean; sx: number; sy: number; ox: number; oy: number } | null>(null);
+  // last tap on a label, for manual double-tap detection (iOS has no dblclick)
+  const lastTapRef = useRef<{ i: number; t: number; x: number; y: number } | null>(null);
   // combined undo/redo stack for the current sheet (text + strokes)
   const historyRef = useRef<Snapshot[]>([{ annos: [], strokes: [] }]);
   const histIndexRef = useRef(0);
@@ -1169,9 +1173,10 @@ export function SheetLightbox({
               <span
                 key={i}
                 onPointerDown={(e) => {
+                  if (e.pointerType === "mouse" && e.button !== 0) return; // right-click opens the menu, not a drag
                   e.stopPropagation();
                   (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-                  dragRef.current = { i, moved: false };
+                  dragRef.current = { i, moved: false, sx: e.clientX, sy: e.clientY, ox: a.x, oy: a.y };
                   setSel(i);
                 }}
                 onPointerMove={(e) => {
@@ -1179,10 +1184,15 @@ export function SheetLightbox({
                   if (!d || d.i !== i) return;
                   const el = boxRef.current;
                   if (!el) return;
-                  const rect = el.getBoundingClientRect();
-                  const nx = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-                  const ny = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+                  const dx = e.clientX - d.sx;
+                  const dy = e.clientY - d.sy;
+                  // finger jitter under ~6px stays a tap: no nudge, no bogus undo entry
+                  if (!d.moved && Math.hypot(dx, dy) < 6) return;
                   d.moved = true;
+                  const rect = el.getBoundingClientRect();
+                  // move by delta from the label's original spot so it doesn't jump under the pointer
+                  const nx = Math.min(1, Math.max(0, d.ox + dx / rect.width));
+                  const ny = Math.min(1, Math.max(0, d.oy + dy / rect.height));
                   const next = annosRef.current.map((p, idx) => (idx === i ? { ...p, x: nx, y: ny } : p));
                   annosRef.current = next;
                   setAnnos(next);
@@ -1191,13 +1201,27 @@ export function SheetLightbox({
                   const d = dragRef.current;
                   dragRef.current = null;
                   (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
-                  if (d?.moved) pushState(annosRef.current, strokesRef.current);
+                  if (d?.moved) {
+                    pushState(annosRef.current, strokesRef.current);
+                    lastTapRef.current = null;
+                    return;
+                  }
+                  // double-tap → edit, detected manually: iOS Safari never
+                  // synthesizes dblclick from touch, so onDoubleClick alone
+                  // would leave iPhone users unable to edit a text
+                  const prev = lastTapRef.current;
+                  const now = Date.now();
+                  if (prev && prev.i === i && now - prev.t < 350 && Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < 24) {
+                    lastTapRef.current = null;
+                    editAt(i);
+                  } else {
+                    lastTapRef.current = { i, t: now, x: e.clientX, y: e.clientY };
+                  }
+                }}
+                onPointerCancel={() => {
+                  dragRef.current = null;
                 }}
                 onClick={(e) => e.stopPropagation()}
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  editAt(i);
-                }}
                 style={{
                   position: "absolute",
                   left: `${a.x * 100}%`,

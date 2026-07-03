@@ -62,7 +62,15 @@ if (isFirebaseConfigured) {
   // events (when the parent never replies) don't accumulate duplicate handlers
   let pendingSsoListener: ((e: MessageEvent) => void) | null = null;
   onAuthStateChanged(auth, (user) => {
-    if (user) return;
+    if (user) {
+      // signed in (by any means) — drop a still-pending SSO listener so a late
+      // parent reply can't silently switch the session to another account
+      if (pendingSsoListener) {
+        window.removeEventListener("message", pendingSsoListener);
+        pendingSsoListener = null;
+      }
+      return;
+    }
     if (window.parent === window) return;
     if (pendingSsoListener) {
       window.removeEventListener("message", pendingSsoListener);

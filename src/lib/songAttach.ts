@@ -25,9 +25,14 @@ function sanitizeAttach(a: any): SongAttach | null {
     const s = a.sheets.filter((x: any) => typeof x === "string" && x);
     if (s.length) out.sheets = s;
   }
+  // annotations keyed by a sheet id that's no longer in `sheets` are orphans
+  // (e.g. the sheet was deleted on another device mid-edit); dropping them here
+  // self-heals existing docs on every load/update/cloud apply
+  const liveSheets = new Set(out.sheets ?? []);
   if (a.sheetTexts && typeof a.sheetTexts === "object" && !Array.isArray(a.sheetTexts)) {
     const st: Record<string, SheetText[]> = {};
     for (const [k, v] of Object.entries(a.sheetTexts)) {
+      if (!liveSheets.has(k)) continue;
       if (!Array.isArray(v)) continue;
       const arr = (v as any[])
         .filter((t) => t && typeof t.text === "string" && t.text && typeof t.x === "number" && typeof t.y === "number")
@@ -45,6 +50,7 @@ function sanitizeAttach(a: any): SongAttach | null {
   if (a.sheetDraws && typeof a.sheetDraws === "object" && !Array.isArray(a.sheetDraws)) {
     const sd: Record<string, SheetStroke[]> = {};
     for (const [k, v] of Object.entries(a.sheetDraws)) {
+      if (!liveSheets.has(k)) continue;
       if (!Array.isArray(v)) continue;
       const arr = (v as any[])
         .map((s): SheetStroke | null => {
