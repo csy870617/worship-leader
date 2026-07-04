@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "../lib/useConti";
-import { removeSongSheet, replaceSongSheet, setSongSheetDraws, setSongSheetTexts, useSongAttach } from "../lib/songAttach";
+import { removeSongSheet, replaceSongSheet, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetTexts, useSongAttach } from "../lib/songAttach";
 import { youtubePlaylistUrl, openYouTube } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
@@ -244,11 +244,7 @@ export default function ContiView({
                           </span>
                         )}
                       </div>
-                      {attach[cur.item.id]?.note && (
-                        <p className="ml-7 mt-1 whitespace-pre-wrap text-lg text-slate-600 dark:text-slate-300">
-                          {attach[cur.item.id]!.note}
-                        </p>
-                      )}
+                      <NoteEditor songId={cur.item.id} attach={attach} indent="ml-7" size="lg" />
                     </div>
                     {cur.aid && (
                       <div className="mt-3 min-h-0 flex-1">
@@ -269,11 +265,9 @@ export default function ContiView({
                       <span className="text-sm font-bold text-indigo-300 dark:text-indigo-400/70">{cur.n}</span>
                       <span className="truncate text-sm font-semibold text-slate-500 dark:text-slate-400">{cur.song.title}</span>
                     </div>
-                    {attach[cur.item.id]?.note && (
-                      <p className="mb-1 ml-5 shrink-0 whitespace-pre-wrap text-base text-slate-600 dark:text-slate-300">
-                        {attach[cur.item.id]!.note}
-                      </p>
-                    )}
+                    <div className="mb-1 shrink-0">
+                      <NoteEditor songId={cur.item.id} attach={attach} indent="ml-5" size="sm" />
+                    </div>
                     <div className="min-h-0 flex-1">
                       <SheetFigure
                         key={cur.aid}
@@ -382,6 +376,9 @@ export default function ContiView({
           texts={{ [textTarget.aid]: attach[textTarget.songId]?.sheetTexts?.[textTarget.aid] ?? [] }}
           draws={{ [textTarget.aid]: attach[textTarget.songId]?.sheetDraws?.[textTarget.aid] ?? [] }}
           note={attach[textTarget.songId]?.note}
+          memo={attach[textTarget.songId]?.memo}
+          onNote={(v) => setSongNote(textTarget.songId, v)}
+          onMemo={(v) => setSongMemo(textTarget.songId, v)}
           onTexts={(aid, list) => setSongSheetTexts(textTarget.songId, aid, list)}
           onDraws={(aid, list) => setSongSheetDraws(textTarget.songId, aid, list)}
           onClose={() => setTextTarget(null)}
@@ -417,9 +414,7 @@ function SongBlock({
         <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">{song.title}</h2>
         {keys && <span className="text-sm font-bold text-indigo-600 dark:text-indigo-300">{keys}</span>}
       </div>
-      {a?.note && (
-        <p className="ml-7 mt-1 whitespace-pre-wrap text-lg text-slate-600 dark:text-slate-300">{a.note}</p>
-      )}
+      <NoteEditor songId={item.id} attach={attach} indent="ml-7" size="lg" />
       {shown.map((aid) => (
         <SheetFigure
           key={aid}
@@ -596,5 +591,72 @@ function SheetFigure({
     <div
       className={(fit ? "h-full" : "ml-7 mt-3 h-24") + " animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800"}
     />
+  );
+}
+
+/** A borderless textarea that grows with its content (no inner scrollbar). */
+function GrowTextarea({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  className: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const resize = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  useEffect(resize, [value]);
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onInput={resize}
+      rows={1}
+      placeholder={placeholder}
+      className={className}
+    />
+  );
+}
+
+/** Inline, always-editable 송폼 + 메모 fields shown under a song in the viewer. */
+function NoteEditor({
+  songId,
+  attach,
+  indent,
+  size,
+}: {
+  songId: string;
+  attach: ReturnType<typeof useSongAttach>;
+  indent: string;
+  size: "lg" | "sm";
+}) {
+  const a = attach[songId];
+  const noteText = size === "lg" ? "text-lg" : "text-base";
+  const base =
+    "w-full resize-none overflow-hidden bg-transparent leading-snug outline-none focus:rounded-lg focus:bg-slate-50 focus:px-2 dark:focus:bg-slate-800 placeholder:text-slate-300 dark:placeholder:text-slate-600";
+  return (
+    <div className={`${indent} mt-1 space-y-0.5`}>
+      <GrowTextarea
+        value={a?.note ?? ""}
+        onChange={(v) => setSongNote(songId, v)}
+        placeholder="송폼 입력"
+        className={`${base} ${noteText} text-slate-600 dark:text-slate-300`}
+      />
+      <GrowTextarea
+        value={a?.memo ?? ""}
+        onChange={(v) => setSongMemo(songId, v)}
+        placeholder="메모 추가"
+        className={`${base} text-sm text-slate-500 dark:text-slate-400`}
+      />
+    </div>
   );
 }

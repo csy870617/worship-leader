@@ -195,7 +195,7 @@ export default function SongDetail() {
 
       <section className="mt-6">
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-          메모 · 유튜브 · 악보
+          송폼 · 메모 · 유튜브 · 악보
         </h2>
         <SongAttachEditor
           songId={song.id}

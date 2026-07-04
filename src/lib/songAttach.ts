@@ -7,7 +7,8 @@ import type { SheetStroke, SheetText } from "./useConti";
 import { getContiState, setContiState } from "./useConti";
 
 export interface SongAttach {
-  note?: string;
+  note?: string; // 송폼 — song form / arrangement notes (e.g. V1, C, Tag)
+  memo?: string; // 메모 — free-form memo
   youtube?: string;
   sheets?: string[]; // attachment ids (Drive fileId or local id)
   sheetTexts?: Record<string, SheetText[]>; // text annotations per sheet
@@ -20,6 +21,7 @@ function sanitizeAttach(a: any): SongAttach | null {
   if (!a || typeof a !== "object") return null;
   const out: SongAttach = {};
   if (typeof a.note === "string" && a.note.trim()) out.note = a.note;
+  if (typeof a.memo === "string" && a.memo.trim()) out.memo = a.memo;
   if (typeof a.youtube === "string" && a.youtube) out.youtube = a.youtube;
   if (Array.isArray(a.sheets)) {
     const s = a.sheets.filter((x: any) => typeof x === "string" && x);
@@ -136,6 +138,9 @@ function update(id: string, fn: (a: SongAttach) => SongAttach) {
 
 export function setSongNote(id: string, note: string) {
   update(id, (a) => ({ ...a, note: note.trim() ? note : undefined }));
+}
+export function setSongMemo(id: string, memo: string) {
+  update(id, (a) => ({ ...a, memo: memo.trim() ? memo : undefined }));
 }
 export function setSongYoutube(id: string, url: string | null) {
   update(id, (a) => ({ ...a, youtube: url?.trim() || undefined }));
