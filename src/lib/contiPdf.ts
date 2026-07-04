@@ -131,7 +131,9 @@ function buildInfoEl(
   el.style.cssText = BASE_STYLE;
 
   const keys = item.key ? item.key : song.keys.join(" / ");
-  const note = getSongAttach(item.id)?.note;
+  const att = getSongAttach(item.id);
+  const note = att?.note;
+  const memo = att?.memo;
   const parts: string[] = [];
 
   // whole-conti playlist link, top-right (only passed for the very first page)
@@ -152,6 +154,11 @@ function buildInfoEl(
       `<div style="margin:8px 0 0 38px;font-size:22px;color:#374151;">${esc(note)}</div>`
     );
   }
+  if (memo) {
+    parts.push(
+      `<div style="margin:4px 0 0 38px;font-size:18px;color:#6b7280;">${esc(memo)}</div>`
+    );
+  }
   if (firstSheet) {
     parts.push(`<div style="margin:12px 0 0 0;">${sheetOverlay(firstSheet.url)}</div>`);
   }
@@ -162,13 +169,14 @@ function buildInfoEl(
 
 /** A page that holds a single sheet image with its annotations. The song's memo
  *  repeats on every extra sheet so it stays visible when a song spans pages. */
-function buildSheetEl(sheet: SheetImg, note?: string): HTMLDivElement {
+function buildSheetEl(sheet: SheetImg, note?: string, memo?: string): HTMLDivElement {
   const el = document.createElement("div");
-  if (note) {
+  if (note || memo) {
+    const head =
+      (note ? `<div style="margin:0 0 6px 0;font-size:22px;color:#374151;">${esc(note)}</div>` : "") +
+      (memo ? `<div style="margin:0 0 10px 0;font-size:18px;color:#6b7280;">${esc(memo)}</div>` : "");
     el.style.cssText = BASE_STYLE;
-    el.innerHTML =
-      `<div style="margin:0 0 10px 0;font-size:22px;color:#374151;">${esc(note)}</div>` +
-      sheetOverlay(sheet.url);
+    el.innerHTML = head + sheetOverlay(sheet.url);
   } else {
     // no memo → edge-to-edge image (unchanged)
     el.style.cssText =
@@ -309,10 +317,12 @@ export async function buildContiPdf(
         console.error("[pdf] info page failed", i, e);
       }
       // remaining sheets: one per page so they're never shrunk together / cut
-      const note = getSongAttach(item.id)?.note;
+      const sheetAtt = getSongAttach(item.id);
+      const note = sheetAtt?.note;
+      const memo = sheetAtt?.memo;
       for (let k = 1; k < sheets.length; k++) {
         try {
-          await renderPage(buildSheetEl(sheets[k], note), true);
+          await renderPage(buildSheetEl(sheets[k], note, memo), true);
         } catch (e) {
           console.error("[pdf] sheet page failed", i, k, e);
         }

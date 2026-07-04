@@ -6,7 +6,7 @@ import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl, copyText, openYouTube } from "../lib/share";
 import { driveEnabled, uploadSharedFile } from "../lib/drive";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
-import { setSongNote, useSongAttach } from "../lib/songAttach";
+import { setSongMemo, setSongNote, useSongAttach } from "../lib/songAttach";
 import { useBackDismiss } from "../lib/backStack";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
@@ -574,7 +574,7 @@ export default function Conti() {
                       onChange={(e) => setSongNote(r.id, e.target.value)}
                       onFocus={(e) => { memoElRef.current = e.currentTarget; memoSongRef.current = r.id; setMemoFocused(true); }}
                       onBlur={() => { memoElRef.current = null; memoSongRef.current = null; setMemoFocused(false); }}
-                      placeholder="메모 추가"
+                      placeholder="송폼 입력"
                       className="-mx-1 min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
                     />
                     {recentlyUsed && (
@@ -590,6 +590,12 @@ export default function Conti() {
                       </button>
                     )}
                   </div>
+                  <input
+                    value={att?.memo ?? ""}
+                    onChange={(e) => setSongMemo(r.id, e.target.value)}
+                    placeholder="메모 추가"
+                    className="-mx-1 mt-0.5 min-w-0 w-full rounded bg-transparent px-1 py-0.5 text-xs text-slate-500 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-400 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
+                  />
                 </div>
                 <button
                   onClick={() => setConfirmRemove(r.id)}
