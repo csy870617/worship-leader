@@ -644,28 +644,33 @@ export default function Conti() {
             </svg>
             묵상노트
           </label>
-          <textarea
-            ref={noteRef}
-            id="conti-meditation-note"
-            value={contiNote}
-            onChange={(e) => setContiNote(e.target.value)}
-            rows={6}
-            placeholder="오늘의 묵상을 기록하세요"
-            className="min-h-32 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm leading-relaxed text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-          />
-          {/* touch-friendly resize handle: CSS resize only works with a mouse,
-              so mobile drags this bar instead (height persists the same way) */}
-          <div
-            onPointerDown={onNoteHandleDown}
-            onPointerMove={onNoteHandleMove}
-            onPointerUp={onNoteHandleUp}
-            onPointerCancel={onNoteHandleUp}
-            role="separator"
-            aria-label="메모 크기 조절"
-            style={{ touchAction: "none" }}
-            className="mx-auto flex h-6 w-24 cursor-ns-resize items-center justify-center"
-          >
-            <span className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-600" />
+          <div className="relative">
+            <textarea
+              ref={noteRef}
+              id="conti-meditation-note"
+              value={contiNote}
+              onChange={(e) => setContiNote(e.target.value)}
+              rows={6}
+              placeholder="오늘의 묵상을 기록하세요"
+              className="min-h-32 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 pb-5 text-sm leading-relaxed text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            />
+            {/* corner resize grip at the box's bottom-right, like the PC resize
+                handle — works on touch too, where the CSS resize corner doesn't
+                (height persists via the ResizeObserver above) */}
+            <div
+              onPointerDown={onNoteHandleDown}
+              onPointerMove={onNoteHandleMove}
+              onPointerUp={onNoteHandleUp}
+              onPointerCancel={onNoteHandleUp}
+              role="separator"
+              aria-label="메모 크기 조절"
+              style={{ touchAction: "none" }}
+              className="absolute bottom-1 right-1 flex h-6 w-6 cursor-ns-resize items-end justify-end p-1 text-slate-400 dark:text-slate-500"
+            >
+              <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" aria-hidden>
+                <path d="M11 5 5 11M11 9l-2 2" />
+              </svg>
+            </div>
           </div>
         </div>
       )}
