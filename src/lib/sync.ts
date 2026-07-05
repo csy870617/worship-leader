@@ -44,6 +44,7 @@ import {
   subscribeSongAttach,
   type SongAttach,
 } from "./songAttach";
+import { mergeAttach } from "./mergeAttach";
 
 interface CloudDoc {
   userSongs: Song[];
@@ -101,8 +102,9 @@ function mergeUnion(local: LocalSnapshot, remote: Partial<CloudDoc>): LocalSnaps
 
   // overrides: union by song id (local wins on conflict)
   const overrides = { ...(remote.overrides ?? {}), ...local.overrides };
-  // song attachments: union by song id (local wins on conflict)
-  const songAttach = { ...(remote.songAttach ?? {}), ...local.songAttach };
+  // song attachments: field-level union so a memo/송폼/sheet present on only one
+  // device is never erased by a stale copy from the other (see mergeAttach)
+  const songAttach = mergeAttach(local.songAttach, remote.songAttach ?? {});
 
   // contis: union by id (local wins); prefer local active selection
   const lc = readContis(local);
@@ -169,10 +171,18 @@ function startLiveListener(uid: string) {
       const remote = snap.data() as CloudDoc;
       const meta = getMeta();
       if (!meta || meta.uid !== uid) return;
-      // accept newer remote only when we have no un-pushed local edits
-      if (remote.updatedAt > meta.at && !meta.dirty) {
-        applyDoc(remote);
-        saveMeta(uid, remote.updatedAt, false);
+      if (remote.updatedAt > meta.at) {
+        if (meta.dirty) {
+          // another device pushed while we hold un-pushed edits → merge both
+          // sides (never drop either's memo) and push the reconciled result,
+          // instead of ignoring the remote and later clobbering it on our push
+          applyDoc(mergeUnion(snapshotLocal(), remote));
+          schedulePush();
+        } else {
+          // no local edits → accept the newer remote (deletions land)
+          applyDoc(remote);
+          saveMeta(uid, remote.updatedAt, false);
+        }
       }
     },
     (e) => console.warn("[sync] live listener error", e)
