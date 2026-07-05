@@ -52,7 +52,24 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      # take the page URL from whichever attempt succeeded
+      url: ${{ steps.deploy1.outputs.page_url || steps.deploy2.outputs.page_url || steps.deploy3.outputs.page_url }}
     steps:
-      - id: deployment
+      # GitHub Pages' deploy step intermittently fails fast with
+      # "Deployment failed, try again later" (a Pages backend hiccup, not a
+      # build problem). Retry up to 3 times with a short backoff so a flaky
+      # first attempt doesn't require a manual re-run.
+      - id: deploy1
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - if: steps.deploy1.outcome == 'failure'
+        run: echo "1차 배포 실패 — 15초 후 재시도"; sleep 15
+      - id: deploy2
+        if: steps.deploy1.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
+        run: echo "2차 배포 실패 — 30초 후 재시도"; sleep 30
+      - id: deploy3
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
         uses: actions/deploy-pages@v4
