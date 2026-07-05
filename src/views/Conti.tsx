@@ -207,30 +207,19 @@ export default function Conti() {
     [displayItems, songById]
   );
 
-  // apply and persist the 묵상노트 box's user-resized height across visits
+  // apply the 묵상노트 box's saved height on mount (device-local, across visits)
   useEffect(() => {
     const el = noteRef.current;
     if (!el) return;
     const saved = localStorage.getItem(NOTE_HEIGHT_KEY);
     if (saved) el.style.height = saved;
-    const ro = new ResizeObserver(() => {
-      const h = `${el.offsetHeight}px`;
-      if (localStorage.getItem(NOTE_HEIGHT_KEY) !== h) {
-        try {
-          localStorage.setItem(NOTE_HEIGHT_KEY, h);
-        } catch {
-          /* ignore quota errors — height just won't persist */
-        }
-      }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
     // re-run once the textarea actually mounts (it's conditional on rows.length)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows.length > 0]);
 
-  // drag the handle under the 묵상노트 to resize it on touch devices, where the
-  // CSS resize corner doesn't work; the ResizeObserver above persists the result
+  // drag the corner grip to resize the 묵상노트; the height is saved directly on
+  // release (not via a ResizeObserver) so unrelated mobile reflows — the on-screen
+  // keyboard, viewport/address-bar changes — can never overwrite the saved value
   const noteResizeRef = useRef<{ y: number; h: number } | null>(null);
   const onNoteHandleDown = (e: React.PointerEvent) => {
     const el = noteRef.current;
@@ -247,6 +236,14 @@ export default function Conti() {
   };
   const onNoteHandleUp = (e: React.PointerEvent) => {
     (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    const el = noteRef.current;
+    if (noteResizeRef.current && el) {
+      try {
+        localStorage.setItem(NOTE_HEIGHT_KEY, `${el.offsetHeight}px`);
+      } catch {
+        /* ignore quota errors — height just won't persist */
+      }
+    }
     noteResizeRef.current = null;
   };
 
@@ -590,12 +587,7 @@ export default function Conti() {
                       </button>
                     )}
                   </div>
-                  <input
-                    value={att?.memo ?? ""}
-                    onChange={(e) => setSongMemo(r.id, e.target.value)}
-                    placeholder="메모 추가"
-                    className="-mx-1 mt-0.5 min-w-0 w-full rounded bg-transparent px-1 py-0.5 text-xs text-slate-500 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-400 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
-                  />
+                  <ContiMemoField value={att?.memo ?? ""} onChange={(v) => setSongMemo(r.id, v)} />
                 </div>
                 <button
                   onClick={() => setConfirmRemove(r.id)}
@@ -962,5 +954,29 @@ export default function Conti() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Multi-line 메모 field for a conti row: a borderless textarea that grows with
+ *  its content so line breaks (Enter) are kept and fully visible. */
+function ContiMemoField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const resize = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  useEffect(resize, [value]);
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onInput={resize}
+      rows={1}
+      placeholder="메모 추가"
+      className="-mx-1 mt-0.5 w-full min-w-0 resize-none overflow-hidden rounded bg-transparent px-1 py-0.5 text-xs leading-relaxed text-slate-500 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-400 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
+    />
   );
 }
