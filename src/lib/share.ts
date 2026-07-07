@@ -143,28 +143,35 @@ function isStandalonePwa(): boolean {
  */
 export function openExternal(url: string) {
   const ua = navigator.userAgent || "";
-  // Installed Android PWA: a new tab can't open, and navigating the app's own
-  // webview to an external origin is refused ("연결을 거부했습니다"). Hand the URL
-  // to the system via an intent — the same mechanism the YouTube buttons already
-  // use successfully — so the default browser / matching app opens it. The
-  // browser_fallback_url guarantees it opens even if no app claims the link.
-  if (/Android/i.test(ua) && isStandalonePwa() && !isInAppBrowser()) {
+  const android = /Android/i.test(ua);
+  // iPadOS 13+ reports as "Macintosh"; touch support tells it apart from a real Mac
+  const ios = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const standalone = isStandalonePwa();
+  const inApp = isInAppBrowser();
+
+  // Installed Android PWA (and Android in-app webviews): a new tab can't open, and
+  // navigating the app's own webview to an external origin is refused ("연결을
+  // 거부했습니다"). Hand the URL to the system via an intent — the same mechanism the
+  // YouTube playlist button already uses successfully — so the default browser /
+  // matching app opens it. browser_fallback_url guarantees it opens regardless.
+  if (android && (standalone || inApp)) {
     const noScheme = url.replace(/^https?:\/\//, "");
     window.location.href =
       `intent://${noScheme}#Intent;scheme=https;` +
       `S.browser_fallback_url=${encodeURIComponent(url)};end`;
     return;
   }
-  // iOS installed app / in-app webview: can't open a new tab → navigate the
-  // current window (an out-of-scope URL hands off to Safari / the browser).
-  if (isStandalonePwa() || isInAppBrowser()) {
+  // iOS installed app, or any in-app webview: window.open is a no-op → navigate
+  // the current window (an out-of-scope URL hands off to Safari / the browser).
+  if ((ios && standalone) || inApp) {
     window.location.href = url;
     return;
   }
-  // a normal browser: open a new tab. NOTE: with "noopener" window.open returns
-  // null even on success, so we must NOT fall back to location.href on a null
-  // result — that would navigate the current page too (double-open). The click
-  // is a user gesture, so the popup is allowed.
+  // Everything else — desktop browsers AND desktop installed PWAs (Mac/Windows),
+  // plus mobile browsers — where window.open reliably opens a new tab/window on a
+  // user gesture. NOTE: with "noopener" window.open returns null even on success,
+  // so we must NOT fall back to location.href on a null result — that would
+  // navigate the current window too (double-open / "refused" in a desktop PWA).
   window.open(url, "_blank", "noopener");
 }
 
