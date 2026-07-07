@@ -142,7 +142,21 @@ function isStandalonePwa(): boolean {
  * hands off to the browser / native app), so the link never silently fails.
  */
 export function openExternal(url: string) {
-  // installed PWAs / in-app webviews can't open a new tab — navigate instead
+  const ua = navigator.userAgent || "";
+  // Installed Android PWA: a new tab can't open, and navigating the app's own
+  // webview to an external origin is refused ("연결을 거부했습니다"). Hand the URL
+  // to the system via an intent — the same mechanism the YouTube buttons already
+  // use successfully — so the default browser / matching app opens it. The
+  // browser_fallback_url guarantees it opens even if no app claims the link.
+  if (/Android/i.test(ua) && isStandalonePwa() && !isInAppBrowser()) {
+    const noScheme = url.replace(/^https?:\/\//, "");
+    window.location.href =
+      `intent://${noScheme}#Intent;scheme=https;` +
+      `S.browser_fallback_url=${encodeURIComponent(url)};end`;
+    return;
+  }
+  // iOS installed app / in-app webview: can't open a new tab → navigate the
+  // current window (an out-of-scope URL hands off to Safari / the browser).
   if (isStandalonePwa() || isInAppBrowser()) {
     window.location.href = url;
     return;
