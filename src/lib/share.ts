@@ -142,13 +142,16 @@ function isStandalonePwa(): boolean {
  * hands off to the browser / native app), so the link never silently fails.
  */
 export function openExternal(url: string) {
+  // installed PWAs / in-app webviews can't open a new tab — navigate instead
   if (isStandalonePwa() || isInAppBrowser()) {
     window.location.href = url;
     return;
   }
-  const w = window.open(url, "_blank", "noopener");
-  // some environments block the popup and return null → fall back to navigation
-  if (!w) window.location.href = url;
+  // a normal browser: open a new tab. NOTE: with "noopener" window.open returns
+  // null even on success, so we must NOT fall back to location.href on a null
+  // result — that would navigate the current page too (double-open). The click
+  // is a user gesture, so the popup is allowed.
+  window.open(url, "_blank", "noopener");
 }
 
 /**
