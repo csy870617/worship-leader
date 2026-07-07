@@ -21,6 +21,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      // we register + poll for updates ourselves in main.tsx (reload-on-update),
+      // so don't also inject the default minimal registrar
+      injectRegister: false,
       includeAssets: ["icon.svg"],
       manifest: {
         name: "Worship Leader",
