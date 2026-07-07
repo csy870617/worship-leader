@@ -20,7 +20,7 @@ import {
   saveSheetFromFile,
 } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
-import { copyText } from "../lib/share";
+import { copyText, openYouTube } from "../lib/share";
 import { registerBack, useBackDismiss } from "../lib/backStack";
 
 const TEXT_COLORS = ["#ef4444", "#000000", "#ffffff", "#2563eb", "#16a34a", "#eab308"];
@@ -237,6 +237,7 @@ export default function SongAttachEditor({
               href={youtubeUrl}
               target="_blank"
               rel="noreferrer"
+              onClick={(e) => { e.preventDefault(); openYouTube(youtubeUrl); }}
               className="shrink-0 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 dark:bg-red-500/15 dark:text-red-400"
             >
               열기
@@ -315,11 +316,13 @@ export default function SongAttachEditor({
             onClose={() => setViewer(null)}
           />
         )}
-        {/* the real <input> is overlaid (opacity 0) so the tap lands on it
-            directly — the most reliable way to open the gallery picker */}
-        <div
+        {/* a real <label> wrapping the input: tapping anywhere on the label
+            natively activates the file input, which is the most reliable way to
+            open the picker across Android/iOS (an opacity-0 overlaid input can
+            silently swallow the tap on some Android browsers) */}
+        <label
           className={
-            "relative inline-flex items-center gap-1.5 overflow-hidden rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300 " +
+            "inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300 " +
             (busy ? "pointer-events-none opacity-60" : "")
           }
         >
@@ -336,9 +339,9 @@ export default function SongAttachEditor({
               onFiles(e.target.files);
               e.target.value = "";
             }}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            className="sr-only"
           />
-        </div>
+        </label>
         {err && <p className="mt-1 text-[11px] font-medium text-rose-500">{err}</p>}
       </div>
 

@@ -119,13 +119,44 @@ export function youtubePlaylistUrl(urls: (string | undefined)[]): string | null 
   return `https://www.youtube.com/watch_videos?video_ids=${ids.slice(0, 50).join(",")}`;
 }
 
+/** True when running as an installed PWA (Android/desktop standalone or iOS
+ *  home-screen app), where opening a new tab via target="_blank" / window.open
+ *  is blocked and silently does nothing. */
+function isStandalonePwa(): boolean {
+  try {
+    return (
+      window.matchMedia?.("(display-mode: standalone)").matches === true ||
+      window.matchMedia?.("(display-mode: fullscreen)").matches === true ||
+      window.matchMedia?.("(display-mode: minimal-ui)").matches === true ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Open an external URL reliably from anywhere — including installed PWAs and
+ * in-app webviews, where `target="_blank"` and `window.open` are no-ops. In
+ * those contexts we navigate the current window instead (an out-of-scope URL
+ * hands off to the browser / native app), so the link never silently fails.
+ */
+export function openExternal(url: string) {
+  if (isStandalonePwa() || isInAppBrowser()) {
+    window.location.href = url;
+    return;
+  }
+  const w = window.open(url, "_blank", "noopener");
+  // some environments block the popup and return null → fall back to navigation
+  if (!w) window.location.href = url;
+}
+
 /**
  * Open a YouTube URL in the YouTube app when it's installed, otherwise in a
  * normal browser. On a real Android browser we use an `intent://` URL with a
- * browser fallback (opens the app if installed, the browser if not). In-app
- * webviews (KakaoTalk, etc.) and iOS/desktop don't support `intent://`, so we
- * open the plain https URL there — it hands off to the app via app/universal
- * links when installed and stays in the browser otherwise.
+ * browser fallback (opens the app if installed, the browser if not). Everywhere
+ * else we defer to openExternal, which also handles standalone PWAs / in-app
+ * webviews where a plain new-tab open would do nothing.
  */
 export function openYouTube(httpsUrl: string) {
   const ua = navigator.userAgent || "";
@@ -138,7 +169,7 @@ export function openYouTube(httpsUrl: string) {
     window.location.href = intent;
     return;
   }
-  window.open(httpsUrl, "_blank", "noopener");
+  openExternal(httpsUrl);
 }
 
 /** Copy text to clipboard with a legacy fallback. */

@@ -1,5 +1,6 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { youtubeSearchUrl } from "../data";
+import { openExternal } from "../lib/share";
 import { hideSong, isOverridden, isUserSong, removeSong, useSongs } from "../lib/catalog";
 import { KeyBadge, TempoBadge, LastUsedBadge } from "../components/Badges";
 import FavoriteButton from "../components/FavoriteButton";
@@ -64,6 +65,7 @@ export default function SongDetail() {
           href={youtubeSearchUrl(song.title)}
           target="_blank"
           rel="noreferrer"
+          onClick={(e) => { e.preventDefault(); openExternal(youtubeSearchUrl(song.title)); }}
           className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 active:bg-red-100 dark:bg-red-500/15 dark:text-red-400"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -75,6 +77,7 @@ export default function SongDetail() {
           href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(`${song.title} 악보`)}`}
           target="_blank"
           rel="noreferrer"
+          onClick={(e) => { e.preventDefault(); openExternal(`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(`${song.title} 악보`)}`); }}
           className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700 active:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-300"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>

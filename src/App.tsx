@@ -6,6 +6,7 @@ import { useSongs } from "./lib/catalog";
 import { getLastBrowse } from "./lib/browseState";
 import { migrateFromContis } from "./lib/songAttach";
 import { initSync } from "./lib/sync";
+import { openExternal } from "./lib/share";
 import AuthButton from "./components/AuthButton";
 import Browse from "./views/Browse";
 import Search from "./views/Search";
@@ -97,6 +98,7 @@ export default function App() {
                 href={FAITHS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(e) => { e.preventDefault(); openExternal(FAITHS_URL); }}
                 className="relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
               >
                 <IconHome />
@@ -167,6 +169,7 @@ export default function App() {
             href={FAITHS_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => { e.preventDefault(); openExternal(FAITHS_URL); }}
             className="relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-slate-400 dark:text-slate-500"
           >
             <IconHome />
