@@ -23,7 +23,8 @@ import { driveEnabled } from "../lib/drive";
 import { copyText, openYouTube } from "../lib/share";
 import { registerBack, useBackDismiss } from "../lib/backStack";
 
-const TEXT_COLORS = ["#ef4444", "#000000", "#ffffff", "#2563eb", "#16a34a", "#eab308"];
+// vivid, near-primary swatches (the previous yellow read as a dull mustard)
+const TEXT_COLORS = ["#ff1e1e", "#000000", "#ffffff", "#1a4bff", "#00b81d", "#ffe600"];
 const TEXT_SIZES: { label: string; value: number }[] = [
   { label: "작게", value: 0.03 },
   { label: "보통", value: 0.045 },
@@ -32,8 +33,8 @@ const TEXT_SIZES: { label: string; value: number }[] = [
 // stroke widths (fraction of image width) for 작게/보통/크게, per tool
 const PEN_WIDTHS = [0.004, 0.008, 0.014];
 const HL_WIDTHS = [0.03, 0.05, 0.08];
-const HL_DEFAULT_COLOR = "#eab308"; // yellow marker
-const PEN_DEFAULT_COLOR = "#ef4444"; // red pen
+const HL_DEFAULT_COLOR = "#ffe600"; // yellow marker
+const PEN_DEFAULT_COLOR = "#ff1e1e"; // red pen
 
 // one undo/redo history entry — the full annotation state of a single sheet
 type Snapshot = { annos: SheetText[]; strokes: SheetStroke[] };

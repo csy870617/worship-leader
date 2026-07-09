@@ -18,11 +18,14 @@ const preventScroll = (e: TouchEvent) => e.preventDefault();
 // remember the 묵상노트 textarea's user-resized height across visits (device-local)
 const NOTE_HEIGHT_KEY = "wl.contiNoteHeight";
 
-// quick-insert chips for the song memo (two rows, like the sheet presets)
+// quick-insert chips for the 송폼 field (two rows, like the sheet presets)
 const MEMO_PRESET_ROWS = [
   ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
   ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
 ];
+// text a preset chip inserts: most get a trailing " - " separator, but "Out"
+// (the ending marker) is inserted on its own
+const presetInsertText = (p: string) => (p === "Out" ? p : `${p} - `);
 
 export default function Conti() {
   const {
@@ -191,12 +194,9 @@ export default function Conti() {
   };
   const onRowPointerEnd = () => cancelLP();
 
+  // accordion: opening a song collapses any other expanded one
   const toggleOpen = (id: string) =>
-    setOpen((s) => {
-      const n = new Set(s);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
-    });
+    setOpen((s) => (s.has(id) ? new Set<string>() : new Set([id])));
 
   const shared = params.get("d");
   const sharedItems = useMemo(() => (shared ? decodeConti(shared) : null), [shared]);
@@ -618,7 +618,7 @@ export default function Conti() {
                 {row.map((p) => (
                   <button
                     key={p}
-                    onPointerDown={(e) => { e.preventDefault(); insertPreset(`${p} - `); }}
+                    onPointerDown={(e) => { e.preventDefault(); insertPreset(presetInsertText(p)); }}
                     className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                   >
                     {p}

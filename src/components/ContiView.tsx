@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "../lib/useConti";
 import { removeSongSheet, replaceSongSheet, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetTexts, useSongAttach } from "../lib/songAttach";
@@ -594,19 +594,32 @@ function SheetFigure({
   );
 }
 
+// quick-insert 송폼 chips (kept in sync with the conti list's presets); "Out" is
+// inserted on its own, the rest with a trailing " - " separator
+const SONG_FORM_PRESETS = [
+  ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
+  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
+];
+const presetInsert = (p: string) => (p === "Out" ? p : `${p} - `);
+
 /** A borderless textarea that grows with its content (no inner scrollbar). */
-function GrowTextarea({
-  value,
-  onChange,
-  placeholder,
-  className,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  className: string;
-}) {
-  const ref = useRef<HTMLTextAreaElement>(null);
+const GrowTextarea = forwardRef<
+  HTMLTextAreaElement,
+  {
+    value: string;
+    onChange: (v: string) => void;
+    placeholder: string;
+    className: string;
+    onFocus?: () => void;
+    onBlur?: () => void;
+  }
+>(function GrowTextarea({ value, onChange, placeholder, className, onFocus, onBlur }, extRef) {
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+  const setRef = (el: HTMLTextAreaElement | null) => {
+    ref.current = el;
+    if (typeof extRef === "function") extRef(el);
+    else if (extRef) extRef.current = el;
+  };
   const resize = () => {
     const el = ref.current;
     if (!el) return;
@@ -616,18 +629,21 @@ function GrowTextarea({
   useEffect(resize, [value]);
   return (
     <textarea
-      ref={ref}
+      ref={setRef}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       onInput={resize}
+      onFocus={onFocus}
+      onBlur={onBlur}
       rows={1}
       placeholder={placeholder}
       className={className}
     />
   );
-}
+});
 
-/** Inline, always-editable 송폼 + 메모 fields shown under a song in the viewer. */
+/** Inline, always-editable 송폼 + 메모 fields shown under a song in the viewer.
+ *  The 송폼 field offers the same quick-insert presets as the conti list. */
 function NoteEditor({
   songId,
   attach,
@@ -643,14 +659,61 @@ function NoteEditor({
   const noteText = size === "lg" ? "text-lg" : "text-base";
   const base =
     "w-full resize-none overflow-hidden bg-transparent leading-snug outline-none focus:rounded-lg focus:bg-slate-50 focus:px-2 dark:focus:bg-slate-800 placeholder:text-slate-300 dark:placeholder:text-slate-600";
+
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const [showPresets, setShowPresets] = useState(false);
+  const pendingCaret = useRef<number | null>(null);
+  // restore the caret after a preset insertion re-renders the controlled field
+  useEffect(() => {
+    const pos = pendingCaret.current;
+    if (pos == null) return;
+    pendingCaret.current = null;
+    const el = taRef.current;
+    if (!el) return;
+    el.focus();
+    try {
+      el.setSelectionRange(pos, pos);
+    } catch {
+      /* ignore */
+    }
+  });
+  const insertPreset = (text: string) => {
+    const el = taRef.current;
+    const cur = a?.note ?? "";
+    const start = el?.selectionStart ?? cur.length;
+    const end = el?.selectionEnd ?? start;
+    pendingCaret.current = start + text.length;
+    setSongNote(songId, cur.slice(0, start) + text + cur.slice(end));
+  };
+
   return (
     <div className={`${indent} mt-1 space-y-0.5`}>
       <GrowTextarea
+        ref={taRef}
         value={a?.note ?? ""}
         onChange={(v) => setSongNote(songId, v)}
+        onFocus={() => setShowPresets(true)}
+        onBlur={() => setShowPresets(false)}
         placeholder="송폼 입력"
         className={`${base} ${noteText} text-slate-600 dark:text-slate-300`}
       />
+      {showPresets && (
+        <div className="space-y-1 py-1">
+          {SONG_FORM_PRESETS.map((row, ri) => (
+            <div key={ri} className="flex flex-wrap gap-1">
+              {row.map((p) => (
+                <button
+                  key={p}
+                  onPointerDown={(e) => { e.preventDefault(); insertPreset(presetInsert(p)); }}
+                  className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
       <GrowTextarea
         value={a?.memo ?? ""}
         onChange={(v) => setSongMemo(songId, v)}
