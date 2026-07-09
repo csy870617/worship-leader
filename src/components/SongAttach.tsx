@@ -714,7 +714,7 @@ export function SheetLightbox({
   const [annos, setAnnos] = useState<SheetText[]>([]);
   const [sel, setSel] = useState<number | null>(null);
   // active annotation tool: text placement, highlighter, freehand pen, or none
-  const [tool, setTool] = useState<"text" | "highlight" | "draw" | null>(null);
+  const [tool, setTool] = useState<"text" | "highlight" | "draw" | "erase" | null>(null);
   const [pendingText, setPendingText] = useState<string | null>(null);
   const [color, setColor] = useState(TEXT_COLORS[0]);
   const [sizeIdx, setSizeIdx] = useState(0); // 기본 글자 크기 '작게'
@@ -757,7 +757,11 @@ export function SheetLightbox({
   const many = ids.length > 1;
   const currentId = ids[index];
   const drawing = tool === "draw" || tool === "highlight";
+  const erasing = tool === "erase";
   const placing = tool === "text";
+  // erase-drag state (a whole swipe is one undo step)
+  const erasingActiveRef = useRef(false);
+  const eraseChangedRef = useRef(false);
 
   const go = (d: number) => setIndex((i) => (i + d + ids.length) % ids.length);
 
@@ -929,7 +933,7 @@ export function SheetLightbox({
 
   // pick a tool; toggle off if it's already active. Highlighter / pen start with
   // a sensible default color so they're usable in one tap.
-  const pickTool = (t: "text" | "highlight" | "draw") => {
+  const pickTool = (t: "text" | "highlight" | "draw" | "erase") => {
     setSel(null);
     setPendingText(null);
     pendingStyleRef.current = null;
@@ -951,7 +955,7 @@ export function SheetLightbox({
 
   const onBoxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (drawing) return; // strokes are handled by the pointer handlers
+    if (drawing || erasing) return; // strokes are handled by the pointer handlers
     if (editingRef.current) return; // a tap outside the input blurs it → commits
     if (!placing) {
       setSel(null);
@@ -1021,9 +1025,43 @@ export function SheetLightbox({
       y: Math.min(1, Math.max(0, (clientY - r.top) / r.height)),
     };
   };
+  // ---- eraser (형광펜/그림 지우기): drag over strokes to remove them ----
+  // eraser radius in px, scaled by the 작게/보통/크게 selector
+  const eraseRadiusPx = () => {
+    const w = boxRef.current?.getBoundingClientRect().width ?? 300;
+    return [0.02, 0.035, 0.055][sizeIdx] * w + 6;
+  };
+  // erase every stroke the eraser touches at (clientX, clientY); live-remove so
+  // strokes vanish under the finger, and remember that something changed
+  const eraseAt = (clientX: number, clientY: number) => {
+    const r = boxRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const R = eraseRadiusPx();
+    const kept = strokesRef.current.filter((s) => {
+      const thresh = R + (s.width * r.width) / 2;
+      const hit = s.points.some((p) => {
+        const dx = clientX - (r.left + p.x * r.width);
+        const dy = clientY - (r.top + p.y * r.height);
+        return dx * dx + dy * dy <= thresh * thresh;
+      });
+      return !hit;
+    });
+    if (kept.length !== strokesRef.current.length) {
+      eraseChangedRef.current = true;
+      writeState(annosRef.current, kept);
+    }
+  };
   const onBoxPointerDown = (e: React.PointerEvent) => {
-    if (!drawing) return;
     if (e.pointerType === "mouse" && e.button !== 0) return; // ignore right/middle click
+    if (erasing) {
+      e.stopPropagation();
+      boxRef.current?.setPointerCapture?.(e.pointerId);
+      erasingActiveRef.current = true;
+      eraseChangedRef.current = false;
+      eraseAt(e.clientX, e.clientY);
+      return;
+    }
+    if (!drawing) return;
     e.stopPropagation();
     boxRef.current?.setPointerCapture?.(e.pointerId);
     const p = ptInBox(e.clientX, e.clientY);
@@ -1031,6 +1069,10 @@ export function SheetLightbox({
     setLiveStroke([p]);
   };
   const onBoxPointerMove = (e: React.PointerEvent) => {
+    if (erasing) {
+      if (erasingActiveRef.current) eraseAt(e.clientX, e.clientY);
+      return;
+    }
     if (!drawing || !strokeDragRef.current) return;
     const p = ptInBox(e.clientX, e.clientY);
     const next = [...strokeDragRef.current, p];
@@ -1038,6 +1080,22 @@ export function SheetLightbox({
     setLiveStroke(next);
   };
   const onBoxPointerUp = (e: React.PointerEvent) => {
+    if (erasing) {
+      if (!erasingActiveRef.current) return;
+      erasingActiveRef.current = false;
+      boxRef.current?.releasePointerCapture?.(e.pointerId);
+      if (eraseChangedRef.current) {
+        eraseChangedRef.current = false;
+        // record the whole swipe as a single undo step
+        const hist = historyRef.current.slice(0, histIndexRef.current + 1);
+        hist.push({ annos: annosRef.current, strokes: strokesRef.current });
+        historyRef.current = hist;
+        histIndexRef.current = hist.length - 1;
+        setCanUndo(true);
+        setCanRedo(false);
+      }
+      return;
+    }
     if (!strokeDragRef.current) return;
     boxRef.current?.releasePointerCapture?.(e.pointerId);
     const pts = strokeDragRef.current;
@@ -1182,8 +1240,8 @@ export function SheetLightbox({
             onPointerUp={onBoxPointerUp}
             onPointerCancel={onBoxPointerUp}
             onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(currentId); } : undefined}
-            style={drawing ? { touchAction: "none" } : undefined}
-            className={"relative inline-block " + (placing || drawing ? "cursor-crosshair" : "")}
+            style={drawing || erasing ? { touchAction: "none" } : undefined}
+            className={"relative inline-block " + (placing || drawing || erasing ? "cursor-crosshair" : "")}
           >
             <img src={url} alt="악보" onLoad={measure} draggable={false} className="block max-h-[62vh] max-w-full" />
             {(strokes.length > 0 || liveStroke) && boxW > 0 && (
@@ -1305,7 +1363,7 @@ export function SheetLightbox({
                   whiteSpace: "nowrap",
                   cursor: "move",
                   touchAction: "none",
-                  pointerEvents: drawing || editing ? "none" : "auto",
+                  pointerEvents: drawing || erasing || editing ? "none" : "auto",
                   padding: "1px 3px",
                   borderRadius: 4,
                   outline: sel === i ? "2px solid #6366f1" : "none",
@@ -1414,6 +1472,20 @@ export function SheetLightbox({
                   <path strokeLinecap="round" strokeLinejoin="round" d="m13.5 6.5 4 4" />
                 </svg>
               </button>
+              <button
+                onClick={() => pickTool("erase")}
+                aria-label="지우개"
+                title="지우개 (형광펜·그림 지우기)"
+                className={
+                  "flex h-9 w-9 items-center justify-center rounded-full " +
+                  (tool === "erase" ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
+                }
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 20.5H20M4.3 15.2l4.5 4.5a1.6 1.6 0 0 0 2.3 0l8.1-8.1a1.6 1.6 0 0 0 0-2.3l-4.5-4.5a1.6 1.6 0 0 0-2.3 0L4.3 12.9a1.6 1.6 0 0 0 0 2.3Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m9 9.5 5.5 5.5" />
+                </svg>
+              </button>
               {/* undo / redo — covers every sheet edit (text + strokes) */}
               <button
                 onClick={undo}
@@ -1481,12 +1553,17 @@ export function SheetLightbox({
                 <span className="ml-1 text-xs font-semibold text-white/70">{index + 1} / {ids.length}</span>
               )}
             </div>
-            {(placing || drawing) && (
+            {(placing || drawing || erasing) && (
               <p className="text-center text-xs font-medium text-white/70">
-                {placing ? "악보를 탭해 텍스트를 넣으세요" : "악보 위를 드래그해 그리세요"}
+                {placing
+                  ? "악보를 탭해 텍스트를 넣으세요"
+                  : erasing
+                  ? "지울 형광펜·그림 위를 드래그하세요"
+                  : "악보 위를 드래그해 그리세요"}
               </p>
             )}
             <div className="flex items-center justify-center gap-3">
+              {tool !== "erase" && (
               <div className="flex items-center gap-1.5">
                 {TEXT_COLORS.map((c) => (
                   <button
@@ -1501,6 +1578,7 @@ export function SheetLightbox({
                   />
                 ))}
               </div>
+              )}
               <div className="flex items-center gap-1">
                 {TEXT_SIZES.map((s, i) => (
                   <button
@@ -1516,7 +1594,8 @@ export function SheetLightbox({
                 ))}
               </div>
             </div>
-            {/* quick-insert presets */}
+            {/* quick-insert presets (not while erasing) */}
+            {tool !== "erase" && (
             <div className="space-y-1.5">
               {TEXT_PRESET_ROWS.map((row, ri) => (
                 <div key={ri} className="flex flex-wrap items-center justify-center gap-1.5">
@@ -1535,6 +1614,7 @@ export function SheetLightbox({
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
       </div>
