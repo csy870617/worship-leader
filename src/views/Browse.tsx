@@ -28,9 +28,15 @@ const CAT_LABEL: Record<string, string> = { hymn: "찬송가", ccm: "CCM" };
 // axes that allow picking multiple values at once (분류는 전체 칩이 있어 단일 선택)
 const MULTI_AXES = new Set(["tempo"]);
 
-// Code filter groups Eb+E under "E" and Bb+B under "B"; other keys stand alone.
+// Code filter groups a flat with its natural (Db+D, Eb+E, Ab+A, Bb+B); other
+// keys stand alone.
 const KEY_GROUPS = ["C", "D", "E", "F", "G", "A", "B"];
-const KEY_MEMBERS: Record<string, string[]> = { E: ["Eb", "E"], B: ["Bb", "B"] };
+const KEY_MEMBERS: Record<string, string[]> = {
+  D: ["Db", "D"],
+  E: ["Eb", "E"],
+  A: ["Ab", "A"],
+  B: ["Bb", "B"],
+};
 const keyMembers = (group: string) => KEY_MEMBERS[group] ?? [group];
 
 // rank a song by its lowest key using the chip order (C, D, Eb, …)
