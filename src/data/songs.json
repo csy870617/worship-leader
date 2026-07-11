@@ -867,21 +867,6 @@
       "hymnNo": null
     },
     {
-      "id": "c_zkc9ex",
-      "title": "나를 향한 주의 사랑 (위러브 Ver.)",
-      "keys": [
-        "G",
-        "A"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "은혜와 사랑"
-      ],
-      "hymnNo": null
-    },
-    {
       "id": "b_tgx5jd",
       "title": "나의 가는 길",
       "keys": [
@@ -1968,20 +1953,6 @@
       ],
       "themes": [
         "축복과 교제"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "c_1scvupa",
-      "title": "마음이 상한 자를 (마커스 Ver.)",
-      "keys": [
-        "G"
-      ],
-      "tempos": [
-        "SLOW"
-      ],
-      "themes": [
-        "기도와 간구"
       ],
       "hymnNo": null
     },
@@ -3288,20 +3259,6 @@
       ],
       "themes": [
         "회개와 고백"
-      ],
-      "hymnNo": null
-    },
-    {
-      "id": "c_dvjuf0",
-      "title": "아주 먼 옛날 (위러브 Ver.)",
-      "keys": [
-        "D"
-      ],
-      "tempos": [
-        "FAST"
-      ],
-      "themes": [
-        "축복과 교제"
       ],
       "hymnNo": null
     },
