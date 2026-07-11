@@ -81,7 +81,7 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "선교와 승리"
@@ -109,7 +109,7 @@
         "D"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "은혜와 사랑"
@@ -446,7 +446,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -534,7 +534,7 @@
         "Bb"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "기도와 간구"
@@ -717,7 +717,7 @@
         "F"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "기도와 간구"
@@ -890,7 +890,7 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -918,7 +918,7 @@
         "E"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "회개와 고백"
@@ -1101,7 +1101,7 @@
         "C"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "은혜와 사랑"
@@ -1245,7 +1245,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "선교와 승리"
@@ -1274,7 +1274,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -1795,7 +1795,7 @@
         "D"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "은혜와 사랑"
@@ -1965,7 +1965,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "선교와 승리"
@@ -2008,7 +2008,7 @@
         "C"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -2022,7 +2022,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -2050,7 +2050,7 @@
         "F"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "회개와 고백"
@@ -2107,7 +2107,7 @@
         "D"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -2164,7 +2164,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "기도와 간구"
@@ -2178,7 +2178,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "선교와 승리"
@@ -2263,7 +2263,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "은혜와 사랑"
@@ -2470,7 +2470,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "기도와 간구"
@@ -2568,7 +2568,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -2624,7 +2624,7 @@
         "C"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "은혜와 사랑"
@@ -2638,8 +2638,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM",
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "경배와 찬양"
@@ -2783,7 +2782,7 @@
         "G"
       ],
       "tempos": [
-        "SLOW"
+        "FAST"
       ],
       "themes": [
         "경배와 찬양"
@@ -2826,7 +2825,7 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "경배와 찬양"
@@ -3028,7 +3027,7 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "기도와 간구"
@@ -3257,7 +3256,7 @@
         "C"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "회개와 고백"
@@ -3300,7 +3299,7 @@
         "C"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "기도와 간구"
@@ -3314,7 +3313,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "기도와 간구"
@@ -3689,7 +3688,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "경배와 찬양"
@@ -3803,7 +3802,7 @@
         "A"
       ],
       "tempos": [
-        "FAST"
+        "MEDIUM"
       ],
       "themes": [
         "회개와 고백"
@@ -4731,7 +4730,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "기도와 간구"
@@ -4872,7 +4871,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "은혜와 사랑"
@@ -5131,7 +5130,7 @@
         "G"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "회개와 고백"
@@ -5187,7 +5186,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "선교와 승리"
@@ -5261,7 +5260,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -5870,7 +5869,7 @@
         "A"
       ],
       "tempos": [
-        "MEDIUM"
+        "FAST"
       ],
       "themes": [
         "경배와 찬양"
@@ -5913,7 +5912,7 @@
         "G"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "경배와 찬양"
@@ -6359,7 +6358,7 @@
         "C"
       ],
       "tempos": [
-        "MEDIUM"
+        "SLOW"
       ],
       "themes": [
         "기도와 간구"
@@ -7217,7 +7216,7 @@
         "Ab"
       ],
       "tempos": [
-        "FAST"
+        "SLOW"
       ],
       "themes": [
         "회개와 고백"
