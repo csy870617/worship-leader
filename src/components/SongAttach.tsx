@@ -26,13 +26,14 @@ import { registerBack, useBackDismiss } from "../lib/backStack";
 // vivid, near-primary swatches (the previous yellow read as a dull mustard)
 const TEXT_COLORS = ["#ff1e1e", "#000000", "#ffffff", "#1a4bff", "#00b81d", "#ffe600"];
 const TEXT_SIZES: { label: string; value: number }[] = [
+  { label: "아주작게", value: 0.02 },
   { label: "작게", value: 0.03 },
   { label: "보통", value: 0.045 },
   { label: "크게", value: 0.07 },
 ];
-// stroke widths (fraction of image width) for 작게/보통/크게, per tool
-const PEN_WIDTHS = [0.004, 0.008, 0.014];
-const HL_WIDTHS = [0.03, 0.05, 0.08];
+// stroke widths (fraction of image width) for 아주작게/작게/보통/크게, per tool
+const PEN_WIDTHS = [0.0025, 0.004, 0.008, 0.014];
+const HL_WIDTHS = [0.02, 0.03, 0.05, 0.08];
 const HL_DEFAULT_COLOR = "#ffe600"; // yellow marker
 const PEN_DEFAULT_COLOR = "#ff1e1e"; // red pen
 
@@ -717,7 +718,7 @@ export function SheetLightbox({
   const [tool, setTool] = useState<"text" | "highlight" | "draw" | "erase" | null>(null);
   const [pendingText, setPendingText] = useState<string | null>(null);
   const [color, setColor] = useState(TEXT_COLORS[0]);
-  const [sizeIdx, setSizeIdx] = useState(0); // 기본 글자 크기 '작게'
+  const [sizeIdx, setSizeIdx] = useState(1); // 기본 글자 크기 '작게' (0은 '아주작게')
   const [boxW, setBoxW] = useState(0);
   const [boxH, setBoxH] = useState(0);
   const [strokes, setStrokes] = useState<SheetStroke[]>([]);
@@ -1029,7 +1030,7 @@ export function SheetLightbox({
   // eraser radius in px, scaled by the 작게/보통/크게 selector
   const eraseRadiusPx = () => {
     const w = boxRef.current?.getBoundingClientRect().width ?? 300;
-    return [0.02, 0.035, 0.055][sizeIdx] * w + 6;
+    return [0.012, 0.02, 0.035, 0.055][sizeIdx] * w + 6;
   };
   // erase every stroke the eraser touches at (clientX, clientY); live-remove so
   // strokes vanish under the finger, and remember that something changed
