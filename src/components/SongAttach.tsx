@@ -731,6 +731,8 @@ export function SheetLightbox({
   const [hasCopied, setHasCopied] = useState(false); // a text was copied → show 붙여넣기
   const boxRef = useRef<HTMLDivElement>(null);
   const editRef = useRef<HTMLInputElement>(null);
+  // canvas 2D context reused to measure the in-place edit text's real width
+  const measureCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const annosRef = useRef<SheetText[]>([]);
   const strokesRef = useRef<SheetStroke[]>([]);
   const strokeDragRef = useRef<{ x: number; y: number }[] | null>(null);
@@ -1420,27 +1422,44 @@ export function SheetLightbox({
               enterKeyHint="done"
               style={
                 editing && boxW
-                  ? {
-                      position: "absolute",
-                      left: `${editing.x * 100}%`,
-                      top: `${editing.y * 100}%`,
-                      transform: "translate(-50%, -50%)",
-                      color: editing.i != null ? annos[editing.i]?.color ?? color : color,
-                      fontSize:
-                        (editing.i != null ? annos[editing.i]?.size ?? TEXT_SIZES[sizeIdx].value : TEXT_SIZES[sizeIdx].value) *
-                        boxW,
-                      fontWeight: 700,
-                      lineHeight: 1.1,
-                      textAlign: "center",
-                      background: "rgba(255,255,255,0.92)",
-                      border: "1px solid #6366f1",
-                      borderRadius: 4,
-                      padding: "1px 4px",
-                      outline: "none",
-                      width: `${Math.max(4, (editing.value.length || 2) + 1)}ch`,
-                      caretColor: "#6366f1",
-                      zIndex: 20,
-                    }
+                  ? (() => {
+                      const fs =
+                        (editing.i != null
+                          ? annos[editing.i]?.size ?? TEXT_SIZES[sizeIdx].value
+                          : TEXT_SIZES[sizeIdx].value) * boxW;
+                      // size the input to the ACTUAL rendered text width (the old
+                      // `ch`-based width truncated Korean, which is ~2ch per glyph)
+                      if (!measureCtxRef.current)
+                        measureCtxRef.current = document.createElement("canvas").getContext("2d");
+                      const mctx = measureCtxRef.current;
+                      let tw = 0;
+                      if (mctx) {
+                        mctx.font = `700 ${fs}px Pretendard, system-ui, -apple-system, sans-serif`;
+                        tw = mctx.measureText(editing.value || "입력").width;
+                      }
+                      const width = Math.min(boxW * 0.96, Math.max(fs * 2, tw + fs * 0.6 + 12));
+                      // keep the (centered) input inside the sheet horizontally
+                      const cx = Math.min(Math.max(editing.x * boxW, width / 2), boxW - width / 2);
+                      return {
+                        position: "absolute" as const,
+                        left: cx,
+                        top: `${editing.y * 100}%`,
+                        transform: "translate(-50%, -50%)",
+                        color: editing.i != null ? annos[editing.i]?.color ?? color : color,
+                        fontSize: fs,
+                        fontWeight: 700,
+                        lineHeight: 1.1,
+                        textAlign: "center" as const,
+                        background: "rgba(255,255,255,0.92)",
+                        border: "1px solid #6366f1",
+                        borderRadius: 4,
+                        padding: "1px 4px",
+                        outline: "none",
+                        width,
+                        caretColor: "#6366f1",
+                        zIndex: 20,
+                      };
+                    })()
                   : { position: "absolute", left: -9999, top: 0, width: 1, height: 1, opacity: 0, pointerEvents: "none" }
               }
             />
