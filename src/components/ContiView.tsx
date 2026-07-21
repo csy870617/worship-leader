@@ -131,6 +131,9 @@ export default function ContiView({
   useEffect(() => {
     if (mode !== "page") return;
     const onKey = (e: KeyboardEvent) => {
+      // typing in the 송폼/메모 fields: arrows must move the caret, not flip pages
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       if (e.key === "ArrowRight") go(1);
       else if (e.key === "ArrowLeft") go(-1);
     };

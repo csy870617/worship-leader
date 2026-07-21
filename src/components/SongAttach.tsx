@@ -846,7 +846,9 @@ export function SheetLightbox({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [many, ids.length]);
 
-  // keyboard actions on the selected text (PC): delete, copy, cut, edit
+  // keyboard actions on the selected text (PC): delete, copy, cut, edit, and
+  // arrow-key nudging (1px per press, Shift = 10px) for fine positioning
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (sel == null || editingRef.current) return;
@@ -867,12 +869,34 @@ export function SheetLightbox({
       } else if (!mod && (e.key === "Enter" || e.key === "F2")) {
         e.preventDefault();
         editSel();
+      } else if (!mod && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        e.preventDefault();
+        const px = e.shiftKey ? 10 : 1;
+        const dx = e.key === "ArrowLeft" ? -px / (boxW || 600) : e.key === "ArrowRight" ? px / (boxW || 600) : 0;
+        const dy = e.key === "ArrowUp" ? -px / (boxH || 800) : e.key === "ArrowDown" ? px / (boxH || 800) : 0;
+        const next = annosRef.current.map((a, i) =>
+          i === sel
+            ? { ...a, x: Math.min(1, Math.max(0, a.x + dx)), y: Math.min(1, Math.max(0, a.y + dy)) }
+            : a
+        );
+        // move live without spamming the undo stack; a whole burst of presses
+        // becomes ONE history entry once the keys go quiet
+        writeState(next, strokesRef.current);
+        if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+        nudgeTimer.current = setTimeout(() => {
+          const hist = historyRef.current.slice(0, histIndexRef.current + 1);
+          hist.push({ annos: annosRef.current, strokes: strokesRef.current });
+          historyRef.current = hist;
+          histIndexRef.current = hist.length - 1;
+          setCanUndo(true);
+          setCanRedo(false);
+        }, 600);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sel, currentId]);
+  }, [sel, currentId, boxW, boxH]);
 
   // ---- undo / redo: Ctrl/Cmd+Z, Ctrl+Shift+Z or Ctrl+Y (ignored while typing) ----
   useEffect(() => {

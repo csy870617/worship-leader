@@ -71,10 +71,10 @@ export default function Conti() {
   const listRef = useRef<HTMLOListElement>(null);
   const noteRef = useRef<HTMLTextAreaElement>(null);
 
-  // remember the focused memo input so preset chips can insert at its cursor
-  const memoElRef = useRef<HTMLInputElement | null>(null);
+  // remember the focused 송폼 field so preset chips can insert at its cursor
+  const memoElRef = useRef<HTMLTextAreaElement | null>(null);
   const memoSongRef = useRef<string | null>(null);
-  const pendingSelRef = useRef<{ el: HTMLInputElement; pos: number } | null>(null);
+  const pendingSelRef = useRef<{ el: HTMLTextAreaElement; pos: number } | null>(null);
   // restore the caret after the controlled memo value has updated
   useEffect(() => {
     const p = pendingSelRef.current;
@@ -565,14 +565,12 @@ export default function Conti() {
                         : r.song.keys.map((k) => <KeyBadge key={k} k={k} />)}
                     </span>
                   </div>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    <input
+                  <div className="mt-0.5 flex items-start gap-2">
+                    <SongFormField
                       value={att?.note ?? ""}
-                      onChange={(e) => setSongNote(r.id, e.target.value)}
-                      onFocus={(e) => { memoElRef.current = e.currentTarget; memoSongRef.current = r.id; setMemoFocused(true); }}
+                      onChange={(v) => setSongNote(r.id, v)}
+                      onFocus={(el) => { memoElRef.current = el; memoSongRef.current = r.id; setMemoFocused(true); }}
                       onBlur={() => { memoElRef.current = null; memoSongRef.current = null; setMemoFocused(false); }}
-                      placeholder="송폼 입력"
-                      className="-mx-1 min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
                     />
                     {recentlyUsed && (
                       <button
@@ -954,6 +952,43 @@ export default function Conti() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Multi-line 송폼 field for a conti row: auto-growing textarea (line breaks
+ *  kept) that also reports its element on focus so preset chips can insert at
+ *  the caret. */
+function SongFormField({
+  value,
+  onChange,
+  onFocus,
+  onBlur,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onFocus: (el: HTMLTextAreaElement) => void;
+  onBlur: () => void;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const resize = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  useEffect(resize, [value]);
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onInput={resize}
+      onFocus={(e) => onFocus(e.currentTarget)}
+      onBlur={onBlur}
+      rows={1}
+      placeholder="송폼 입력"
+      className="-mx-1 min-w-0 flex-1 resize-none overflow-hidden rounded bg-transparent px-1 py-0.5 text-xs leading-relaxed text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
+    />
   );
 }
 

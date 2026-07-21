@@ -151,12 +151,12 @@ function buildInfoEl(
   );
   if (note) {
     parts.push(
-      `<div style="margin:8px 0 0 38px;font-size:22px;color:#374151;">${esc(note)}</div>`
+      `<div style="margin:8px 0 0 38px;font-size:22px;color:#374151;white-space:pre-wrap;">${esc(note)}</div>`
     );
   }
   if (memo) {
     parts.push(
-      `<div style="margin:4px 0 0 38px;font-size:18px;color:#6b7280;">${esc(memo)}</div>`
+      `<div style="margin:4px 0 0 38px;font-size:18px;color:#6b7280;white-space:pre-wrap;">${esc(memo)}</div>`
     );
   }
   if (firstSheet) {
@@ -173,8 +173,8 @@ function buildSheetEl(sheet: SheetImg, note?: string, memo?: string): HTMLDivEle
   const el = document.createElement("div");
   if (note || memo) {
     const head =
-      (note ? `<div style="margin:0 0 6px 0;font-size:22px;color:#374151;">${esc(note)}</div>` : "") +
-      (memo ? `<div style="margin:0 0 10px 0;font-size:18px;color:#6b7280;">${esc(memo)}</div>` : "");
+      (note ? `<div style="margin:0 0 6px 0;font-size:22px;color:#374151;white-space:pre-wrap;">${esc(note)}</div>` : "") +
+      (memo ? `<div style="margin:0 0 10px 0;font-size:18px;color:#6b7280;white-space:pre-wrap;">${esc(memo)}</div>` : "");
     el.style.cssText = BASE_STYLE;
     el.innerHTML = head + sheetOverlay(sheet.url);
   } else {
