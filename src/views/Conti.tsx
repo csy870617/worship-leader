@@ -24,8 +24,8 @@ const MEMO_PRESET_ROWS = [
   ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
 ];
 // text a preset chip inserts: most get a trailing " - " separator, but "Out"
-// (the ending marker) is inserted on its own
-const presetInsertText = (p: string) => (p === "Out" ? p : `${p} - `);
+// (the ending marker) is inserted on its own and "Rit" as "(Rit)"
+const presetInsertText = (p: string) => (p === "Out" ? p : p === "Rit" ? "(Rit)" : `${p} - `);
 
 export default function Conti() {
   const {

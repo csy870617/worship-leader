@@ -603,7 +603,7 @@ const SONG_FORM_PRESETS = [
   ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
   ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
 ];
-const presetInsert = (p: string) => (p === "Out" ? p : `${p} - `);
+const presetInsert = (p: string) => (p === "Out" ? p : p === "Rit" ? "(Rit)" : `${p} - `);
 
 /** A borderless textarea that grows with its content (no inner scrollbar). */
 const GrowTextarea = forwardRef<
