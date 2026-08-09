@@ -149,15 +149,34 @@ export function openExternal(url: string) {
   const standalone = isStandalonePwa();
   const inApp = isInAppBrowser();
 
-  // Installed Android PWA (and Android in-app webviews): a new tab can't open, and
-  // navigating the app's own webview to an external origin is refused ("연결을
-  // 거부했습니다"). Hand the URL to the system via an intent — the same mechanism the
-  // YouTube playlist button already uses successfully — so the default browser /
-  // matching app opens it. browser_fallback_url guarantees it opens regardless.
+  // Installed Android PWA (and Android in-app webviews). Two steps, in this order:
+  //   1) window.open — a WebAPK opens out-of-scope links in a Chrome Custom Tab,
+  //      which keeps the URL exactly as given. This matters for pages whose query
+  //      params carry the mode (e.g. Google's udm=2 image tab): an intent can be
+  //      claimed by an app that ignores them, or fail outright with a blank/error
+  //      screen when no app clearly matches the URL.
+  //   2) intent:// — for the cases where a new tab really can't open. VIEW +
+  //      BROWSABLE marks it as browser-openable so the system can resolve it even
+  //      without a package, and browser_fallback_url is the last resort.
   if (android && (standalone || inApp)) {
+    try {
+      const w = window.open(url, "_blank");
+      if (w) {
+        // opened (Custom Tab / new tab) — sever the opener link for safety
+        try {
+          (w as Window & { opener?: unknown }).opener = null;
+        } catch {
+          /* cross-origin: nothing to clear */
+        }
+        return;
+      }
+    } catch {
+      /* blocked → fall through to the intent hand-off */
+    }
     const noScheme = url.replace(/^https?:\/\//, "");
     window.location.href =
       `intent://${noScheme}#Intent;scheme=https;` +
+      `action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;` +
       `S.browser_fallback_url=${encodeURIComponent(url)};end`;
     return;
   }
