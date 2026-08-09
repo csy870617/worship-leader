@@ -20,3 +20,10 @@ export const sortKo = (a: { title: string }, b: { title: string }) =>
 export function youtubeSearchUrl(title: string): string {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(title + " 찬양")}`;
 }
+
+/** Google IMAGE search for a song's sheet music. Uses `udm=2` — Google retired
+ *  the old `tbm=isch` image parameter, which now falls back to a plain web
+ *  search instead of showing sheet images. */
+export function sheetSearchUrl(title: string): string {
+  return `https://www.google.com/search?udm=2&q=${encodeURIComponent(title + " 악보")}`;
+}
