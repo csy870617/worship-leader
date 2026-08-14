@@ -10,6 +10,9 @@ import { setSongMemo, setSongNote, sheetsForKey, useSongAttach } from "../lib/so
 import { useBackDismiss } from "../lib/backStack";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
+import SongFormField from "../components/SongFormField";
+import PresetChips from "../components/PresetChips";
+import { presetInsertText } from "../lib/songForm";
 import ContiView from "../components/ContiView";
 
 // block page scrolling while a row is being dragged (added/removed on demand)
@@ -18,14 +21,6 @@ const preventScroll = (e: TouchEvent) => e.preventDefault();
 // remember the 묵상노트 textarea's user-resized height across visits (device-local)
 const NOTE_HEIGHT_KEY = "wl.contiNoteHeight";
 
-// quick-insert chips for the 송폼 field (two rows, like the sheet presets)
-const MEMO_PRESET_ROWS = [
-  ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
-  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
-];
-// text a preset chip inserts: most get a trailing " - " separator, but "Out"
-// (the ending marker) is inserted on its own and "Rit" as "(Rit)"
-const presetInsertText = (p: string) => (p === "Out" ? p : p === "Rit" ? "(Rit)" : `${p} - `);
 
 export default function Conti() {
   const {
@@ -572,6 +567,8 @@ export default function Conti() {
                       onChange={(v) => setSongNote(r.id, v)}
                       onFocus={(el) => { memoElRef.current = el; memoSongRef.current = r.id; setMemoFocused(true); }}
                       onBlur={() => { memoElRef.current = null; memoSongRef.current = null; setMemoFocused(false); }}
+                      className="-mx-1 w-full rounded px-1 py-0.5"
+                      textClassName="text-xs leading-relaxed text-slate-600 placeholder:text-slate-400 dark:text-slate-300 dark:placeholder:text-slate-600"
                     />
                     {recentlyUsed && (
                       <button
@@ -608,25 +605,12 @@ export default function Conti() {
         })}
       </ol>
 
-      {/* memo quick-insert presets — only while a memo is being edited */}
+      {/* 송폼 quick-insert presets — only while a 송폼 field is being edited */}
       {memoFocused && (
-        <div className="mt-3 border-y border-slate-100 px-3 py-2 dark:border-slate-800">
-          <div className="space-y-1.5">
-            {MEMO_PRESET_ROWS.map((row, ri) => (
-              <div key={ri} className="flex flex-wrap gap-1.5">
-                {row.map((p) => (
-                  <button
-                    key={p}
-                    onPointerDown={(e) => { e.preventDefault(); insertPreset(presetInsertText(p)); }}
-                    className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
+        <PresetChips
+          onInsert={(p) => insertPreset(presetInsertText(p))}
+          className="mt-3 border-y border-slate-100 px-3 py-2 dark:border-slate-800"
+        />
       )}
 
       {/* 묵상노트 — free-form meditation memo, sits between the song list and actions */}
@@ -953,43 +937,6 @@ export default function Conti() {
         </div>
       )}
     </div>
-  );
-}
-
-/** Multi-line 송폼 field for a conti row: auto-growing textarea (line breaks
- *  kept) that also reports its element on focus so preset chips can insert at
- *  the caret. */
-function SongFormField({
-  value,
-  onChange,
-  onFocus,
-  onBlur,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  onFocus: (el: HTMLTextAreaElement) => void;
-  onBlur: () => void;
-}) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-  const resize = () => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  };
-  useEffect(resize, [value]);
-  return (
-    <textarea
-      ref={ref}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      onInput={resize}
-      onFocus={(e) => onFocus(e.currentTarget)}
-      onBlur={onBlur}
-      rows={1}
-      placeholder="송폼 입력"
-      className="-mx-1 min-w-0 flex-1 resize-none overflow-hidden rounded bg-transparent px-1 py-0.5 text-xs leading-relaxed text-slate-600 outline-none placeholder:text-slate-400 focus:bg-white dark:text-slate-300 dark:placeholder:text-slate-600 dark:focus:bg-slate-900"
-    />
   );
 }
 

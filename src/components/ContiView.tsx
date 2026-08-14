@@ -7,6 +7,9 @@ import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromF
 import { driveEnabled } from "../lib/drive";
 import { registerBack, useBackDismiss } from "../lib/backStack";
 import { CropModal, SheetLightbox } from "./SongAttach";
+import SongFormField from "./SongFormField";
+import PresetChips from "./PresetChips";
+import { presetInsertText } from "../lib/songForm";
 
 type Page =
   | { kind: "info"; item: ContiItem; song: Song; aid?: string; n: number }
@@ -598,13 +601,6 @@ function SheetFigure({
   );
 }
 
-// quick-insert 송폼 chips (kept in sync with the conti list's presets); "Out" is
-// inserted on its own, the rest with a trailing " - " separator
-const SONG_FORM_PRESETS = [
-  ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
-  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
-];
-const presetInsert = (p: string) => (p === "Out" ? p : p === "Rit" ? "(Rit)" : `${p} - `);
 
 /** A borderless textarea that grows with its content (no inner scrollbar). */
 const GrowTextarea = forwardRef<
@@ -664,7 +660,7 @@ function NoteEditor({
   const base =
     "w-full resize-none overflow-hidden bg-transparent leading-snug outline-none focus:rounded-lg focus:bg-slate-50 focus:px-2 dark:focus:bg-slate-800 placeholder:text-slate-300 dark:placeholder:text-slate-600";
 
-  const taRef = useRef<HTMLTextAreaElement>(null);
+  const taRef = useRef<HTMLTextAreaElement | null>(null);
   const [showPresets, setShowPresets] = useState(false);
   const pendingCaret = useRef<number | null>(null);
   // restore the caret after a preset insertion re-renders the controlled field
@@ -692,31 +688,16 @@ function NoteEditor({
 
   return (
     <div className={`${indent} mt-1 space-y-0.5`}>
-      <GrowTextarea
-        ref={taRef}
+      <SongFormField
         value={a?.note ?? ""}
         onChange={(v) => setSongNote(songId, v)}
-        onFocus={() => setShowPresets(true)}
+        onFocus={(el) => { taRef.current = el; setShowPresets(true); }}
         onBlur={() => setShowPresets(false)}
-        placeholder="송폼 입력"
-        className={`${base} ${noteText} text-slate-600 dark:text-slate-300`}
+        className={base}
+        textClassName={`${noteText} text-slate-600 dark:text-slate-300`}
       />
       {showPresets && (
-        <div className="space-y-1 py-1">
-          {SONG_FORM_PRESETS.map((row, ri) => (
-            <div key={ri} className="flex flex-wrap gap-1">
-              {row.map((p) => (
-                <button
-                  key={p}
-                  onPointerDown={(e) => { e.preventDefault(); insertPreset(presetInsert(p)); }}
-                  className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
+        <PresetChips onInsert={(p) => insertPreset(presetInsertText(p))} className="py-1" />
       )}
       <GrowTextarea
         value={a?.memo ?? ""}
