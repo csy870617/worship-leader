@@ -18,16 +18,22 @@ export default function SongFormField({
   placeholder = "송폼 입력",
   className,
   textClassName = "",
+  wrapClassName = "",
 }: {
   value: string;
   onChange: (v: string) => void;
   onFocus?: (el: HTMLTextAreaElement) => void;
   onBlur?: () => void;
   placeholder?: string;
-  /** layout/appearance classes shared by the textarea and its mirror */
+  /** layout/appearance classes shared by the textarea and its mirror. Must NOT
+   *  set a background or a focus-dependent padding: the textarea sits above the
+   *  colored mirror, so an opaque background would hide the text, and a padding
+   *  that changes on focus would misalign the two. Use `wrapClassName` for that. */
   className: string;
   /** extra classes for the visible text (color, size) */
   textClassName?: string;
+  /** classes for the wrapper — put backgrounds / focus-within styling here */
+  wrapClassName?: string;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const mirrorRef = useRef<HTMLDivElement>(null);
@@ -45,7 +51,7 @@ export default function SongFormField({
 
   const segs = songFormSegments(value);
   return (
-    <div className="relative w-full">
+    <div className={`relative w-full ${wrapClassName}`}>
       {/* colored mirror — same box metrics as the textarea */}
       <div
         ref={mirrorRef}
@@ -74,7 +80,8 @@ export default function SongFormField({
         rows={1}
         placeholder={placeholder}
         // text is transparent so only the mirror shows; caret stays visible
-        className={`${className} ${textClassName} relative resize-none overflow-hidden bg-transparent text-transparent caret-slate-700 dark:caret-slate-200`}
+        style={{ background: "transparent" }}
+        className={`${className} ${textClassName} relative resize-none overflow-hidden text-transparent caret-slate-700 dark:caret-slate-200`}
       />
     </div>
   );

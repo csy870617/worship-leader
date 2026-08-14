@@ -657,8 +657,11 @@ function NoteEditor({
 }) {
   const a = attach[songId];
   const noteText = size === "lg" ? "text-lg" : "text-base";
+  // shared metrics only — the focus background lives on the wrapper so it can
+  // never cover the song form's colored overlay (see SongFormField)
   const base =
-    "w-full resize-none overflow-hidden bg-transparent leading-snug outline-none focus:rounded-lg focus:bg-slate-50 focus:px-2 dark:focus:bg-slate-800 placeholder:text-slate-300 dark:placeholder:text-slate-600";
+    "w-full resize-none overflow-hidden bg-transparent leading-snug outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600";
+  const focusWrap = "rounded-lg focus-within:bg-slate-50 dark:focus-within:bg-slate-800";
 
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   const [showPresets, setShowPresets] = useState(false);
@@ -695,6 +698,7 @@ function NoteEditor({
         onBlur={() => setShowPresets(false)}
         className={base}
         textClassName={`${noteText} text-slate-600 dark:text-slate-300`}
+        wrapClassName={focusWrap}
       />
       {showPresets && (
         <PresetChips onInsert={(p) => insertPreset(presetInsertText(p))} className="py-1" />
