@@ -7,6 +7,7 @@ import {
   setSongMemo,
   setSongNote,
   setSongSheets,
+  setSongSheetKey,
   setSongSheetDraws,
   setSongSheetTexts,
   setSongYoutube,
@@ -20,6 +21,7 @@ import {
   saveSheetFromFile,
 } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
+import { getSongById } from "../lib/catalog";
 import { copyText, openYouTube } from "../lib/share";
 import { registerBack, useBackDismiss } from "../lib/backStack";
 
@@ -61,6 +63,9 @@ export default function SongAttachEditor({
   const youtubeUrl = a?.youtube;
   const sheetIds = a?.sheets ?? [];
   const sheetTexts = a?.sheetTexts ?? {};
+  // a song with several keys can hold a separate sheet per key
+  const songKeys = getSongById(songId)?.keys ?? [];
+  const sheetKeys = a?.sheetKeys ?? {};
 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -256,8 +261,8 @@ export default function SongAttachEditor({
         {orderedIds.length > 0 && (
           <div ref={gridRef} className="mb-2 flex flex-wrap gap-2">
             {orderedIds.map((aid, idx) => (
+              <div key={aid} className="flex flex-col items-center gap-1">
               <div
-                key={aid}
                 data-thumb-aid={aid}
                 className={
                   "relative rounded-lg transition-transform duration-150 " +
@@ -281,6 +286,11 @@ export default function SongAttachEditor({
                     {idx + 1}
                   </span>
                 )}
+                {sheetKeys[aid] && (
+                  <span className="pointer-events-none absolute right-0.5 top-0.5 rounded-md bg-emerald-600 px-1 text-[10px] font-bold leading-4 text-white shadow">
+                    {sheetKeys[aid]}
+                  </span>
+                )}
                 {orderedIds.length > 1 && (
                   <span
                     onPointerDown={(e) => onGripDown(e, aid)}
@@ -298,6 +308,40 @@ export default function SongAttachEditor({
                     </svg>
                   </span>
                 )}
+              </div>
+              {/* which key this sheet is for — only for songs with several keys.
+                  "공통" (no key) keeps the sheet visible for every key. */}
+              {songKeys.length > 1 && (
+                <div className="flex flex-wrap justify-center gap-1">
+                  <button
+                    onClick={() => setSongSheetKey(songId, aid, null)}
+                    title="모든 코드에서 보임"
+                    className={
+                      "rounded px-1.5 py-0.5 text-[10px] font-bold " +
+                      (!sheetKeys[aid]
+                        ? "bg-indigo-600 text-white"
+                        : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400")
+                    }
+                  >
+                    공통
+                  </button>
+                  {songKeys.map((k) => (
+                    <button
+                      key={k}
+                      onClick={() => setSongSheetKey(songId, aid, k)}
+                      title={`${k} 코드를 고른 콘티에서만 보임`}
+                      className={
+                        "rounded px-1.5 py-0.5 text-[10px] font-bold " +
+                        (sheetKeys[aid] === k
+                          ? "bg-indigo-600 text-white"
+                          : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400")
+                      }
+                    >
+                      {k}
+                    </button>
+                  ))}
+                </div>
+              )}
               </div>
             ))}
           </div>
@@ -394,7 +438,8 @@ export function CropModal({
   const [src, setSrc] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
-  const [rect, setRect] = useState({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+  // start with the whole image selected — most sheets need no cropping at all
+  const [rect, setRect] = useState({ x: 0, y: 0, w: 1, h: 1 });
   const dragRef = useRef<{ mode: string; sx: number; sy: number; sr: typeof rect } | null>(null);
   const [working, setWorking] = useState(false);
   const MIN = 0.08;

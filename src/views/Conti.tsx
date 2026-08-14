@@ -6,7 +6,7 @@ import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl, copyText, openYouTube } from "../lib/share";
 import { driveEnabled, uploadSharedFile } from "../lib/drive";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
-import { setSongMemo, setSongNote, useSongAttach } from "../lib/songAttach";
+import { setSongMemo, setSongNote, sheetsForKey, useSongAttach } from "../lib/songAttach";
 import { useBackDismiss } from "../lib/backStack";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
@@ -479,7 +479,8 @@ export default function Conti() {
           const recentlyUsed = used && daysSince(used) <= 28;
           const att = attach[r.id];
           const youtube = att?.youtube;
-          const sheetCount = att?.sheets?.length ?? 0;
+          // count only the sheets that this row's chosen key will actually show
+          const sheetCount = sheetsForKey(att, r.key).length;
           return (
             <li key={r.id}>
               <div

@@ -13,6 +13,21 @@ export interface SongAttach {
   sheets?: string[]; // attachment ids (Drive fileId or local id)
   sheetTexts?: Record<string, SheetText[]>; // text annotations per sheet
   sheetDraws?: Record<string, SheetStroke[]>; // pen / highlighter strokes per sheet
+  /** Which key each sheet belongs to (attachment id → key, e.g. "G").
+   *  A sheet with no entry is shared: it shows for every key. */
+  sheetKeys?: Record<string, string>;
+}
+
+/** Sheets to show for a chosen key: the ones tagged with that key plus every
+ *  untagged (shared) sheet, in the song's own sheet order. With no key chosen
+ *  — or no per-key tagging at all — every sheet is returned. */
+export function sheetsForKey(a: SongAttach | undefined, key?: string | null): string[] {
+  const sheets = a?.sheets ?? [];
+  const tags = a?.sheetKeys;
+  if (!key || !tags) return sheets;
+  const matching = sheets.filter((aid) => !tags[aid] || tags[aid] === key);
+  // never hide everything: a key with no sheets of its own falls back to all
+  return matching.length ? matching : sheets;
 }
 type Store = Record<string, SongAttach>;
 const LS = "wl.songAttach";
@@ -74,6 +89,15 @@ function sanitizeAttach(a: any): SongAttach | null {
       if (arr.length) sd[k] = arr;
     }
     if (Object.keys(sd).length) out.sheetDraws = sd;
+  }
+  // per-sheet key tags; entries for sheets that no longer exist are dropped
+  if (a.sheetKeys && typeof a.sheetKeys === "object" && !Array.isArray(a.sheetKeys)) {
+    const sk: Record<string, string> = {};
+    for (const [k, v] of Object.entries(a.sheetKeys)) {
+      if (!liveSheets.has(k)) continue;
+      if (typeof v === "string" && v) sk[k] = v;
+    }
+    if (Object.keys(sk).length) out.sheetKeys = sk;
   }
   return Object.keys(out).length ? out : null;
 }
@@ -145,8 +169,21 @@ export function setSongMemo(id: string, memo: string) {
 export function setSongYoutube(id: string, url: string | null) {
   update(id, (a) => ({ ...a, youtube: url?.trim() || undefined }));
 }
-export function addSongSheet(id: string, aid: string) {
-  update(id, (a) => ({ ...a, sheets: [...(a.sheets ?? []), aid] }));
+export function addSongSheet(id: string, aid: string, key?: string | null) {
+  update(id, (a) => {
+    const next: SongAttach = { ...a, sheets: [...(a.sheets ?? []), aid] };
+    if (key) next.sheetKeys = { ...(a.sheetKeys ?? {}), [aid]: key };
+    return next;
+  });
+}
+/** Tag a sheet with the key it belongs to; null clears it (shared sheet). */
+export function setSongSheetKey(id: string, aid: string, key: string | null) {
+  update(id, (a) => {
+    const sk = { ...(a.sheetKeys ?? {}) };
+    if (key) sk[aid] = key;
+    else delete sk[aid];
+    return { ...a, sheetKeys: sk };
+  });
 }
 /** Replace the sheet order of a song (drag-and-drop commit). Keeps only the
  *  ids that already belong to the song, so a stale list can't add/drop sheets. */
@@ -166,7 +203,9 @@ export function removeSongSheet(id: string, aid: string) {
     delete st[aid];
     const sd = { ...(a.sheetDraws ?? {}) };
     delete sd[aid];
-    return { ...a, sheets, sheetTexts: st, sheetDraws: sd };
+    const sk = { ...(a.sheetKeys ?? {}) };
+    delete sk[aid];
+    return { ...a, sheets, sheetTexts: st, sheetDraws: sd, sheetKeys: sk };
   });
 }
 export function replaceSongSheet(
@@ -209,7 +248,12 @@ export function replaceSongSheet(
         .filter((s) => s.points.some((p) => p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1));
       if (mappedD.length) sd[newAid] = mappedD;
     }
-    return { ...a, sheets, sheetTexts: st, sheetDraws: sd };
+    // a re-crop keeps the sheet's key tag, just under the new attachment id
+    const sk = { ...(a.sheetKeys ?? {}) };
+    const oldKey = sk[oldAid];
+    delete sk[oldAid];
+    if (oldKey) sk[newAid] = oldKey;
+    return { ...a, sheets, sheetTexts: st, sheetDraws: sd, sheetKeys: sk };
   });
 }
 export function setSongSheetTexts(id: string, aid: string, list: SheetText[]) {

@@ -1,7 +1,7 @@
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
-import { getSongAttach } from "./songAttach";
+import { getSongAttach, sheetsForKey } from "./songAttach";
 import { youtubePlaylistUrl } from "./share";
 
 const esc = (s: string) =>
@@ -223,18 +223,20 @@ export async function buildContiPdf(
     if (!song) continue;
     const att = getSongAttach(item.id);
     const sheets: SheetImg[] = [];
-    if (att?.sheets?.length) {
+    // export only the sheets for the key chosen in the conti (plus shared ones)
+    const sheetIds = sheetsForKey(att, item.key);
+    if (sheetIds.length) {
       const urls = await Promise.all(
-        att.sheets.map((aid) => withTimeout(loadSheet(aid), 15000, undefined))
+        sheetIds.map((aid) => withTimeout(loadSheet(aid), 15000, undefined))
       );
-      for (let idx = 0; idx < att.sheets.length; idx++) {
+      for (let idx = 0; idx < sheetIds.length; idx++) {
         const u = urls[idx];
         if (u)
           sheets.push({
             url: await compositeSheet(
               u,
-              att.sheetTexts?.[att.sheets[idx]],
-              att.sheetDraws?.[att.sheets[idx]]
+              att?.sheetTexts?.[sheetIds[idx]],
+              att?.sheetDraws?.[sheetIds[idx]]
             ),
           });
       }

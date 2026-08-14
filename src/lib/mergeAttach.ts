@@ -45,11 +45,13 @@ export function mergeAttach(local: Store, remote: Store): Store {
       youtube: la.youtube ?? ra.youtube,
       sheetTexts: { ...(ra.sheetTexts ?? {}), ...(la.sheetTexts ?? {}) },
       sheetDraws: { ...(ra.sheetDraws ?? {}), ...(la.sheetDraws ?? {}) },
+      sheetKeys: { ...(ra.sheetKeys ?? {}), ...(la.sheetKeys ?? {}) },
     };
     if (sheets.length) merged.sheets = sheets;
     else delete merged.sheets;
     if (!Object.keys(merged.sheetTexts ?? {}).length) delete merged.sheetTexts;
     if (!Object.keys(merged.sheetDraws ?? {}).length) delete merged.sheetDraws;
+    if (!Object.keys(merged.sheetKeys ?? {}).length) delete merged.sheetKeys;
     out[id] = merged;
   }
   return out;

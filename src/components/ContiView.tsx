@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "../lib/useConti";
-import { removeSongSheet, replaceSongSheet, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetTexts, useSongAttach } from "../lib/songAttach";
+import { removeSongSheet, replaceSongSheet, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetTexts, sheetsForKey, useSongAttach } from "../lib/songAttach";
 import { youtubePlaylistUrl, openYouTube } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
@@ -80,7 +80,8 @@ export default function ContiView({
   const pages = useMemo(() => {
     const p: Page[] = [];
     rows.forEach(({ item, song }, i) => {
-      const sheets = attach[item.id]?.sheets ?? [];
+      // only the sheets for the key chosen in the conti (plus shared ones)
+      const sheets = sheetsForKey(attach[item.id], item.key);
       p.push({ kind: "info", item, song, aid: sheets[0], n: i + 1 });
       for (let k = 1; k < sheets.length; k++) p.push({ kind: "sheet", item, song, aid: sheets[k], n: i + 1 });
     });
@@ -408,7 +409,7 @@ function SongBlock({
 }) {
   const a = attach[item.id];
   const keys = item.key ? item.key : song.keys.join(" / ");
-  const sheets = a?.sheets ?? [];
+  const sheets = sheetsForKey(a, item.key);
   const shown = firstSheetOnly ? sheets.slice(0, 1) : sheets;
   return (
     <section>
