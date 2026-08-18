@@ -704,12 +704,20 @@ function NoteEditor({
       presetHideTimer.current = null;
     }
   };
-  const hidePresetBarSoon = () => {
+  const hidePresetBarSoon = (delay = 300) => {
     keepPresetBar();
     presetHideTimer.current = setTimeout(() => {
       presetHideTimer.current = null;
       setShowPresets(false);
-    }, 300);
+    }, delay);
+  };
+  /** After a tap inside the bar, put the caret back in the field. If the
+   *  browser refuses, arm a slower hide so the bar can't get stuck open. */
+  const restorePresetFocus = () => {
+    keepPresetBar();
+    const el = taRef.current;
+    if (el && document.activeElement !== el) el.focus();
+    if (!taRef.current || document.activeElement !== taRef.current) hidePresetBarSoon(2500);
   };
   useEffect(() => () => keepPresetBar(), []);
   const insertPreset = (text: string) => {
@@ -727,13 +735,17 @@ function NoteEditor({
         value={a?.note ?? ""}
         onChange={(v) => setSongNote(songId, v)}
         onFocus={(el) => { taRef.current = el; keepPresetBar(); setShowPresets(true); }}
-        onBlur={hidePresetBarSoon}
+        onBlur={() => hidePresetBarSoon()}
         className={base}
         textClassName={`${noteText} text-slate-600 dark:text-slate-300`}
         wrapClassName={focusWrap}
       />
       {showPresets && (
-        <div onPointerDownCapture={keepPresetBar} onTouchStartCapture={keepPresetBar}>
+        <div
+          onPointerDownCapture={keepPresetBar}
+          onTouchStartCapture={keepPresetBar}
+          onPointerUpCapture={restorePresetFocus}
+        >
           <PresetChips onInsert={(p) => insertPreset(presetInsertText(p))} className="py-1" />
         </div>
       )}

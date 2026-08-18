@@ -101,14 +101,22 @@ export default function Conti() {
     keepPresetBar();
     setMemoFocused(true);
   };
-  const hidePresetBarSoon = () => {
+  const hidePresetBarSoon = (delay = 300) => {
     keepPresetBar();
     presetHideTimer.current = setTimeout(() => {
       presetHideTimer.current = null;
       memoElRef.current = null;
       memoSongRef.current = null;
       setMemoFocused(false);
-    }, 300);
+    }, delay);
+  };
+  /** After a tap inside the bar, put the caret back in the field. If the
+   *  browser refuses, arm a slower hide so the bar can't get stuck open. */
+  const restorePresetFocus = () => {
+    keepPresetBar();
+    const el = memoElRef.current;
+    if (el && document.activeElement !== el) el.focus();
+    if (!memoElRef.current || document.activeElement !== memoElRef.current) hidePresetBarSoon(2500);
   };
   useEffect(() => () => keepPresetBar(), []);
 
@@ -699,7 +707,7 @@ export default function Conti() {
                       value={att?.note ?? ""}
                       onChange={(v) => setSongNote(r.id, v)}
                       onFocus={(el) => { memoElRef.current = el; memoSongRef.current = r.id; showPresetBar(); }}
-                      onBlur={hidePresetBarSoon}
+                      onBlur={() => hidePresetBarSoon()}
                       className="-mx-1 w-full rounded px-1 py-0.5"
                       textClassName="text-xs leading-relaxed text-slate-600 placeholder:text-slate-400 dark:text-slate-300 dark:placeholder:text-slate-600"
                     />
@@ -740,7 +748,11 @@ export default function Conti() {
 
       {/* 송폼 quick-insert presets — only while a 송폼 field is being edited */}
       {memoFocused && (
-        <div onPointerDownCapture={keepPresetBar} onTouchStartCapture={keepPresetBar}>
+        <div
+          onPointerDownCapture={keepPresetBar}
+          onTouchStartCapture={keepPresetBar}
+          onPointerUpCapture={restorePresetFocus}
+        >
           <PresetChips
             onInsert={(p) => insertPreset(presetInsertText(p))}
             className="mt-3 border-y border-slate-100 px-3 py-2 dark:border-slate-800"
