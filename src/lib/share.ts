@@ -119,28 +119,11 @@ export function youtubePlaylistUrl(urls: (string | undefined)[]): string | null 
   return `https://www.youtube.com/watch_videos?video_ids=${ids.slice(0, 50).join(",")}`;
 }
 
-/** The same ad-hoc playlist, opened in YouTube Music instead. `watch_videos`
- *  builds a temporary playlist from the ids; YouTube Music accepts the playlist
- *  it creates, so the conti plays as a queue there too. */
-export function youtubeMusicPlaylistUrl(urls: (string | undefined)[]): string | null {
-  const yt = youtubePlaylistUrl(urls);
-  return yt ? yt.replace("https://www.youtube.com/", "https://music.youtube.com/") : null;
-}
-
-/** Open a playlist URL in the YouTube Music app (Android) or on
- *  music.youtube.com everywhere else. */
-export function openYouTubeMusic(url: string) {
-  const ua = navigator.userAgent || "";
-  if (/Android/i.test(ua) && !isInAppBrowser()) {
-    const noScheme = url.replace(/^https?:\/\//, "");
-    window.location.href =
-      `intent://${noScheme}#Intent;scheme=https;` +
-      `package=com.google.android.apps.youtube.music;` +
-      `S.browser_fallback_url=${encodeURIComponent(url)};end`;
-    return;
-  }
-  openExternal(url);
-}
+// NOTE: there is no YouTube Music equivalent of this. music.youtube.com does
+// not serve `watch_videos`, and its only playable URLs are `watch?v=` (one
+// song) and `playlist?list=` (a playlist that already exists). The temporary
+// id `watch_videos` mints lives in a redirect the app can't read (cross-origin),
+// so an ad-hoc conti queue can only be opened in YouTube itself.
 
 /** True when running as an installed PWA (Android/desktop standalone or iOS
  *  home-screen app), where opening a new tab via target="_blank" / window.open
