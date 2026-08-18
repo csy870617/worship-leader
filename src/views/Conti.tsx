@@ -26,7 +26,7 @@ const NOTE_HEIGHT_KEY = "wl.contiNoteHeight";
 export default function Conti() {
   const {
     conti, remove, setKey, clear, replace,
-    contis, activeId, active, createConti, renameConti, deleteConti, setActive,
+    contis, activeId, active, createConti, renameConti, moveConti, deleteConti, setActive,
     contiNote, setContiNote,
   } = useConti();
   const attach = useSongAttach();
@@ -48,6 +48,7 @@ export default function Conti() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [memoFocused, setMemoFocused] = useState(false);
   const [pickPlaylist, setPickPlaylist] = useState(false);
+  const [reorderContis, setReorderContis] = useState(false);
 
   // back button / navigation dismisses any open popup instead of leaving the page
   useBackDismiss(menuOpen, () => setMenuOpen(false));
@@ -55,6 +56,7 @@ export default function Conti() {
   useBackDismiss(confirmDelete, () => setConfirmDelete(false));
   useBackDismiss(shareReady != null, () => { setShareReady(null); setShareErr(null); });
   useBackDismiss(driveLink != null, () => setDriveLink(null));
+  useBackDismiss(reorderContis, () => setReorderContis(false));
 
   // ---- drag-to-reorder + long-press/right-click delete ----
   const [dragId, setDragId] = useState<string | null>(null);
@@ -433,6 +435,17 @@ export default function Conti() {
                 >
                   사용 완료
                 </button>
+                {contis.length > 1 && (
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setReorderContis(true);
+                    }}
+                    className="block w-full px-4 py-2 text-left text-sm text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
+                  >
+                    순서 변경
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setMenuOpen(false);
@@ -902,6 +915,67 @@ export default function Conti() {
                 비우기
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {reorderContis && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-3"
+          onClick={() => setReorderContis(false)}
+        >
+          <div
+            className="max-h-[70vh] w-full max-w-sm overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/10"
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: "wlSheetUp .18s ease-out" }}
+          >
+            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-200 dark:bg-slate-600" />
+            <p className="mb-3 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
+              콘티 순서 변경
+            </p>
+            <ul className="space-y-1.5">
+              {contis.map((c, i) => (
+                <li
+                  key={c.id}
+                  className={
+                    "flex items-center gap-2 rounded-xl px-3 py-2 " +
+                    (c.id === activeId ? "bg-indigo-50 dark:bg-indigo-500/15" : "bg-slate-50 dark:bg-slate-700/50")
+                  }
+                >
+                  <span className="w-5 shrink-0 text-xs font-bold text-slate-400">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    {c.name}
+                    <span className="ml-1 text-xs font-normal text-slate-400">({c.items.length}곡)</span>
+                  </span>
+                  <button
+                    onClick={() => moveConti(c.id, -1)}
+                    disabled={i === 0}
+                    aria-label="위로"
+                    className="rounded-lg p-1.5 text-slate-500 active:bg-slate-200 disabled:opacity-30 dark:text-slate-300 dark:active:bg-slate-600"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m5 15 7-7 7 7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => moveConti(c.id, 1)}
+                    disabled={i === contis.length - 1}
+                    aria-label="아래로"
+                    className="rounded-lg p-1.5 text-slate-500 active:bg-slate-200 disabled:opacity-30 dark:text-slate-300 dark:active:bg-slate-600"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => setReorderContis(false)}
+              className="mt-3 w-full rounded-2xl bg-indigo-600 py-3 text-sm font-bold text-white active:bg-indigo-700"
+            >
+              완료
+            </button>
           </div>
         </div>
       )}

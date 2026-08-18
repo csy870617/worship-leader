@@ -273,6 +273,15 @@ export function useConti() {
       contis: state.contis.map((c) => (c.id === id ? { ...c, name: name.trim() || c.name } : c)),
     });
   }, []);
+  /** Move a saved conti one slot up (-1) or down (+1) in the list. */
+  const moveConti = useCallback((id: string, dir: -1 | 1) => {
+    const idx = state.contis.findIndex((c) => c.id === id);
+    const next = idx + dir;
+    if (idx < 0 || next < 0 || next >= state.contis.length) return;
+    const contis = state.contis.slice();
+    [contis[idx], contis[next]] = [contis[next], contis[idx]];
+    commit({ ...state, contis });
+  }, []);
   // 묵상노트 — store the meditation memo on the active conti
   const setContiNote = useCallback((note: string) => {
     const a = active();
@@ -310,6 +319,7 @@ export function useConti() {
     replace,
     createConti,
     renameConti,
+    moveConti,
     deleteConti,
     setActive,
   };
