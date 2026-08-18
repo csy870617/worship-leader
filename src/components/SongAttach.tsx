@@ -756,8 +756,9 @@ export function SheetLightbox({
   const [loading, setLoading] = useState(true);
   const [annos, setAnnos] = useState<SheetText[]>([]);
   const [sel, setSel] = useState<number | null>(null);
-  // active annotation tool: text placement, highlighter, freehand pen, or none
-  const [tool, setTool] = useState<"text" | "highlight" | "draw" | "erase" | null>(null);
+  // active annotation tool: text placement, highlighter, freehand pen,
+  // straight line, eraser, or none
+  const [tool, setTool] = useState<"text" | "highlight" | "draw" | "line" | "erase" | null>(null);
   const [pendingText, setPendingText] = useState<string | null>(null);
   const [color, setColor] = useState(TEXT_COLORS[0]);
   const [sizeIdx, setSizeIdx] = useState(1); // 기본 글자 크기 '작게' (0은 '아주작게')
@@ -801,7 +802,7 @@ export function SheetLightbox({
   sizeIdxRef.current = sizeIdx;
   const many = ids.length > 1;
   const currentId = ids[index];
-  const drawing = tool === "draw" || tool === "highlight";
+  const drawing = tool === "draw" || tool === "highlight" || tool === "line";
   const erasing = tool === "erase";
   const placing = tool === "text";
   // erase-drag state (a whole swipe is one undo step)
@@ -1016,7 +1017,7 @@ export function SheetLightbox({
 
   // pick a tool; toggle off if it's already active. Highlighter / pen start with
   // a sensible default color so they're usable in one tap.
-  const pickTool = (t: "text" | "highlight" | "draw" | "erase") => {
+  const pickTool = (t: "text" | "highlight" | "draw" | "line" | "erase") => {
     setSel(null);
     setPendingText(null);
     pendingStyleRef.current = null;
@@ -1025,7 +1026,7 @@ export function SheetLightbox({
       return;
     }
     if (t === "highlight") setColor(HL_DEFAULT_COLOR);
-    else if (t === "draw") setColor(PEN_DEFAULT_COLOR);
+    else if (t === "draw" || t === "line") setColor(PEN_DEFAULT_COLOR);
     setTool(t);
   };
 
@@ -1120,13 +1121,30 @@ export function SheetLightbox({
     const r = boxRef.current?.getBoundingClientRect();
     if (!r) return;
     const R = eraseRadiusPx();
+    // distance from the eraser to a stroke *segment*, not just to its recorded
+    // points — a straight line only has two of those, and its middle has to be
+    // erasable too
+    const nearSegment = (
+      ax: number, ay: number, bx: number, by: number, thresh: number
+    ) => {
+      const vx = bx - ax;
+      const vy = by - ay;
+      const len2 = vx * vx + vy * vy;
+      const t = len2 ? Math.max(0, Math.min(1, ((clientX - ax) * vx + (clientY - ay) * vy) / len2)) : 0;
+      const dx = clientX - (ax + t * vx);
+      const dy = clientY - (ay + t * vy);
+      return dx * dx + dy * dy <= thresh * thresh;
+    };
     const kept = strokesRef.current.filter((s) => {
       const thresh = R + (s.width * r.width) / 2;
-      const hit = s.points.some((p) => {
-        const dx = clientX - (r.left + p.x * r.width);
-        const dy = clientY - (r.top + p.y * r.height);
-        return dx * dx + dy * dy <= thresh * thresh;
-      });
+      const px = (p: { x: number; y: number }) => r.left + p.x * r.width;
+      const py = (p: { x: number; y: number }) => r.top + p.y * r.height;
+      const hit =
+        s.points.length === 1
+          ? nearSegment(px(s.points[0]), py(s.points[0]), px(s.points[0]), py(s.points[0]), thresh)
+          : s.points.some((p, i) =>
+              i === 0 ? false : nearSegment(px(s.points[i - 1]), py(s.points[i - 1]), px(p), py(p), thresh)
+            );
       return !hit;
     });
     if (kept.length !== strokesRef.current.length) {
@@ -1158,7 +1176,8 @@ export function SheetLightbox({
     }
     if (!drawing || !strokeDragRef.current) return;
     const p = ptInBox(e.clientX, e.clientY);
-    const next = [...strokeDragRef.current, p];
+    // 직선: keep only where the drag started and where it is now
+    const next = tool === "line" ? [strokeDragRef.current[0], p] : [...strokeDragRef.current, p];
     strokeDragRef.current = next;
     setLiveStroke(next);
   };
@@ -1570,6 +1589,21 @@ export function SheetLightbox({
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="m16.5 3.5 4 4L8 20l-4 .5.5-4L16.5 3.5Z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="m13.5 6.5 4 4" />
+                </svg>
+              </button>
+              <button
+                onClick={() => pickTool("line")}
+                aria-label="선 긋기"
+                title="선 긋기 (끌어서 직선)"
+                className={
+                  "flex h-9 w-9 items-center justify-center rounded-full " +
+                  (tool === "line" ? "bg-indigo-600 text-white" : "bg-white/15 text-white")
+                }
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                  <path strokeLinecap="round" d="M6.8 17.2 17.2 6.8" />
+                  <circle cx="5.2" cy="18.8" r="1.9" />
+                  <circle cx="18.8" cy="5.2" r="1.9" />
                 </svg>
               </button>
               <button
