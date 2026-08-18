@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useSongs } from "../lib/catalog";
 import { useConti, type ContiItem } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
-import { decodeConti, youtubePlaylistUrl, copyText, openYouTube } from "../lib/share";
+import { decodeConti, youtubePlaylistUrl, youtubeMusicPlaylistUrl, copyText, openYouTube, openYouTubeMusic } from "../lib/share";
 import { driveEnabled, uploadSharedFile } from "../lib/drive";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
 import { setSongMemo, setSongNote, sheetsForKey, useSongAttach } from "../lib/songAttach";
@@ -14,6 +14,7 @@ import SongFormField from "../components/SongFormField";
 import PresetChips from "../components/PresetChips";
 import { presetInsertText } from "../lib/songForm";
 import ContiView from "../components/ContiView";
+import PlaylistChooser from "../components/PlaylistChooser";
 
 // block page scrolling while a row is being dragged (added/removed on demand)
 const preventScroll = (e: TouchEvent) => e.preventDefault();
@@ -46,6 +47,7 @@ export default function Conti() {
   const [showView, setShowView] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [memoFocused, setMemoFocused] = useState(false);
+  const [pickPlaylist, setPickPlaylist] = useState(false);
 
   // back button / navigation dismisses any open popup instead of leaving the page
   useBackDismiss(menuOpen, () => setMenuOpen(false));
@@ -676,7 +678,7 @@ export default function Conti() {
                 href={playlistUrl}
                 target="_blank"
                 rel="noreferrer"
-                onClick={(e) => { e.preventDefault(); openYouTube(playlistUrl); }}
+                onClick={(e) => { e.preventDefault(); setPickPlaylist(true); }}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-600 py-3 text-sm font-bold text-white active:bg-red-700"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -902,6 +904,19 @@ export default function Conti() {
             </div>
           </div>
         </div>
+      )}
+
+      {pickPlaylist && playlistUrl && (
+        <PlaylistChooser
+          onClose={() => setPickPlaylist(false)}
+          onPick={(t) => {
+            setPickPlaylist(false);
+            if (t === "music") {
+              const m = youtubeMusicPlaylistUrl(conti.map((c) => attach[c.id]?.youtube));
+              if (m) openYouTubeMusic(m);
+            } else openYouTube(playlistUrl);
+          }}
+        />
       )}
 
       {confirmDelete && (

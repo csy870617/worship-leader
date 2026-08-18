@@ -2,13 +2,14 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "../lib/useConti";
 import { removeSongSheet, replaceSongSheet, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetTexts, sheetsForKey, useSongAttach } from "../lib/songAttach";
-import { youtubePlaylistUrl, openYouTube } from "../lib/share";
+import { youtubePlaylistUrl, youtubeMusicPlaylistUrl, openYouTube, openYouTubeMusic } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
 import { registerBack, useBackDismiss } from "../lib/backStack";
 import { CropModal, SheetLightbox } from "./SongAttach";
 import SongFormField from "./SongFormField";
 import PresetChips from "./PresetChips";
+import PlaylistChooser from "./PlaylistChooser";
 import { presetInsertText } from "../lib/songForm";
 
 type Page =
@@ -36,6 +37,7 @@ export default function ContiView({
   const [cropFile, setCropFile] = useState<File | null>(null);
   const cropTarget = useRef<{ songId: string; aid: string } | null>(null);
   const [textTarget, setTextTarget] = useState<{ songId: string; aid: string } | null>(null);
+  const [pickPlaylist, setPickPlaylist] = useState(false);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
 
   const startText = (songId: string, aid: string) => {
@@ -180,7 +182,7 @@ export default function ContiView({
               href={playlistUrl}
               target="_blank"
               rel="noreferrer"
-              onClick={(e) => { e.preventDefault(); openYouTube(playlistUrl); }}
+              onClick={(e) => { e.preventDefault(); setPickPlaylist(true); }}
               aria-label="유튜브 재생목록"
               className="rounded-full p-1 text-red-600 active:bg-red-50 dark:text-red-500"
             >
@@ -375,6 +377,19 @@ export default function ContiView({
       )}
 
       {cropFile && <CropModal file={cropFile} onDone={onCropDone} />}
+
+      {pickPlaylist && playlistUrl && (
+        <PlaylistChooser
+          onClose={() => setPickPlaylist(false)}
+          onPick={(t) => {
+            setPickPlaylist(false);
+            if (t === "music") {
+              const m = youtubeMusicPlaylistUrl(items.map((c) => attach[c.id]?.youtube));
+              if (m) openYouTubeMusic(m);
+            } else openYouTube(playlistUrl);
+          }}
+        />
+      )}
 
       {textTarget && (
         <SheetLightbox
