@@ -4,9 +4,10 @@
 // recognizing preset tokens (V1, C, Tag, …). Keeping the stored value plain
 // means sync, PDF export and hand-typed forms all keep working unchanged.
 
-/** quick-insert chips, in display order (two rows) */
+/** quick-insert chips, in display order: verse family, chorus family, the rest */
 export const PRESET_ROWS = [
-  ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
+  ["Int4", "Int8", "V", "V1", "V2", "V3"],
+  ["PC", "C", "C1", "C2", "C3"],
   ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
 ];
 export const ALL_PRESETS = PRESET_ROWS.flat();
@@ -20,8 +21,8 @@ export const presetInsertText = (p: string) => (p === "Out" ? p : p === "Rit" ? 
 const BLUE = "#2563eb";
 const RED = "#dc2626";
 export const DEFAULT_PRESET_COLORS: Record<string, string> = {
-  V: BLUE, V1: BLUE, V2: BLUE,
-  PC: RED, C: RED, C1: RED, C2: RED,
+  V: BLUE, V1: BLUE, V2: BLUE, V3: BLUE,
+  PC: RED, C: RED, C1: RED, C2: RED, C3: RED,
 };
 
 /** palette offered when recoloring a preset ("" = no color / inherit) */
