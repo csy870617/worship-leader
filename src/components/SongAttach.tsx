@@ -885,8 +885,6 @@ export function SheetLightbox({
     const onKey = (e: KeyboardEvent) => {
       if (editingRef.current) return; // let the in-place input keep focus/keys
       if (e.key === "Escape") close();
-      else if (e.key === "ArrowRight" && many) go(1);
-      else if (e.key === "ArrowLeft" && many) go(-1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -897,10 +895,26 @@ export function SheetLightbox({
   // arrow-key nudging (1px per press, Shift = 10px) for fine positioning
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
+    const arrows = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
     const onKey = (e: KeyboardEvent) => {
-      if (sel == null || editingRef.current) return;
+      if (editingRef.current) return; // let the in-place input keep focus/keys
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      // The editor is modal: arrow keys belong to it and must never reach the
+      // screen behind it (the conti list / 콘티보기 would flip pages or change
+      // the focused control while a text is being nudged). Capture-phase
+      // stopPropagation keeps them from ever getting there.
+      if (arrows.includes(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (sel == null) {
+          // nothing selected → arrows page through the attached sheets
+          if (many && e.key === "ArrowRight") go(1);
+          else if (many && e.key === "ArrowLeft") go(-1);
+          return;
+        }
+      }
+      if (sel == null) return;
       const mod = e.ctrlKey || e.metaKey;
       const k = e.key.toLowerCase();
       if (e.key === "Delete" || e.key === "Backspace") {
@@ -940,10 +954,10 @@ export function SheetLightbox({
         }, 600);
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sel, currentId, boxW, boxH]);
+  }, [sel, currentId, boxW, boxH, many, ids.length]);
 
   // ---- undo / redo: Ctrl/Cmd+Z, Ctrl+Shift+Z or Ctrl+Y (ignored while typing) ----
   useEffect(() => {

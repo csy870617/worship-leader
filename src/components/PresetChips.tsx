@@ -12,7 +12,14 @@ import {
  * Quick-insert chips for the song form. Each chip is drawn in the color that
  * preset will have in the text, and a 색 편집 toggle lets the user recolor any
  * of them (tap chip → pick a color).
+ *
+ * The bar is mounted only while a 송폼 field is being edited, so the edit-mode
+ * state lives at module level: a blur that briefly unmounts the bar must not
+ * throw the user out of 색 편집 mid-recolor.
  */
+let keptEditMode = false;
+let keptEditing: string | null = null;
+
 export default function PresetChips({
   onInsert,
   className = "",
@@ -24,8 +31,16 @@ export default function PresetChips({
   variant?: "light" | "dark";
 }) {
   const [, force] = useState(0);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [editMode, setEditMode] = useState(false);
+  const [editing, setEditingState] = useState<string | null>(keptEditing);
+  const [editMode, setEditModeState] = useState(keptEditMode);
+  const setEditing = (v: string | null) => {
+    keptEditing = v;
+    setEditingState(v);
+  };
+  const setEditMode = (v: boolean) => {
+    keptEditMode = v;
+    setEditModeState(v);
+  };
   useEffect(() => subscribePresetColors(() => force((n) => n + 1)), []);
 
   const base =
@@ -47,11 +62,15 @@ export default function PresetChips({
                   // preset lands at the caret; in edit mode we open the palette
                   onPointerDown={(e) => {
                     e.preventDefault();
-                    if (editMode) setEditing((cur) => (cur === p ? null : p));
+                    if (editMode) setEditing(editing === p ? null : p);
                     else onInsert(p);
                   }}
                   className={`rounded-md px-2.5 py-1 text-xs font-bold ${base} ${
-                    editing === p ? "ring-2 ring-indigo-400" : ""
+                    editing === p
+                      ? "ring-2 ring-indigo-400"
+                      : editMode
+                      ? "ring-1 ring-indigo-300"
+                      : ""
                   }`}
                   style={c ? { color: c } : undefined}
                 >
@@ -63,33 +82,36 @@ export default function PresetChips({
         ))}
       </div>
 
-      {/* color palette for the chip being edited */}
-      {editMode && editing && (
+      {/* color palette — shown for the whole of 색 편집 mode, so it's obvious
+          the colors are there; until a chip is picked it just says which step
+          is missing instead of staying invisible */}
+      {editMode && (
         <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
           <span className={`text-[11px] font-semibold ${variant === "dark" ? "text-white/70" : "text-slate-400"}`}>
-            {editing} 색
+            {editing ? `${editing} 색` : "색을 바꿀 프리셋을 누르세요"}
           </span>
-          {PRESET_COLOR_CHOICES.map((c) => (
-            <button
-              key={c || "none"}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                setPresetColor(editing, c);
-              }}
-              aria-label={c || "색 없음"}
-              className={
-                "h-6 w-6 rounded-full border text-[9px] font-bold " +
-                (presetColor(editing) === c
-                  ? "border-indigo-500 ring-2 ring-indigo-400"
-                  : variant === "dark"
-                  ? "border-white/40"
-                  : "border-slate-300")
-              }
-              style={c ? { background: c } : undefined}
-            >
-              {c ? "" : "×"}
-            </button>
-          ))}
+          {editing &&
+            PRESET_COLOR_CHOICES.map((c) => (
+              <button
+                key={c || "none"}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  setPresetColor(editing, c);
+                }}
+                aria-label={c || "색 없음"}
+                className={
+                  "h-6 w-6 rounded-full border text-[9px] font-bold " +
+                  (presetColor(editing) === c
+                    ? "border-indigo-500 ring-2 ring-indigo-400"
+                    : variant === "dark"
+                    ? "border-white/40"
+                    : "border-slate-300")
+                }
+                style={c ? { background: c } : undefined}
+              >
+                {c ? "" : "×"}
+              </button>
+            ))}
         </div>
       )}
 
@@ -97,7 +119,7 @@ export default function PresetChips({
         <button
           onPointerDown={(e) => {
             e.preventDefault();
-            setEditMode((v) => !v);
+            setEditMode(!editMode);
             setEditing(null);
           }}
           className={`text-[11px] font-semibold ${

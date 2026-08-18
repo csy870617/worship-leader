@@ -695,6 +695,23 @@ function NoteEditor({
       /* ignore */
     }
   });
+  // keep the preset bar up when it is tapped, even if the field blurs first
+  // (some browsers blur regardless of preventDefault) — see Conti.tsx
+  const presetHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keepPresetBar = () => {
+    if (presetHideTimer.current) {
+      clearTimeout(presetHideTimer.current);
+      presetHideTimer.current = null;
+    }
+  };
+  const hidePresetBarSoon = () => {
+    keepPresetBar();
+    presetHideTimer.current = setTimeout(() => {
+      presetHideTimer.current = null;
+      setShowPresets(false);
+    }, 300);
+  };
+  useEffect(() => () => keepPresetBar(), []);
   const insertPreset = (text: string) => {
     const el = taRef.current;
     const cur = a?.note ?? "";
@@ -709,14 +726,16 @@ function NoteEditor({
       <SongFormField
         value={a?.note ?? ""}
         onChange={(v) => setSongNote(songId, v)}
-        onFocus={(el) => { taRef.current = el; setShowPresets(true); }}
-        onBlur={() => setShowPresets(false)}
+        onFocus={(el) => { taRef.current = el; keepPresetBar(); setShowPresets(true); }}
+        onBlur={hidePresetBarSoon}
         className={base}
         textClassName={`${noteText} text-slate-600 dark:text-slate-300`}
         wrapClassName={focusWrap}
       />
       {showPresets && (
-        <PresetChips onInsert={(p) => insertPreset(presetInsertText(p))} className="py-1" />
+        <div onPointerDownCapture={keepPresetBar} onTouchStartCapture={keepPresetBar}>
+          <PresetChips onInsert={(p) => insertPreset(presetInsertText(p))} className="py-1" />
+        </div>
       )}
       <GrowTextarea
         value={a?.memo ?? ""}

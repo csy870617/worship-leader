@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSongs } from "../lib/catalog";
-import { useConti, type ContiItem } from "../lib/useConti";
+import { useConti, type Conti as ContiList, type ContiItem } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl, youtubeMusicPlaylistUrl, copyText, openYouTube, openYouTubeMusic } from "../lib/share";
 import { driveEnabled, uploadSharedFile } from "../lib/drive";
@@ -26,7 +26,7 @@ const NOTE_HEIGHT_KEY = "wl.contiNoteHeight";
 export default function Conti() {
   const {
     conti, remove, setKey, clear, replace,
-    contis, activeId, active, createConti, renameConti, moveConti, deleteConti, setActive,
+    contis, activeId, active, createConti, renameConti, setContiOrder, deleteConti, setActive,
     contiNote, setContiNote,
   } = useConti();
   const attach = useSongAttach();
@@ -86,6 +86,32 @@ export default function Conti() {
       /* ignore */
     }
   });
+  // The preset bar is only mounted while a 송폼 field is being edited. Some
+  // browsers blur the field when the bar itself is tapped, which would yank the
+  // bar away mid-tap (and out of 색 편집 mode), so the hide is deferred and any
+  // touch inside the bar cancels it.
+  const presetHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keepPresetBar = () => {
+    if (presetHideTimer.current) {
+      clearTimeout(presetHideTimer.current);
+      presetHideTimer.current = null;
+    }
+  };
+  const showPresetBar = () => {
+    keepPresetBar();
+    setMemoFocused(true);
+  };
+  const hidePresetBarSoon = () => {
+    keepPresetBar();
+    presetHideTimer.current = setTimeout(() => {
+      presetHideTimer.current = null;
+      memoElRef.current = null;
+      memoSongRef.current = null;
+      setMemoFocused(false);
+    }, 300);
+  };
+  useEffect(() => () => keepPresetBar(), []);
+
   const insertPreset = (text: string) => {
     const el = memoElRef.current;
     const songId = memoSongRef.current;
@@ -100,9 +126,101 @@ export default function Conti() {
     setSongNote(songId, next);
   };
 
+  // ---- drag-to-reorder for the saved-conti list (mouse drag / long-press) ----
+  const [cDragId, setCDragId] = useState<string | null>(null);
+  const [cOrder, setCOrder] = useState<string[] | null>(null);
+  const cDragIdRef = useRef<string | null>(null);
+  const cOrderRef = useRef<string[] | null>(null);
+  const cListRef = useRef<HTMLUListElement>(null);
+  const cLpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cLpStart = useRef<{ x: number; y: number } | null>(null);
+  const cCancelLP = () => {
+    cLpStart.current = null;
+    if (cLpTimer.current) {
+      clearTimeout(cLpTimer.current);
+      cLpTimer.current = null;
+    }
+  };
+  const cIndexFromY = (y: number) => {
+    const list = cListRef.current;
+    if (!list) return -1;
+    const lis = Array.from(list.children) as HTMLElement[];
+    for (let i = 0; i < lis.length; i++) {
+      const r = lis[i].getBoundingClientRect();
+      if (y < r.top + r.height / 2) return i;
+    }
+    return lis.length - 1;
+  };
+  const cBeginDrag = (id: string) => {
+    cDragIdRef.current = id;
+    const snap = contis.map((c) => c.id);
+    cOrderRef.current = snap;
+    setCDragId(id);
+    setCOrder(snap);
+    window.addEventListener("touchmove", preventScroll, { passive: false });
+  };
+  const cEndDrag = () => {
+    cCancelLP();
+    const order = cOrderRef.current;
+    cDragIdRef.current = null;
+    cOrderRef.current = null;
+    setCDragId(null);
+    setCOrder(null);
+    window.removeEventListener("touchmove", preventScroll);
+    if (order) setContiOrder(order);
+  };
+  const cPointerDown = (e: React.PointerEvent, id: string) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    if (e.pointerType === "mouse") {
+      e.preventDefault();
+      cBeginDrag(id);
+      return;
+    }
+    // touch: hold briefly so a plain tap/scroll isn't mistaken for a drag
+    cLpStart.current = { x: e.clientX, y: e.clientY };
+    cLpTimer.current = setTimeout(() => {
+      cLpStart.current = null;
+      cLpTimer.current = null;
+      cBeginDrag(id);
+    }, 250);
+  };
+  const cPointerMove = (e: React.PointerEvent) => {
+    if (!cDragIdRef.current) {
+      // a real finger move before the hold completes = scrolling, not a drag
+      const s = cLpStart.current;
+      if (s && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 10) cCancelLP();
+      return;
+    }
+    const order = cOrderRef.current;
+    if (!order) return;
+    const to = cIndexFromY(e.clientY);
+    const from = order.indexOf(cDragIdRef.current);
+    if (to < 0 || from < 0 || to === from) return;
+    const next = order.slice();
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    cOrderRef.current = next;
+    setCOrder(next);
+  };
+  const cPointerUp = (e: React.PointerEvent) => {
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    } catch {
+      /* pointer already released */
+    }
+    cCancelLP();
+    if (cDragIdRef.current) cEndDrag();
+  };
+  /** The saved contis in the order the drag is previewing (or as stored). */
+  const orderedContis = cOrder
+    ? cOrder.map((id) => contis.find((c) => c.id === id)).filter((c): c is ContiList => !!c)
+    : contis;
+
   useEffect(() => () => {
     window.removeEventListener("touchmove", preventScroll);
     cancelLP();
+    cCancelLP();
   }, []);
 
   const indexFromY = (y: number) => {
@@ -580,8 +698,8 @@ export default function Conti() {
                     <SongFormField
                       value={att?.note ?? ""}
                       onChange={(v) => setSongNote(r.id, v)}
-                      onFocus={(el) => { memoElRef.current = el; memoSongRef.current = r.id; setMemoFocused(true); }}
-                      onBlur={() => { memoElRef.current = null; memoSongRef.current = null; setMemoFocused(false); }}
+                      onFocus={(el) => { memoElRef.current = el; memoSongRef.current = r.id; showPresetBar(); }}
+                      onBlur={hidePresetBarSoon}
                       className="-mx-1 w-full rounded px-1 py-0.5"
                       textClassName="text-xs leading-relaxed text-slate-600 placeholder:text-slate-400 dark:text-slate-300 dark:placeholder:text-slate-600"
                     />
@@ -622,10 +740,12 @@ export default function Conti() {
 
       {/* 송폼 quick-insert presets — only while a 송폼 field is being edited */}
       {memoFocused && (
-        <PresetChips
-          onInsert={(p) => insertPreset(presetInsertText(p))}
-          className="mt-3 border-y border-slate-100 px-3 py-2 dark:border-slate-800"
-        />
+        <div onPointerDownCapture={keepPresetBar} onTouchStartCapture={keepPresetBar}>
+          <PresetChips
+            onInsert={(p) => insertPreset(presetInsertText(p))}
+            className="mt-3 border-y border-slate-100 px-3 py-2 dark:border-slate-800"
+          />
+        </div>
       )}
 
       {/* 묵상노트 — free-form meditation memo, sits between the song list and actions */}
@@ -930,43 +1050,38 @@ export default function Conti() {
             style={{ animation: "wlSheetUp .18s ease-out" }}
           >
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-200 dark:bg-slate-600" />
-            <p className="mb-3 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
+            <p className="text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
               콘티 순서 변경
             </p>
-            <ul className="space-y-1.5">
-              {contis.map((c, i) => (
+            <p className="mb-3 mt-0.5 text-center text-xs text-slate-400 dark:text-slate-500">
+              끌어서(모바일은 길게 눌러서) 옮기세요
+            </p>
+            <ul className="space-y-1.5" ref={cListRef}>
+              {orderedContis.map((c, i) => (
                 <li
                   key={c.id}
+                  onPointerDown={(e) => cPointerDown(e, c.id)}
+                  onPointerMove={cPointerMove}
+                  onPointerUp={cPointerUp}
+                  onPointerCancel={cPointerUp}
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{ touchAction: "pan-y" }}
                   className={
-                    "flex items-center gap-2 rounded-xl px-3 py-2 " +
-                    (c.id === activeId ? "bg-indigo-50 dark:bg-indigo-500/15" : "bg-slate-50 dark:bg-slate-700/50")
+                    "flex cursor-grab select-none items-center gap-2 rounded-xl px-3 py-2.5 transition-shadow active:cursor-grabbing " +
+                    (c.id === activeId ? "bg-indigo-50 dark:bg-indigo-500/15" : "bg-slate-50 dark:bg-slate-700/50") +
+                    (cDragId === c.id ? " opacity-80 shadow-lg ring-2 ring-indigo-400" : "")
                   }
                 >
-                  <span className="w-5 shrink-0 text-xs font-bold text-slate-400">{i + 1}</span>
+                  <span className="flex w-6 shrink-0 flex-col items-center text-slate-300 dark:text-slate-500">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                      <circle cx="8" cy="6" r="1.5" /><circle cx="16" cy="6" r="1.5" /><circle cx="8" cy="12" r="1.5" /><circle cx="16" cy="12" r="1.5" /><circle cx="8" cy="18" r="1.5" /><circle cx="16" cy="18" r="1.5" />
+                    </svg>
+                    <span className="mt-0.5 text-[11px] font-bold leading-none text-slate-400">{i + 1}</span>
+                  </span>
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
                     {c.name}
                     <span className="ml-1 text-xs font-normal text-slate-400">({c.items.length}곡)</span>
                   </span>
-                  <button
-                    onClick={() => moveConti(c.id, -1)}
-                    disabled={i === 0}
-                    aria-label="위로"
-                    className="rounded-lg p-1.5 text-slate-500 active:bg-slate-200 disabled:opacity-30 dark:text-slate-300 dark:active:bg-slate-600"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m5 15 7-7 7 7" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => moveConti(c.id, 1)}
-                    disabled={i === contis.length - 1}
-                    aria-label="아래로"
-                    className="rounded-lg p-1.5 text-slate-500 active:bg-slate-200 disabled:opacity-30 dark:text-slate-300 dark:active:bg-slate-600"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
-                    </svg>
-                  </button>
                 </li>
               ))}
             </ul>

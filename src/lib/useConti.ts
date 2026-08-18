@@ -273,6 +273,21 @@ export function useConti() {
       contis: state.contis.map((c) => (c.id === id ? { ...c, name: name.trim() || c.name } : c)),
     });
   }, []);
+  /** Reorder the saved contis to the given id order (drag-and-drop commit).
+   *  Ids not in the list keep their relative order at the end, so a conti added
+   *  on another device mid-drag can't be dropped. */
+  const setContiOrder = useCallback((ids: string[]) => {
+    const rank = new Map(ids.map((id, i) => [id, i]));
+    const contis = state.contis.slice().sort((a, b) => {
+      const ra = rank.get(a.id);
+      const rb = rank.get(b.id);
+      if (ra != null && rb != null) return ra - rb;
+      if (ra != null) return -1;
+      if (rb != null) return 1;
+      return 0;
+    });
+    if (contis.some((c, i) => c.id !== state.contis[i].id)) commit({ ...state, contis });
+  }, []);
   /** Move a saved conti one slot up (-1) or down (+1) in the list. */
   const moveConti = useCallback((id: string, dir: -1 | 1) => {
     const idx = state.contis.findIndex((c) => c.id === id);
@@ -320,6 +335,7 @@ export function useConti() {
     createConti,
     renameConti,
     moveConti,
+    setContiOrder,
     deleteConti,
     setActive,
   };
