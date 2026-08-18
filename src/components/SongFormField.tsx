@@ -15,6 +15,7 @@ export default function SongFormField({
   onChange,
   onFocus,
   onBlur,
+  onSelect,
   placeholder = "송폼 입력",
   className,
   textClassName = "",
@@ -24,6 +25,9 @@ export default function SongFormField({
   onChange: (v: string) => void;
   onFocus?: (el: HTMLTextAreaElement) => void;
   onBlur?: () => void;
+  /** the currently selected text (empty string when nothing is selected) —
+   *  lets the preset bar offer a color for hand-typed words */
+  onSelect?: (selected: string) => void;
   placeholder?: string;
   /** layout/appearance classes shared by the textarea and its mirror. Must NOT
    *  set a background or a focus-dependent padding: the textarea sits above the
@@ -48,6 +52,9 @@ export default function SongFormField({
     el.style.height = `${Math.max(el.scrollHeight, mirrorRef.current?.scrollHeight ?? 0)}px`;
   };
   useLayoutEffect(resize, [value]);
+
+  const report = (el: HTMLTextAreaElement) =>
+    onSelect?.(el.value.slice(el.selectionStart ?? 0, el.selectionEnd ?? 0));
 
   const segs = songFormSegments(value);
   return (
@@ -75,8 +82,15 @@ export default function SongFormField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onInput={resize}
-        onFocus={(e) => onFocus?.(e.currentTarget)}
+        onFocus={(e) => {
+          onFocus?.(e.currentTarget);
+          report(e.currentTarget);
+        }}
         onBlur={onBlur}
+        onSelect={(e) => report(e.currentTarget)}
+        onKeyUp={(e) => report(e.currentTarget)}
+        onMouseUp={(e) => report(e.currentTarget)}
+        onTouchEnd={(e) => report(e.currentTarget)}
         rows={1}
         placeholder={placeholder}
         // text is transparent so only the mirror shows; caret stays visible

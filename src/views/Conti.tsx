@@ -46,6 +46,8 @@ export default function Conti() {
   const [showView, setShowView] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [memoFocused, setMemoFocused] = useState(false);
+  // text selected in a 송폼 field — the preset bar offers to color it
+  const [formSel, setFormSel] = useState("");
   const [reorderContis, setReorderContis] = useState(false);
 
   // back button / navigation dismisses any open popup instead of leaving the page
@@ -706,6 +708,7 @@ export default function Conti() {
                       onChange={(v) => setSongNote(r.id, v)}
                       onFocus={(el) => { memoElRef.current = el; memoSongRef.current = r.id; showPresetBar(); }}
                       onBlur={() => hidePresetBarSoon()}
+                      onSelect={setFormSel}
                       className="-mx-1 w-full rounded px-1 py-0.5"
                       textClassName="text-xs leading-relaxed text-slate-600 placeholder:text-slate-400 dark:text-slate-300 dark:placeholder:text-slate-600"
                     />
@@ -752,6 +755,7 @@ export default function Conti() {
           onPointerUpCapture={restorePresetFocus}
         >
           <PresetChips
+            selection={formSel}
             onInsert={(p) => insertPreset(presetInsertText(p))}
             className="mt-3 border-y border-slate-100 px-3 py-2 dark:border-slate-800"
           />

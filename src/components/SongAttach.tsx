@@ -24,6 +24,7 @@ import { driveEnabled } from "../lib/drive";
 import { getSongById } from "../lib/catalog";
 import { copyText, openYouTube } from "../lib/share";
 import { registerBack, useBackDismiss } from "../lib/backStack";
+import { PRESET_ROWS } from "../lib/songForm";
 
 // vivid, near-primary swatches (the previous yellow read as a dull mustard)
 const TEXT_COLORS = ["#ff1e1e", "#000000", "#ffffff", "#1a4bff", "#00b81d", "#ffe600"];
@@ -41,10 +42,6 @@ const PEN_DEFAULT_COLOR = "#ff1e1e"; // red pen
 
 // one undo/redo history entry — the full annotation state of a single sheet
 type Snapshot = { annos: SheetText[]; strokes: SheetStroke[] };
-const TEXT_PRESET_ROWS = [
-  ["Int4", "Int8", "V", "V1", "V2", "PC", "C", "C1", "C2"],
-  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
-];
 
 /** Self-contained editor for a song's memo / YouTube link / sheet music. */
 export default function SongAttachEditor({
@@ -1700,7 +1697,7 @@ export function SheetLightbox({
             {/* quick-insert presets (not while erasing) */}
             {tool !== "erase" && (
             <div className="space-y-1.5">
-              {TEXT_PRESET_ROWS.map((row, ri) => (
+              {PRESET_ROWS.map((row, ri) => (
                 <div key={ri} className="flex flex-wrap items-center justify-center gap-1.5">
                   {row.map((p) => (
                     <button

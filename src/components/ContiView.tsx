@@ -665,6 +665,7 @@ function NoteEditor({
 
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   const [showPresets, setShowPresets] = useState(false);
+  const [formSel, setFormSel] = useState("");
   const pendingCaret = useRef<number | null>(null);
   // restore the caret after a preset insertion re-renders the controlled field
   useEffect(() => {
@@ -721,6 +722,7 @@ function NoteEditor({
         onChange={(v) => setSongNote(songId, v)}
         onFocus={(el) => { taRef.current = el; keepPresetBar(); setShowPresets(true); }}
         onBlur={() => hidePresetBarSoon()}
+        onSelect={setFormSel}
         className={base}
         textClassName={`${noteText} text-slate-600 dark:text-slate-300`}
         wrapClassName={focusWrap}
@@ -731,7 +733,11 @@ function NoteEditor({
           onTouchStartCapture={keepPresetBar}
           onPointerUpCapture={restorePresetFocus}
         >
-          <PresetChips onInsert={(p) => insertPreset(presetInsertText(p))} className="py-1" />
+          <PresetChips
+            selection={formSel}
+            onInsert={(p) => insertPreset(presetInsertText(p))}
+            className="py-1"
+          />
         </div>
       )}
       <GrowTextarea

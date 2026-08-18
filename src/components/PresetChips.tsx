@@ -22,10 +22,13 @@ let keptEditing: string | null = null;
 
 export default function PresetChips({
   onInsert,
+  selection = "",
   className = "",
   variant = "light",
 }: {
   onInsert: (preset: string) => void;
+  /** text currently selected in the song form — colorable like a preset */
+  selection?: string;
   className?: string;
   /** "light" = on a white card (conti list), "dark" = on the dark sheet toolbar */
   variant?: "light" | "dark";
@@ -42,6 +45,15 @@ export default function PresetChips({
     setEditModeState(v);
   };
   useEffect(() => subscribePresetColors(() => force((n) => n + 1)), []);
+
+  // a selection in the field is an explicit choice, so it wins over the chip
+  // that 색 편집 mode has open (single-line: a form never colors across lines)
+  // trimmed but otherwise verbatim: the color is stored under the exact text,
+  // so normalizing the spacing here would stop it from matching the form
+  const trimmed = selection.trim();
+  const sel = trimmed.includes("\n") || trimmed.length > 40 ? "" : trimmed;
+  const target = sel || editing;
+  const targetLabel = sel ? `「${sel.length > 12 ? sel.slice(0, 12) + "…" : sel}」` : editing;
 
   const base =
     variant === "dark"
@@ -82,26 +94,27 @@ export default function PresetChips({
         ))}
       </div>
 
-      {/* color palette — shown for the whole of 색 편집 mode, so it's obvious
-          the colors are there; until a chip is picked it just says which step
-          is missing instead of staying invisible */}
-      {editMode && (
+      {/* Color palette. It colors whatever is selected in the song form — any
+          hand-typed word, not just a preset — and falls back to the chip picked
+          in 색 편집 mode. In edit mode with neither, it says which step is
+          missing instead of staying invisible. */}
+      {(target || editMode) && (
         <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
           <span className={`text-[11px] font-semibold ${variant === "dark" ? "text-white/70" : "text-slate-400"}`}>
-            {editing ? `${editing} 색` : "색을 바꿀 프리셋을 누르세요"}
+            {target ? `${targetLabel} 색` : "색을 바꿀 프리셋을 누르거나 글자를 선택하세요"}
           </span>
-          {editing &&
+          {target &&
             PRESET_COLOR_CHOICES.map((c) => (
               <button
                 key={c || "none"}
                 onPointerDown={(e) => {
                   e.preventDefault();
-                  setPresetColor(editing, c);
+                  setPresetColor(target, c);
                 }}
                 aria-label={c || "색 없음"}
                 className={
                   "h-6 w-6 rounded-full border text-[9px] font-bold " +
-                  (presetColor(editing) === c
+                  (presetColor(target) === c
                     ? "border-indigo-500 ring-2 ring-indigo-400"
                     : variant === "dark"
                     ? "border-white/40"
