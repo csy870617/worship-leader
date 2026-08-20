@@ -67,9 +67,12 @@ export default function SongAttachEditor({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [viewer, setViewer] = useState<number | null>(null);
-  const [cropQueue, setCropQueue] = useState<File[]>([]);
+  // queued crops carry an id: the crop dialog must be a *fresh* component per
+  // file (it latches "closed" once done), so the id drives its React key
+  const [cropQueue, setCropQueue] = useState<{ id: string; file: File }[]>([]);
   const [sheetMenu, setSheetMenu] = useState<string | null>(null);
   const [recrop, setRecrop] = useState<{ aid: string; file: File } | null>(null);
+  const cropSeq = useRef(0);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
 
   // ---- drag-to-reorder sheets via a grip handle (same proven pattern as the
@@ -168,7 +171,12 @@ export default function SongAttachEditor({
   const onFiles = (files: FileList | null) => {
     if (!files) return;
     const imgs = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (imgs.length) setCropQueue((q) => [...q, ...imgs]);
+    if (!imgs.length) return;
+    setCropQueue((q) => [
+      ...q,
+      ...imgs.map((file, i) => ({ id: `cq_${Date.now().toString(36)}_${cropSeq.current + i}`, file })),
+    ]);
+    cropSeq.current += imgs.length;
   };
   const onCropDone = async (cropped: File | null) => {
     // always advance the queue, even if a save fails, so the crop view can't get stuck
@@ -388,7 +396,9 @@ export default function SongAttachEditor({
         {err && <p className="mt-1 text-[11px] font-medium text-rose-500">{err}</p>}
       </div>
 
-      {cropQueue.length > 0 && <CropModal file={cropQueue[0]} onDone={onCropDone} />}
+      {cropQueue.length > 0 && (
+        <CropModal key={cropQueue[0].id} file={cropQueue[0].file} onDone={onCropDone} />
+      )}
       {recrop && <CropModal file={recrop.file} onDone={onRecropDone} />}
 
       {sheetMenu && (
@@ -458,7 +468,13 @@ export function CropModal({
     onDoneRef.current(result, crop);
     dismissRef.current?.(true);
   };
+  // Re-arm for every file: when several photos are cropped in a row the dialog
+  // can be handed the next file without unmounting, and a latched closedRef (or
+  // a spent back-registration) would leave its buttons dead.
   useEffect(() => {
+    closedRef.current = false;
+    setRect({ x: 0, y: 0, w: 1, h: 1 });
+    setWorking(false);
     dismissRef.current = registerBack(() => {
       if (closedRef.current) return;
       closedRef.current = true;
@@ -466,7 +482,7 @@ export function CropModal({
     });
     return () => dismissRef.current?.(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [file]);
 
   const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
   const rel = (clientX: number, clientY: number) => {
