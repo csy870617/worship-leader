@@ -16,13 +16,15 @@ export const ALL_PRESETS = PRESET_ROWS.flat();
  *  (the ending marker) goes in on its own and "Rit" as "(Rit)" */
 export const presetInsertText = (p: string) => (p === "Out" ? p : p === "Rit" ? "(Rit)" : `${p} - `);
 
-// verse family = blue, chorus family = red, everything else inherits the
-// surrounding text color
+// verse family = blue, chorus family = red, bridge = green, everything else
+// inherits the surrounding text color
 const BLUE = "#2563eb";
 const RED = "#dc2626";
+const GREEN = "#16a34a";
 export const DEFAULT_PRESET_COLORS: Record<string, string> = {
   V: BLUE, V1: BLUE, V2: BLUE, V3: BLUE,
   PC: RED, C: RED, C1: RED, C2: RED, C3: RED,
+  B: GREEN,
 };
 
 /** palette offered when recoloring a preset ("" = no color / inherit) */
