@@ -169,16 +169,53 @@ export default function SongAttachEditor({
     removeSheetEverywhere(aid);
   };
 
-  const onFiles = (files: FileList | null) => {
-    if (!files) return;
-    const imgs = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (!imgs.length) return;
+  /** Send image files through the crop dialog, one after another. */
+  const queueCrops = (files: File[]) => {
+    const imgs = files.filter((f) => f.type.startsWith("image/"));
+    if (!imgs.length) return false;
     setCropQueue((q) => [
       ...q,
       ...imgs.map((file, i) => ({ id: `cq_${Date.now().toString(36)}_${cropSeq.current + i}`, file })),
     ]);
     cropSeq.current += imgs.length;
+    return true;
   };
+  const onFiles = (files: FileList | null) => {
+    if (files) queueCrops(Array.from(files));
+  };
+
+  /** 붙여넣기: take a screenshot/copied image straight out of the clipboard.
+   *  Needs the tap that called it (clipboard reads are gesture-gated), and the
+   *  browser may still ask for permission. */
+  const pasteFromClipboard = async () => {
+    setErr(null);
+    try {
+      const items = await navigator.clipboard.read();
+      const files: File[] = [];
+      for (const item of items) {
+        const type = item.types.find((t) => t.startsWith("image/"));
+        if (!type) continue;
+        const blob = await item.getType(type);
+        files.push(new File([blob], `sheet.${type.split("/")[1] || "png"}`, { type }));
+      }
+      if (!queueCrops(files)) setErr("클립보드에 이미지가 없어요");
+    } catch {
+      setErr("붙여넣기를 쓸 수 없어요. 이미지를 복사한 뒤 Ctrl+V(⌘V)로 붙여넣어 보세요");
+    }
+  };
+  // Ctrl+V / ⌘V anywhere on this song (outside a text field) pastes an image
+  // too — the same path browsers that block clipboard.read() still allow.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      const files = Array.from(e.clipboardData?.files ?? []);
+      if (queueCrops(files)) e.preventDefault();
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const onCropDone = async (cropped: File | null) => {
     // always advance the queue, even if a save fails, so the crop view can't get stuck
     if (cropped) {
@@ -395,6 +432,17 @@ export default function SongAttachEditor({
               className="sr-only"
             />
           </label>
+          {/* paste an image straight from the clipboard (screenshot, copied sheet) */}
+          <button
+            onClick={pasteFromClipboard}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 disabled:opacity-60 dark:bg-slate-800 dark:text-slate-300"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5h6M9 4.5a1.5 1.5 0 0 0-1.5 1.5v.5h9V6A1.5 1.5 0 0 0 15 4.5M7.5 6.5H6.75A1.75 1.75 0 0 0 5 8.25v10A1.75 1.75 0 0 0 6.75 20h10.5A1.75 1.75 0 0 0 19 18.25V8.25a1.75 1.75 0 0 0-1.75-1.75H16.5" />
+            </svg>
+            붙여넣기
+          </button>
           {/* find a sheet to add: Google image search for "<곡 제목> 악보".
               openExternal so it also works from the installed app. */}
           <button
