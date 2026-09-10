@@ -9,23 +9,20 @@ const esc = (s: string) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 
 
-/** Song form as HTML: the same row of boxes the app shows (the PDF has no
- *  caret to stay aligned with, so the boxes use real padding). */
+/** Song form as HTML: the same row of boxes the app shows, with real padding
+ *  (the PDF has no caret to stay aligned with). Each box states its own
+ *  line-height so the label sits centered whatever the row's line-height is. */
 function formHtml(text: string): string {
   return parseForm(text)
     .map((item) => {
       const color = itemColor(item);
-      const label = esc(item.text);
-      if (!color) {
-        return (
-          `<span style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;` +
-          `border-radius:5px;padding:1px 6px;margin-right:7px;display:inline-block;">${label}</span>`
-        );
-      }
-      const { bg, fg, border } = formBoxColors(color);
+      const { bg, fg, border } = color
+        ? formBoxColors(color)
+        : { bg: "#f1f5f9", fg: "#475569", border: "#e2e8f0" };
       return (
-        `<span style="background:${bg};color:${fg};border:1px solid ${border};` +
-        `border-radius:5px;padding:1px 6px;margin-right:7px;display:inline-block;">${label}</span>`
+        `<span style="display:inline-block;background:${bg};color:${fg};border:1px solid ${border};` +
+        `border-radius:6px;padding:3px 9px;margin:0 7px 5px 0;line-height:1.25;vertical-align:top;">` +
+        `${esc(item.text)}</span>`
       );
     })
     .join("");
@@ -175,7 +172,7 @@ function buildInfoEl(
   );
   if (note) {
     parts.push(
-      `<div style="margin:8px 0 0 38px;font-size:22px;line-height:1.75;color:#374151;white-space:pre-wrap;">${formHtml(note)}</div>`
+      `<div style="margin:8px 0 0 38px;font-size:22px;line-height:1.25;color:#374151;">${formHtml(note)}</div>`
     );
   }
   if (memo) {
@@ -197,7 +194,7 @@ function buildSheetEl(sheet: SheetImg, note?: string, memo?: string): HTMLDivEle
   const el = document.createElement("div");
   if (note || memo) {
     const head =
-      (note ? `<div style="margin:0 0 6px 0;font-size:22px;line-height:1.75;color:#374151;white-space:pre-wrap;">${formHtml(note)}</div>` : "") +
+      (note ? `<div style="margin:0 0 6px 0;font-size:22px;line-height:1.25;color:#374151;">${formHtml(note)}</div>` : "") +
       (memo ? `<div style="margin:0 0 10px 0;font-size:18px;color:#6b7280;white-space:pre-wrap;">${esc(memo)}</div>` : "");
     el.style.cssText = BASE_STYLE;
     el.innerHTML = head + sheetOverlay(sheet.url);

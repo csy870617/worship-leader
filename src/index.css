@@ -36,3 +36,13 @@ html.dark body {
     transform: translateY(0);
   }
 }
+
+/* html2canvas (the PDF renderer) works out where a font's baseline sits by
+   measuring a hidden <img> next to a line of text. Tailwind's reset makes every
+   image display:block, which takes that <img> out of the line box and returns a
+   baseline that is off by several pixels — in the PDF the song-form labels then
+   sat below their boxes. This puts just that measuring image back inline; the
+   selector matches nothing else on the page. */
+body > div[style*="visibility: hidden"][style*="white-space: nowrap"] > img {
+  display: inline !important;
+}
