@@ -12,19 +12,23 @@ export const PRESET_ROWS = [
 ];
 export const ALL_PRESETS = PRESET_ROWS.flat();
 
-/** text a preset chip inserts: most get a trailing " - " separator, but "Out"
- *  (the ending marker) goes in on its own and "Rit" as "(Rit)" */
-export const presetInsertText = (p: string) => (p === "Out" ? p : p === "Rit" ? "(Rit)" : `${p} - `);
+/** Text a preset chip inserts. The form is a row of boxes, so a preset drops in
+ *  as just its own box plus a space — the space matters, since anything written
+ *  against a box without one joins it. "Rit" goes in as "(Rit)". */
+export const presetInsertText = (p: string) => (p === "Rit" ? "(Rit) " : `${p} `);
 
-// verse family = blue, chorus family = red, bridge = green, everything else
-// inherits the surrounding text color
+// verse family = blue, chorus family = red, bridge = green, and the structural
+// markers (intro/interlude/tag/ending) a neutral slate — every preset gets a
+// box so the form reads as one row of boxes
 const BLUE = "#2563eb";
 const RED = "#dc2626";
 const GREEN = "#16a34a";
+const SLATE = "#64748b";
 export const DEFAULT_PRESET_COLORS: Record<string, string> = {
   V: BLUE, V1: BLUE, V2: BLUE, V3: BLUE,
   PC: RED, C: RED, C1: RED, C2: RED, C3: RED,
   B: GREEN,
+  Int4: SLATE, Int8: SLATE, Itl4: SLATE, Itl8: SLATE, Tag: SLATE, Out: SLATE, Rit: SLATE,
 };
 
 /** palette offered when recoloring a preset ("" = no color / inherit) */
@@ -106,24 +110,50 @@ export interface FormSegment {
   color?: string;
 }
 
-/** Readable text color for a filled box of `bg` (white on anything dark). */
-export function boxTextColor(bg: string): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(bg.trim());
-  if (!m) return "#ffffff";
+const hex = (c: string) => {
+  const m = /^#?([0-9a-f]{6})$/i.exec(c.trim());
+  if (!m) return null;
   const n = parseInt(m[1], 16);
-  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-  return lum > 0.62 ? "#0f172a" : "#ffffff";
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+};
+const toHex = (r: number, g: number, b: number) =>
+  "#" + [r, g, b].map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0")).join("");
+
+/**
+ * The soft two-tone pair a song-form box is drawn with: a pale wash of the
+ * chosen color behind its own, deeper shade of text. Reads calmly next to the
+ * plain text around it, and stays legible on white and on the dark sheet
+ * screen because the wash is opaque.
+ */
+export function formBoxColors(color: string): { bg: string; fg: string; border: string } {
+  const c = hex(color);
+  if (!c) return { bg: "#e2e8f0", fg: "#334155", border: "#cbd5e1" };
+  const mix = (v: number, w: number) => v + (255 - v) * w;
+  const wash = (v: number) => mix(v, 0.84);
+  const edge = (v: number) => mix(v, 0.55);
+  const deep = (v: number) => v * 0.78;
+  return {
+    bg: toHex(wash(c.r), wash(c.g), wash(c.b)),
+    fg: toHex(deep(c.r), deep(c.g), deep(c.b)),
+    border: toHex(edge(c.r), edge(c.g), edge(c.b)),
+  };
 }
 
 /** Inline style for a song-form box in a *layout-safe* place — the field's
  *  mirror sits exactly on top of a transparent textarea, so the box may not
  *  change text metrics. box-shadow paints the padding instead of adding it. */
 export function formBoxStyle(color: string): Record<string, string> {
+  const { bg, fg, border } = formBoxColors(color);
   return {
-    background: color,
-    color: boxTextColor(color),
+    background: bg,
+    color: fg,
     borderRadius: "4px",
-    boxShadow: `0 0 0 2px ${color}`,
+    // both are painted outside the text box and cost no layout space, so the
+    // mirror still lines up with the caret: shadow = the padding, outline = the
+    // edge that keeps two boxes apart when only a space separates them
+    boxShadow: `0 0 0 2px ${bg}`,
+    outline: `1px solid ${border}`,
+    outlineOffset: "1px",
   };
 }
 

@@ -2,7 +2,7 @@ import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
 import { getSongAttach, sheetsForKey } from "./songAttach";
-import { boxTextColor, songFormSegments } from "./songForm";
+import { formBoxColors, songFormSegments } from "./songForm";
 import { youtubePlaylistUrl } from "./share";
 
 const esc = (s: string) =>
@@ -14,12 +14,14 @@ const esc = (s: string) =>
  *  padding instead of the field's faux-padding shadow). */
 function formHtml(text: string): string {
   return songFormSegments(text)
-    .map((seg) =>
-      seg.color
-        ? `<span style="background:${seg.color};color:${boxTextColor(seg.color)};` +
-          `border-radius:4px;padding:1px 5px;white-space:pre-wrap;">${esc(seg.text)}</span>`
-        : esc(seg.text)
-    )
+    .map((seg) => {
+      if (!seg.color) return esc(seg.text);
+      const { bg, fg, border } = formBoxColors(seg.color);
+      return (
+        `<span style="background:${bg};color:${fg};border:1px solid ${border};` +
+        `border-radius:5px;padding:1px 5px;white-space:pre-wrap;">${esc(seg.text)}</span>`
+      );
+    })
     .join("");
 }
 

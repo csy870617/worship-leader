@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   PRESET_COLOR_CHOICES,
   PRESET_ROWS,
-  boxTextColor,
+  formBoxColors,
   presetColor,
   resetPresetColors,
   setPresetColor,
@@ -68,6 +68,7 @@ export default function PresetChips({
           <div key={ri} className="flex flex-wrap items-center justify-center gap-1.5">
             {row.map((p) => {
               const c = presetColor(p);
+              const box = c ? formBoxColors(c) : null;
               return (
                 <button
                   key={p}
@@ -85,7 +86,7 @@ export default function PresetChips({
                       ? "ring-1 ring-indigo-300"
                       : ""
                   }`}
-                  style={c ? { background: c, color: boxTextColor(c) } : undefined}
+                  style={box ? { background: box.bg, color: box.fg, border: `1px solid ${box.border}` } : undefined}
                 >
                   {p}
                 </button>
