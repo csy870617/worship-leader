@@ -25,7 +25,8 @@ import { getSongById } from "../lib/catalog";
 import { copyText, openExternal, openYouTube } from "../lib/share";
 import { sheetSearchUrl } from "../data";
 import { registerBack, useBackDismiss } from "../lib/backStack";
-import { PRESET_ROWS } from "../lib/songForm";
+import { PRESET_ROWS, formBoxStyle, songFormSegments } from "../lib/songForm";
+import SongFormField from "./SongFormField";
 
 // vivid, near-primary swatches (the previous yellow read as a dull mustard)
 const TEXT_COLORS = ["#ff1e1e", "#000000", "#ffffff", "#1a4bff", "#00b81d", "#ffe600"];
@@ -771,10 +772,13 @@ function LightboxNote({
   value,
   onChange,
   placeholder,
+  boxes = false,
 }: {
   value: string;
   onChange?: (v: string) => void;
   placeholder: string;
+  /** 송폼: draw preset tokens as colored boxes (메모 stays plain text) */
+  boxes?: boolean;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const resize = () => {
@@ -786,8 +790,30 @@ function LightboxNote({
   useEffect(resize, [value]);
   if (!onChange) {
     return value ? (
-      <p className="max-w-full whitespace-pre-wrap text-center text-sm text-white/80">{value}</p>
+      <p className="max-w-full whitespace-pre-wrap text-center text-sm leading-[1.75] text-white/80">
+        {songFormSegments(value).map((s, i) =>
+          s.color ? (
+            <span key={i} style={formBoxStyle(s.color)}>
+              {s.text}
+            </span>
+          ) : (
+            <span key={i}>{s.text}</span>
+          )
+        )}
+      </p>
     ) : null;
+  }
+  if (boxes) {
+    return (
+      <SongFormField
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full resize-none overflow-hidden px-3 py-1.5 text-center text-sm outline-none"
+        textClassName="text-white/90 placeholder:text-white/40"
+        wrapClassName="rounded-lg bg-white/10 focus-within:bg-white/15"
+      />
+    );
   }
   return (
     <textarea
@@ -1396,7 +1422,7 @@ export function SheetLightbox({
       <div className="my-auto flex flex-col items-center gap-3">
         {onNote || onMemo ? (
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md space-y-1.5">
-            <LightboxNote value={note ?? ""} onChange={onNote} placeholder="송폼 입력" />
+            <LightboxNote value={note ?? ""} onChange={onNote} placeholder="송폼 입력" boxes />
             <LightboxNote value={memo ?? ""} onChange={onMemo} placeholder="메모 추가" />
           </div>
         ) : (

@@ -106,6 +106,27 @@ export interface FormSegment {
   color?: string;
 }
 
+/** Readable text color for a filled box of `bg` (white on anything dark). */
+export function boxTextColor(bg: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(bg.trim());
+  if (!m) return "#ffffff";
+  const n = parseInt(m[1], 16);
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum > 0.62 ? "#0f172a" : "#ffffff";
+}
+
+/** Inline style for a song-form box in a *layout-safe* place — the field's
+ *  mirror sits exactly on top of a transparent textarea, so the box may not
+ *  change text metrics. box-shadow paints the padding instead of adding it. */
+export function formBoxStyle(color: string): Record<string, string> {
+  return {
+    background: color,
+    color: boxTextColor(color),
+    borderRadius: "4px",
+    boxShadow: `0 0 0 2px ${color}`,
+  };
+}
+
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**

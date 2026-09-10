@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { songFormSegments, subscribePresetColors } from "../lib/songForm";
+import { formBoxStyle, songFormSegments, subscribePresetColors } from "../lib/songForm";
 
 /**
  * Song-form input that shows preset tokens (V1, C, …) in color.
@@ -10,6 +10,10 @@ import { songFormSegments, subscribePresetColors } from "../lib/songForm";
  * underneath — same font, padding and wrapping — paints the colored text. The
  * field auto-grows, so there is no scroll offset to keep in sync.
  */
+// boxes are painted with a 2px shadow ring, so the lines need room to breathe.
+// Both layers must use the exact same value or the mirror drifts off the caret.
+const LINE_HEIGHT = 1.75;
+
 export default function SongFormField({
   value,
   onChange,
@@ -63,11 +67,12 @@ export default function SongFormField({
       <div
         ref={mirrorRef}
         aria-hidden
+        style={{ lineHeight: LINE_HEIGHT }}
         className={`${className} ${textClassName} pointer-events-none absolute inset-0 whitespace-pre-wrap break-words`}
       >
         {segs.map((s, i) =>
           s.color ? (
-            <span key={i} style={{ color: s.color }}>
+            <span key={i} style={formBoxStyle(s.color)}>
               {s.text}
             </span>
           ) : (
@@ -94,7 +99,7 @@ export default function SongFormField({
         rows={1}
         placeholder={placeholder}
         // text is transparent so only the mirror shows; caret stays visible
-        style={{ background: "transparent" }}
+        style={{ background: "transparent", lineHeight: LINE_HEIGHT }}
         className={`${className} ${textClassName} relative resize-none overflow-hidden text-transparent caret-slate-700 dark:caret-slate-200`}
       />
     </div>

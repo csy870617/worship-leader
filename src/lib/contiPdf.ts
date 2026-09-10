@@ -2,17 +2,24 @@ import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
 import { getSongAttach, sheetsForKey } from "./songAttach";
-import { songFormSegments } from "./songForm";
+import { boxTextColor, songFormSegments } from "./songForm";
 import { youtubePlaylistUrl } from "./share";
 
 const esc = (s: string) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 
 
-/** Song form as HTML with preset tokens colored the same way the app shows them. */
+/** Song form as HTML: colored parts become filled boxes, exactly like the app
+ *  shows them (the PDF has no caret to stay aligned with, so it can use real
+ *  padding instead of the field's faux-padding shadow). */
 function formHtml(text: string): string {
   return songFormSegments(text)
-    .map((seg) => (seg.color ? `<span style="color:${seg.color};">${esc(seg.text)}</span>` : esc(seg.text)))
+    .map((seg) =>
+      seg.color
+        ? `<span style="background:${seg.color};color:${boxTextColor(seg.color)};` +
+          `border-radius:4px;padding:1px 5px;white-space:pre-wrap;">${esc(seg.text)}</span>`
+        : esc(seg.text)
+    )
     .join("");
 }
 
@@ -160,7 +167,7 @@ function buildInfoEl(
   );
   if (note) {
     parts.push(
-      `<div style="margin:8px 0 0 38px;font-size:22px;color:#374151;white-space:pre-wrap;">${formHtml(note)}</div>`
+      `<div style="margin:8px 0 0 38px;font-size:22px;line-height:1.75;color:#374151;white-space:pre-wrap;">${formHtml(note)}</div>`
     );
   }
   if (memo) {
@@ -182,7 +189,7 @@ function buildSheetEl(sheet: SheetImg, note?: string, memo?: string): HTMLDivEle
   const el = document.createElement("div");
   if (note || memo) {
     const head =
-      (note ? `<div style="margin:0 0 6px 0;font-size:22px;color:#374151;white-space:pre-wrap;">${formHtml(note)}</div>` : "") +
+      (note ? `<div style="margin:0 0 6px 0;font-size:22px;line-height:1.75;color:#374151;white-space:pre-wrap;">${formHtml(note)}</div>` : "") +
       (memo ? `<div style="margin:0 0 10px 0;font-size:18px;color:#6b7280;white-space:pre-wrap;">${esc(memo)}</div>` : "");
     el.style.cssText = BASE_STYLE;
     el.innerHTML = head + sheetOverlay(sheet.url);

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   PRESET_COLOR_CHOICES,
   PRESET_ROWS,
+  boxTextColor,
   presetColor,
   resetPresetColors,
   setPresetColor,
@@ -84,7 +85,7 @@ export default function PresetChips({
                       ? "ring-1 ring-indigo-300"
                       : ""
                   }`}
-                  style={c ? { color: c } : undefined}
+                  style={c ? { background: c, color: boxTextColor(c) } : undefined}
                 >
                   {p}
                 </button>
