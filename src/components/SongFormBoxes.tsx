@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   type FormItem,
   formBoxColors,
@@ -24,12 +24,29 @@ import {
 
 // The chip bar lives outside this component, so the field that was last
 // touched registers itself here and receives the chips' taps.
-type Ctl = { insert: (text: string, preset: boolean) => void };
+type Ctl = {
+  insert: (text: string, preset: boolean) => void;
+  /** a chip is being dragged over the page: mark where it would land */
+  hover: (x: number, y: number) => boolean;
+  /** let go of a dragged chip; true when it landed in the form */
+  drop: (text: string, preset: boolean, x: number, y: number) => boolean;
+  cancelHover: () => void;
+};
 let activeCtl: Ctl | null = null;
-/** Drop a new box into the song form the user is editing. */
+/** Add a box at the end of the song form the user is editing (a chip tap). */
 export function insertFormBox(text: string, preset = true) {
   activeCtl?.insert(text, preset);
   return activeCtl != null;
+}
+/** Chip dragging: show where the box would go, and put it there on release. */
+export function formDragOver(x: number, y: number) {
+  return activeCtl?.hover(x, y) ?? false;
+}
+export function formDragDrop(text: string, preset: boolean, x: number, y: number) {
+  return activeCtl?.drop(text, preset, x, y) ?? false;
+}
+export function formDragCancel() {
+  activeCtl?.cancelHover();
 }
 
 // block page scrolling while a box is being dragged
@@ -67,6 +84,7 @@ export default function SongFormBoxes({
   itemsRef.current = items;
 
   const [sel, setSel] = useState<string | null>(null);
+  const [dropAt, setDropAt] = useState<number | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [order, setOrder] = useState<FormItem[] | null>(null);
   const dragIdRef = useRef<string | null>(null);
@@ -84,6 +102,9 @@ export default function SongFormBoxes({
   const commit = (next: FormItem[]) => onChange(serializeForm(next));
   const activate = () => {
     const ctl: Ctl = {
+      hover: () => false,
+      drop: () => false,
+      cancelHover: () => {},
       insert: (text: string, preset: boolean) => {
         const cur = itemsRef.current;
         const at = sel ? cur.findIndex((i) => i.id === sel) : -1;
@@ -96,6 +117,24 @@ export default function SongFormBoxes({
         commit(next);
       },
     };
+    ctl.hover = (x, y) => {
+      const at = dropIndexFromPoint(x, y);
+      setDropAt(at);
+      return at != null;
+    };
+    ctl.drop = (text, preset, x, y) => {
+      const at = dropIndexFromPoint(x, y);
+      setDropAt(null);
+      if (at == null) return false;
+      const cur = itemsRef.current;
+      const next = [...cur.slice(0, at), { id: "new", text, preset }, ...cur.slice(at)];
+      focusIdRef.current = preset ? null : `b${at}`;
+      setSel(null);
+      onSelect?.("");
+      commit(next);
+      return true;
+    };
+    ctl.cancelHover = () => setDropAt(null);
     myCtl.current = ctl;
     activeCtl = ctl;
     // the bar belongs to whichever field was last touched; a tap anywhere else
@@ -147,6 +186,31 @@ export default function SongFormBoxes({
       if (d < bestD) {
         bestD = d;
         best = i;
+      }
+    });
+    return best;
+  };
+  /** Index a box dropped at (x, y) would take, or null when that point isn't
+   *  over this field. */
+  const dropIndexFromPoint = (x: number, y: number): number | null => {
+    const row = rowRef.current;
+    if (!row) return null;
+    const rr = row.getBoundingClientRect();
+    const pad = 14; // a little forgiveness around the field
+    if (x < rr.left - pad || x > rr.right + pad || y < rr.top - pad || y > rr.bottom + pad) return null;
+    const boxes = Array.from(row.querySelectorAll<HTMLElement>("[data-boxwrap]"));
+    if (!boxes.length) return 0;
+    let best = 0;
+    let bestD = Infinity;
+    boxes.forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      const dx = x - (r.left + r.width / 2);
+      const dy = y - (r.top + r.height / 2);
+      const d = dx * dx + dy * dy;
+      if (d < bestD) {
+        bestD = d;
+        // right half of a box means "after it"
+        best = dx > 0 ? i + 1 : i;
       }
     });
     return best;
@@ -276,11 +340,12 @@ export default function SongFormBoxes({
           {placeholder}
         </span>
       )}
-      {shown.map((item) => {
+      {dropAt === 0 && <DropMark />}
+      {shown.map((item, idx) => {
         const color = itemColor(item);
         const box = color ? formBoxColors(color) : null;
         const selected = sel === item.id;
-        return (
+        const node = (
           <span
             key={item.id}
             data-boxwrap
@@ -338,9 +403,23 @@ export default function SongFormBoxes({
             )}
           </span>
         );
+        return dropAt === idx + 1 ? (
+          <Fragment key={`${item.id}-w`}>
+            {node}
+            <DropMark />
+          </Fragment>
+        ) : (
+          node
+        );
       })}
     </div>
   );
+
+}
+
+/** Where a dragged chip would land. */
+function DropMark() {
+  return <span aria-hidden className="h-6 w-0.5 shrink-0 rounded-full bg-indigo-500" />;
 }
 
 /** An input that is exactly as wide as what it holds. */
@@ -365,7 +444,7 @@ function AutoInput({
           the text and the input stretches to it */}
       <span
         aria-hidden
-        className={`invisible col-start-1 row-start-1 whitespace-pre px-0.5 font-bold ${textSize}`}
+        className={`invisible col-start-1 row-start-1 whitespace-pre px-0.5 font-bold leading-6 ${textSize}`}
       >
         {value || "글자"}
       </span>
@@ -380,7 +459,8 @@ function AutoInput({
         onBlur={onBlur}
         onPointerDown={(e) => e.stopPropagation()}
         placeholder="글자"
-        className={`col-start-1 row-start-1 w-full bg-transparent px-0.5 font-bold outline-none placeholder:font-normal placeholder:opacity-60 ${textSize}`}
+        // the same line box as a preset, so every box in a row is one height
+        className={`col-start-1 row-start-1 w-full bg-transparent p-0 px-0.5 font-bold leading-6 outline-none placeholder:font-normal placeholder:opacity-60 ${textSize}`}
       />
     </span>
   );
