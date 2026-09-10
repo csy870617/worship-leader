@@ -7,7 +7,7 @@ import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromF
 import { driveEnabled } from "../lib/drive";
 import { registerBack, useBackDismiss } from "../lib/backStack";
 import { CropModal, SheetLightbox } from "./SongAttach";
-import SongFormField from "./SongFormField";
+import SongFormBoxes, { insertFormBox } from "./SongFormBoxes";
 import PresetChips from "./PresetChips";
 import { presetInsertText } from "../lib/songForm";
 
@@ -656,31 +656,12 @@ function NoteEditor({
   size: "lg" | "sm";
 }) {
   const a = attach[songId];
-  const noteText = size === "lg" ? "text-lg" : "text-base";
-  // shared metrics only — the focus background lives on the wrapper so it can
-  // never cover the song form's colored overlay (see SongFormField)
   const base =
     "w-full resize-none overflow-hidden bg-transparent leading-snug outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600";
-  const focusWrap = "rounded-lg focus-within:bg-slate-50 dark:focus-within:bg-slate-800";
+  const focusWrap = "rounded-lg px-1 py-0.5";
 
-  const taRef = useRef<HTMLTextAreaElement | null>(null);
   const [showPresets, setShowPresets] = useState(false);
   const [formSel, setFormSel] = useState("");
-  const pendingCaret = useRef<number | null>(null);
-  // restore the caret after a preset insertion re-renders the controlled field
-  useEffect(() => {
-    const pos = pendingCaret.current;
-    if (pos == null) return;
-    pendingCaret.current = null;
-    const el = taRef.current;
-    if (!el) return;
-    el.focus();
-    try {
-      el.setSelectionRange(pos, pos);
-    } catch {
-      /* ignore */
-    }
-  });
   // keep the preset bar up when it is tapped, even if the field blurs first
   // (some browsers blur regardless of preventDefault) — see Conti.tsx
   const presetHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -697,35 +678,19 @@ function NoteEditor({
       setShowPresets(false);
     }, delay);
   };
-  /** After a tap inside the bar, put the caret back in the field. If the
-   *  browser refuses, arm a slower hide so the bar can't get stuck open. */
-  const restorePresetFocus = () => {
-    keepPresetBar();
-    const el = taRef.current;
-    if (el && document.activeElement !== el) el.focus();
-    if (!taRef.current || document.activeElement !== taRef.current) hidePresetBarSoon(2500);
-  };
+  /** A tap inside the bar must not put it away. */
+  const restorePresetFocus = () => keepPresetBar();
   useEffect(() => () => keepPresetBar(), []);
-  const insertPreset = (text: string) => {
-    const el = taRef.current;
-    const cur = a?.note ?? "";
-    const start = el?.selectionStart ?? cur.length;
-    const end = el?.selectionEnd ?? start;
-    pendingCaret.current = start + text.length;
-    setSongNote(songId, cur.slice(0, start) + text + cur.slice(end));
-  };
-
   return (
     <div className={`${indent} mt-1 space-y-0.5`}>
-      <SongFormField
+      <SongFormBoxes
         value={a?.note ?? ""}
         onChange={(v) => setSongNote(songId, v)}
-        onFocus={(el) => { taRef.current = el; keepPresetBar(); setShowPresets(true); }}
+        onFocus={() => { keepPresetBar(); setShowPresets(true); }}
         onBlur={() => hidePresetBarSoon()}
         onSelect={setFormSel}
-        className={base}
-        textClassName={`${noteText} text-slate-600 dark:text-slate-300`}
-        wrapClassName={focusWrap}
+        size={size}
+        className={focusWrap}
       />
       {showPresets && (
         <div
@@ -735,7 +700,8 @@ function NoteEditor({
         >
           <PresetChips
             selection={formSel}
-            onInsert={(p) => insertPreset(presetInsertText(p))}
+            onInsert={(p) => insertFormBox(presetInsertText(p))}
+            onInsertText={() => insertFormBox("", false)}
             className="py-1"
           />
         </div>

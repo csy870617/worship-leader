@@ -10,7 +10,7 @@ import { setSongMemo, setSongNote, sheetsForKey, useSongAttach } from "../lib/so
 import { useBackDismiss } from "../lib/backStack";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
-import SongFormField from "../components/SongFormField";
+import SongFormBoxes, { insertFormBox } from "../components/SongFormBoxes";
 import PresetChips from "../components/PresetChips";
 import { presetInsertText } from "../lib/songForm";
 import ContiView from "../components/ContiView";
@@ -119,20 +119,6 @@ export default function Conti() {
     if (!memoElRef.current || document.activeElement !== memoElRef.current) hidePresetBarSoon(2500);
   };
   useEffect(() => () => keepPresetBar(), []);
-
-  const insertPreset = (text: string) => {
-    const el = memoElRef.current;
-    const songId = memoSongRef.current;
-    if (!el || !songId) {
-      flash("먼저 메모를 누른 뒤 사용하세요");
-      return;
-    }
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? start;
-    const next = el.value.slice(0, start) + text + el.value.slice(end);
-    pendingSelRef.current = { el, pos: start + text.length };
-    setSongNote(songId, next);
-  };
 
   // ---- drag-to-reorder for the saved-conti list (mouse drag / long-press) ----
   const [cDragId, setCDragId] = useState<string | null>(null);
@@ -703,14 +689,13 @@ export default function Conti() {
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-start gap-2">
-                    <SongFormField
+                    <SongFormBoxes
                       value={att?.note ?? ""}
                       onChange={(v) => setSongNote(r.id, v)}
-                      onFocus={(el) => { memoElRef.current = el; memoSongRef.current = r.id; showPresetBar(); }}
+                      onFocus={showPresetBar}
                       onBlur={() => hidePresetBarSoon()}
                       onSelect={setFormSel}
-                      className="-mx-1 w-full rounded px-1 py-0.5"
-                      textClassName="text-xs leading-relaxed text-slate-600 placeholder:text-slate-400 dark:text-slate-300 dark:placeholder:text-slate-600"
+                      className="-mx-1 px-1 py-0.5"
                     />
                     {recentlyUsed && (
                       <button
@@ -756,7 +741,8 @@ export default function Conti() {
         >
           <PresetChips
             selection={formSel}
-            onInsert={(p) => insertPreset(presetInsertText(p))}
+            onInsert={(p) => insertFormBox(presetInsertText(p))}
+            onInsertText={() => insertFormBox("", false)}
             className="mt-3 border-y border-slate-100 px-3 py-2 dark:border-slate-800"
           />
         </div>

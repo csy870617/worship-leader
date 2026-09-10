@@ -1,21 +1,21 @@
-// 송폼(song form) presets and their colors.
+// 송폼(song form): a row of boxes, and the colors they are drawn in.
 //
-// The song form itself stays PLAIN TEXT — colors are applied when rendering by
-// recognizing preset tokens (V1, C, Tag, …). Keeping the stored value plain
-// means sync, PDF export and hand-typed forms all keep working unchanged.
+// A form is stored as ONE STRING so sync, PDF export and everything that
+// already carries this field keep working. The boxes are joined by an
+// invisible separator; a string without it (anything written before boxes
+// existed) is read back as boxes by splitting on whitespace, so old forms
+// still show up as boxes.
 
 /** quick-insert chips, in display order: verse family, chorus family, the rest */
 export const PRESET_ROWS = [
   ["Int4", "Int8", "V", "V1", "V2", "V3"],
-  ["PC", "C", "C1", "C2", "C3"],
-  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
+  ["PC", "C", "C1", "C2", "C3", "C4"],
+  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit", "/"],
 ];
 export const ALL_PRESETS = PRESET_ROWS.flat();
 
-/** Text a preset chip inserts. The form is a row of boxes, so a preset drops in
- *  as just its own box plus a space — the space matters, since anything written
- *  against a box without one joins it. "Rit" goes in as "(Rit)". */
-export const presetInsertText = (p: string) => (p === "Rit" ? "(Rit) " : `${p} `);
+/** A preset chip drops in as its own box, labeled exactly like the chip. */
+export const presetInsertText = (p: string) => p;
 
 // verse family = blue, chorus family = red, bridge = green, and the structural
 // markers (intro/interlude/tag/ending) a neutral slate — every preset gets a
@@ -27,8 +27,10 @@ const SLATE = "#64748b";
 export const DEFAULT_PRESET_COLORS: Record<string, string> = {
   V: BLUE, V1: BLUE, V2: BLUE, V3: BLUE,
   PC: RED, C: RED, C1: RED, C2: RED, C3: RED,
+  C4: RED,
   B: GREEN,
-  Int4: SLATE, Int8: SLATE, Itl4: SLATE, Itl8: SLATE, Tag: SLATE, Out: SLATE, Rit: SLATE,
+  // structural markers all share one calm tone
+  Int4: SLATE, Int8: SLATE, Itl4: SLATE, Itl8: SLATE, Tag: SLATE, Out: SLATE, Rit: SLATE, "/": SLATE,
 };
 
 /** palette offered when recoloring a preset ("" = no color / inherit) */
@@ -66,13 +68,6 @@ export function presetColor(name: string): string {
   const o = overrides[name];
   return o !== undefined ? o : DEFAULT_PRESET_COLORS[name] ?? "";
 }
-/** Words/phrases the user colored that aren't presets, longest first so an
- *  overlapping shorter one can't win the match. */
-function customKeys(): string[] {
-  return Object.keys(overrides)
-    .filter((k) => overrides[k] && !ALL_PRESETS.includes(k))
-    .sort((a, b) => b.length - a.length);
-}
 export function setPresetColor(name: string, color: string) {
   if (!validKey(name)) return;
   // storing the default explicitly is harmless and keeps intent obvious
@@ -103,11 +98,6 @@ export function subscribePresetColors(cb: () => void) {
 }
 export function presetColorsVersion() {
   return version;
-}
-
-export interface FormSegment {
-  text: string;
-  color?: string;
 }
 
 const hex = (c: string) => {
@@ -157,82 +147,52 @@ export function formBoxStyle(color: string): Record<string, string> {
   };
 }
 
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** One box of a song form. A preset box's label is fixed; a text box holds
+ *  whatever the user typed in it. */
+export interface FormItem {
+  /** stable within one parse, used as the React key */
+  id: string;
+  text: string;
+  preset: boolean;
+}
 
-/**
- * Split a song form into colored segments. Two things get a color: a run of
- * letters+digits that exactly matches a preset, and any word/phrase the user
- * colored by hand (those win, and are tried longest-first). Everything else
- * (separators, spaces, free text, newlines) passes through uncolored, so the
- * rendered text is always identical to the stored string.
- */
-export function songFormSegments(text: string): FormSegment[] {
-  const custom = customKeys();
-  const re = new RegExp(
-    (custom.length ? custom.map(escapeRe).join("|") + "|" : "") + "[A-Za-z]+[0-9]*",
-    "g"
-  );
-  const out: FormSegment[] = [];
-  const push = (t: string, color?: string) => {
-    if (!t) return;
-    const prev = out[out.length - 1];
-    if (prev && prev.color === color) prev.text += t; // keep runs merged
-    else out.push(color ? { text: t, color } : { text: t });
-  };
+/** invisible separator between boxes (unit separator) */
+const SEP = "\u001f";
+const isPresetName = (t: string) => ALL_PRESETS.includes(t);
 
-  // Work chunk by chunk (a chunk = a run with no spaces in it). Anything
-  // written up against a colored token — "(V1)", "C1x2", "V1절" — belongs to
-  // that token and takes its color; a space ends the run.
-  const byChunks = (part: string) => {
-  for (const chunk of part.split(/(\s+)/)) {
-    if (!chunk || /^\s+$/.test(chunk)) {
-      push(chunk);
-      continue;
-    }
-    re.lastIndex = 0;
-    const hits: { start: number; color: string }[] = [];
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(chunk))) {
-      if (!m[0]) {
-        re.lastIndex++; // defensive: never spin on a zero-length match
-        continue;
-      }
-      const color = presetColor(m[0]);
-      if (color) hits.push({ start: m.index, color });
-    }
-    if (!hits.length) {
-      push(chunk);
-      continue;
-    }
-    // each colored token owns the chunk from its own start (the leading part
-    // goes to the first one) until the next colored token begins
-    for (let i = 0; i < hits.length; i++) {
-      const from = i === 0 ? 0 : hits[i].start;
-      const to = i + 1 < hits.length ? hits[i + 1].start : chunk.length;
-      push(chunk.slice(from, to), hits[i].color);
-    }
-  }
-  };
-
-  // A hand-colored phrase can contain spaces, so it has to be matched before
-  // the text is cut into chunks; what's left goes through the chunk pass.
-  const phrases = custom.filter((k) => /\s/.test(k));
-  if (!phrases.length) {
-    byChunks(text);
-    return out;
-  }
-  const pre = new RegExp(phrases.map(escapeRe).join("|"), "g");
-  let last = 0;
-  let pm: RegExpExecArray | null;
-  while ((pm = pre.exec(text))) {
-    if (!pm[0]) {
-      pre.lastIndex++;
-      continue;
-    }
-    if (pm.index > last) byChunks(text.slice(last, pm.index));
-    push(pm[0], presetColor(pm[0]));
-    last = pm.index + pm[0].length;
-  }
-  if (last < text.length) byChunks(text.slice(last));
+/** Read a stored form as its boxes. */
+export function parseForm(value: string): FormItem[] {
+  const raw = value ?? "";
+  if (!raw) return [];
+  const parts = raw.includes(SEP)
+    ? raw.split(SEP)
+    : // legacy plain text: every word is its own box, and the separators the
+      // form used to be written with ("-") are dropped
+      raw
+        .split(/\s+/)
+        .filter((w) => w && w !== "-" && w !== "–");
+  const out: FormItem[] = [];
+  parts.forEach((text, i) => {
+    // "(Rit)" was how Rit used to go in — show it as the Rit box now
+    const t = /^\((.+)\)$/.test(text) && isPresetName(text.slice(1, -1)) ? text.slice(1, -1) : text;
+    out.push({ id: `b${i}`, text: t, preset: isPresetName(t) });
+  });
   return out;
+}
+
+/** Write boxes back to the stored string. */
+export function serializeForm(items: FormItem[]): string {
+  return items.map((it) => it.text).join(SEP);
+}
+
+/** Plain, separator-free text of a form — for anything that just needs to read it. */
+export function formPlainText(value: string): string {
+  return parseForm(value)
+    .map((i) => i.text)
+    .join(" ");
+}
+
+/** The color a box is drawn in ("" = plain, no box). */
+export function itemColor(item: FormItem): string {
+  return presetColor(item.text.trim());
 }

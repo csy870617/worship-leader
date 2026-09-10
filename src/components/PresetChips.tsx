@@ -23,11 +23,14 @@ let keptEditing: string | null = null;
 
 export default function PresetChips({
   onInsert,
+  onInsertText,
   selection = "",
   className = "",
   variant = "light",
 }: {
   onInsert: (preset: string) => void;
+  /** add an empty box the user types into (for anything the presets miss) */
+  onInsertText?: () => void;
   /** text currently selected in the song form — colorable like a preset */
   selection?: string;
   className?: string;
@@ -94,6 +97,23 @@ export default function PresetChips({
             })}
           </div>
         ))}
+        {onInsertText && (
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            <button
+              onPointerDown={(e) => {
+                e.preventDefault();
+                onInsertText();
+              }}
+              className={`rounded-md border border-dashed px-2.5 py-1 text-xs font-bold ${
+                variant === "dark"
+                  ? "border-white/40 text-white/80"
+                  : "border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400"
+              }`}
+            >
+              ＋ 빈 박스
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Color palette. It colors whatever is selected in the song form — any

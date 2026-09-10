@@ -2,24 +2,30 @@ import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
 import { getSongAttach, sheetsForKey } from "./songAttach";
-import { formBoxColors, songFormSegments } from "./songForm";
+import { formBoxColors, itemColor, parseForm } from "./songForm";
 import { youtubePlaylistUrl } from "./share";
 
 const esc = (s: string) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 
 
-/** Song form as HTML: colored parts become filled boxes, exactly like the app
- *  shows them (the PDF has no caret to stay aligned with, so it can use real
- *  padding instead of the field's faux-padding shadow). */
+/** Song form as HTML: the same row of boxes the app shows (the PDF has no
+ *  caret to stay aligned with, so the boxes use real padding). */
 function formHtml(text: string): string {
-  return songFormSegments(text)
-    .map((seg) => {
-      if (!seg.color) return esc(seg.text);
-      const { bg, fg, border } = formBoxColors(seg.color);
+  return parseForm(text)
+    .map((item) => {
+      const color = itemColor(item);
+      const label = esc(item.text);
+      if (!color) {
+        return (
+          `<span style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;` +
+          `border-radius:5px;padding:1px 6px;margin-right:7px;display:inline-block;">${label}</span>`
+        );
+      }
+      const { bg, fg, border } = formBoxColors(color);
       return (
         `<span style="background:${bg};color:${fg};border:1px solid ${border};` +
-        `border-radius:5px;padding:1px 5px;white-space:pre-wrap;">${esc(seg.text)}</span>`
+        `border-radius:5px;padding:1px 6px;margin-right:7px;display:inline-block;">${label}</span>`
       );
     })
     .join("");
