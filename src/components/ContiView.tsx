@@ -727,7 +727,7 @@ function NoteEditor({
             selection={formSel}
             onInsert={(p) => insertFormBox(presetInsertText(p))}
             onInsertText={() => insertFormBox("", false)}
-            className="py-1"
+            className="py-1.5"
           />
         </div>
       )}

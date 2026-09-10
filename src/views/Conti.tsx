@@ -743,7 +743,7 @@ export default function Conti() {
             selection={formSel}
             onInsert={(p) => insertFormBox(presetInsertText(p))}
             onInsertText={() => insertFormBox("", false)}
-            className="mt-3 border-y border-slate-100 px-3 py-2 dark:border-slate-800"
+            className="mt-3 px-3"
           />
         </div>
       )}

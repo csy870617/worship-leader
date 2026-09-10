@@ -141,114 +141,166 @@ export default function PresetChips({
   const target = sel || editing;
   const targetLabel = sel ? `「${sel.length > 12 ? sel.slice(0, 12) + "…" : sel}」` : editing;
 
-  const base =
-    variant === "dark"
-      ? "bg-white/15 text-white active:bg-white/30"
-      : "bg-slate-100 text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300";
+  const dark = variant === "dark";
+  const card = dark
+    ? "rounded-2xl bg-white/10 p-2.5 ring-1 ring-white/15"
+    : "rounded-2xl bg-slate-50 p-2.5 ring-1 ring-slate-200 dark:bg-slate-800/60 dark:ring-slate-700";
+  const plainChip = dark
+    ? "bg-white/15 text-white active:bg-white/30"
+    : "bg-white text-slate-600 ring-1 ring-slate-200 active:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700";
+  const muted = dark ? "text-white/60" : "text-slate-400 dark:text-slate-500";
+  const action = (on: boolean) =>
+    "rounded-full px-2.5 py-1 text-[11px] font-semibold transition " +
+    (on
+      ? "bg-indigo-600 text-white"
+      : dark
+      ? "bg-white/15 text-white/80 active:bg-white/25"
+      : "bg-white text-slate-500 ring-1 ring-slate-200 active:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700");
 
   return (
-    <div className={className}>
-      <div className="space-y-1.5">
-        {PRESET_ROWS.map((row, ri) => (
-          <div key={ri} className="flex flex-wrap items-center justify-center gap-1.5">
-            {row.map((p) => {
-              const c = presetColor(p);
-              const box = c ? formBoxColors(c) : null;
-              return (
-                <button
-                  key={p}
-                  // pointerDown + preventDefault keeps the field focused so the
-                  // preset lands at the caret; in edit mode we open the palette
-                  onPointerDown={(e) => {
-                    if (editMode) {
-                      e.preventDefault();
-                      setEditing(editing === p ? null : p);
-                      return;
-                    }
-                    chipPointerDown(e, p, true);
-                  }}
-                  onPointerMove={chipPointerMove}
-                  onPointerUp={(e) => {
-                    if (editMode) return;
-                    // a drag already put the box where it was dropped
-                    if (!chipPointerUp(e)) onInsert(p);
-                  }}
-                  onPointerCancel={(e) => {
-                    if (!editMode) chipPointerUp(e);
-                  }}
-                  className={`rounded-md px-2.5 py-1 text-xs font-bold ${base} ${
-                    editing === p
-                      ? "ring-2 ring-indigo-400"
-                      : editMode
-                      ? "ring-1 ring-indigo-300"
-                      : ""
-                  }`}
-                  style={{
-                    touchAction: "pan-y",
-                    ...(box ? { background: box.bg, color: box.fg, border: `1px solid ${box.border}` } : {}),
-                  }}
-                >
-                  {p}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-        {onInsertText && (
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
-            <button
-              onPointerDown={(e) => chipPointerDown(e, "", false)}
-              onPointerMove={chipPointerMove}
-              onPointerUp={(e) => {
-                if (!chipPointerUp(e)) onInsertText();
-              }}
-              onPointerCancel={chipPointerUp}
-              style={{ touchAction: "pan-y" }}
-              className={`rounded-md border border-dashed px-2.5 py-1 text-xs font-bold ${
-                variant === "dark"
-                  ? "border-white/40 text-white/80"
-                  : "border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400"
-              }`}
-            >
-              ＋ 빈 박스
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Color palette. It colors whatever is selected in the song form — any
-          hand-typed word, not just a preset — and falls back to the chip picked
-          in 색 편집 mode. In edit mode with neither, it says which step is
-          missing instead of staying invisible. */}
-      {(target || editMode) && (
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
-          <span className={`text-[11px] font-semibold ${variant === "dark" ? "text-white/70" : "text-slate-400"}`}>
-            {target ? `${targetLabel} 색` : "색을 바꿀 프리셋을 누르거나 글자를 선택하세요"}
+    <div className={className} data-preset-bar>
+      <div className={card}>
+        {/* what this bar is, and the one switch it has */}
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className={`text-[11px] font-semibold ${muted}`}>
+            {editMode ? "박스 색 바꾸기" : "송폼 프리셋"}
           </span>
-          {target &&
-            PRESET_COLOR_CHOICES.map((c) => (
+          <div className="flex items-center gap-1.5">
+            {editMode && (
               <button
-                key={c || "none"}
                 onPointerDown={(e) => {
                   e.preventDefault();
-                  setPresetColor(target, c);
+                  resetPresetColors();
+                  setEditing(null);
                 }}
-                aria-label={c || "색 없음"}
-                className={
-                  "h-6 w-6 rounded-full border text-[9px] font-bold " +
-                  (presetColor(target) === c
-                    ? "border-indigo-500 ring-2 ring-indigo-400"
-                    : variant === "dark"
-                    ? "border-white/40"
-                    : "border-slate-300")
-                }
-                style={c ? { background: c } : undefined}
+                className={action(false)}
               >
-                {c ? "" : "×"}
+                기본색으로
               </button>
-            ))}
+            )}
+            <button
+              onPointerDown={(e) => {
+                e.preventDefault();
+                setEditMode(!editMode);
+                setEditing(null);
+              }}
+              className={action(editMode)}
+            >
+              {editMode ? "완료" : "색 편집"}
+            </button>
+          </div>
         </div>
-      )}
+
+        <div className="space-y-1.5">
+          {PRESET_ROWS.map((row, ri) => (
+            <div key={ri} className="flex flex-wrap items-center justify-center gap-1.5">
+              {row.map((p) => {
+                const c = presetColor(p);
+                const box = c ? formBoxColors(c) : null;
+                return (
+                  <button
+                    key={p}
+                    // pointerDown + preventDefault keeps the field focused so the
+                    // preset lands where it should; in edit mode we open the palette
+                    onPointerDown={(e) => {
+                      if (editMode) {
+                        e.preventDefault();
+                        setEditing(editing === p ? null : p);
+                        return;
+                      }
+                      chipPointerDown(e, p, true);
+                    }}
+                    onPointerMove={chipPointerMove}
+                    onPointerUp={(e) => {
+                      if (editMode) return;
+                      // a drag already put the box where it was dropped
+                      if (!chipPointerUp(e)) onInsert(p);
+                    }}
+                    onPointerCancel={(e) => {
+                      if (!editMode) chipPointerUp(e);
+                    }}
+                    className={`min-w-[3rem] rounded-lg px-2 py-1.5 text-xs font-bold leading-4 transition ${
+                      box ? "" : plainChip
+                    } ${
+                      editing === p
+                        ? "ring-2 ring-indigo-500"
+                        : editMode
+                        ? "ring-1 ring-indigo-300"
+                        : ""
+                    }`}
+                    style={{
+                      touchAction: "pan-y",
+                      ...(box ? { background: box.bg, color: box.fg, border: `1px solid ${box.border}` } : {}),
+                    }}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+              {/* the typed box rides along at the end of the last row */}
+              {ri === PRESET_ROWS.length - 1 && onInsertText && (
+                <button
+                  onPointerDown={(e) => chipPointerDown(e, "", false)}
+                  onPointerMove={chipPointerMove}
+                  onPointerUp={(e) => {
+                    if (!chipPointerUp(e)) onInsertText();
+                  }}
+                  onPointerCancel={chipPointerUp}
+                  style={{ touchAction: "pan-y" }}
+                  className={`min-w-[3rem] rounded-lg border border-dashed px-2 py-1.5 text-xs font-bold leading-4 ${
+                    dark
+                      ? "border-white/40 text-white/80"
+                      : "border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  ＋ 글자
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Color palette: colors the box picked in 색 편집 mode, or whichever box
+            is selected in the form. */}
+        {(target || editMode) && (
+          <div
+            className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5 border-t pt-2.5"
+            style={{ borderColor: dark ? "rgba(255,255,255,.15)" : "#e2e8f0" }}
+          >
+            <span className={`text-[11px] font-semibold ${muted}`}>
+              {target ? `${targetLabel} 색` : "색을 바꿀 박스를 누르세요"}
+            </span>
+            {target &&
+              PRESET_COLOR_CHOICES.map((c) => (
+                <button
+                  key={c || "none"}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    setPresetColor(target, c);
+                  }}
+                  aria-label={c || "색 없음"}
+                  className={
+                    "h-7 w-7 rounded-full border text-[10px] font-bold transition " +
+                    (presetColor(target) === c
+                      ? "border-white ring-2 ring-indigo-500"
+                      : dark
+                      ? "border-white/40"
+                      : "border-slate-300")
+                  }
+                  style={c ? { background: c } : undefined}
+                >
+                  {c ? "" : "×"}
+                </button>
+              ))}
+          </div>
+        )}
+
+        {!editMode && (
+          <p className={`mt-2 text-center text-[11px] ${muted}`}>
+            눌러서 추가 · 끌어서 원하는 자리에
+          </p>
+        )}
+      </div>
 
       {drag && (
         <span
@@ -272,33 +324,6 @@ export default function PresetChips({
           {drag.text || "글자"}
         </span>
       )}
-
-      <div className="mt-1.5 flex items-center justify-center gap-3">
-        <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            setEditMode(!editMode);
-            setEditing(null);
-          }}
-          className={`text-[11px] font-semibold ${
-            editMode ? "text-indigo-500" : variant === "dark" ? "text-white/60" : "text-slate-400"
-          }`}
-        >
-          {editMode ? "완료" : "색 편집"}
-        </button>
-        {editMode && (
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              resetPresetColors();
-              setEditing(null);
-            }}
-            className={`text-[11px] font-semibold ${variant === "dark" ? "text-white/60" : "text-slate-400"}`}
-          >
-            기본색으로
-          </button>
-        )}
-      </div>
     </div>
   );
 }

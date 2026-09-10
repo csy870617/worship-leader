@@ -141,7 +141,14 @@ export default function SongFormBoxes({
     // lets the parent put it away (the bar itself cancels that on its own)
     if (!outsideRef.current) {
       const onOutside = (e: PointerEvent) => {
-        if (rowRef.current?.contains(e.target as Node)) return;
+        const t = e.target as Element | null;
+        if (rowRef.current?.contains(t as Node)) return;
+        // the preset bar is this field's own toolbar: tapping it keeps the
+        // selection (that's where the color palette and the chips act on it)
+        if (t?.closest?.("[data-preset-bar]")) return;
+        setSel(null);
+        setDropAt(null);
+        onSelect?.("");
         onBlurRef.current?.();
       };
       outsideRef.current = onOutside;
