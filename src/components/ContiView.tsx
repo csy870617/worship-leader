@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "../lib/useConti";
-import { removeSongSheet, replaceSongSheet, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetTexts, sheetsForKey, useSongAttach } from "../lib/songAttach";
+import { removeSongSheet, replaceSongSheet, restoreSongSheetOriginal, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetOrigin, setSongSheetTexts, sheetsForKey, useSongAttach } from "../lib/songAttach";
 import { youtubePlaylistUrl, openYouTube } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
@@ -57,13 +57,26 @@ export default function ContiView({
   };
   const onCropDone = async (newFile: File | null, crop?: { x: number; y: number; w: number; h: number }) => {
     const t = cropTarget.current;
+    const source = cropFile;
     cropTarget.current = null;
     setCropFile(null);
     if (newFile && t) {
-      const newAid = await saveSheetFromFile(newFile, songById.get(t.songId)?.title ?? "");
+      const title = songById.get(t.songId)?.title ?? "";
+      const hadOrigin = attach[t.songId]?.sheetOrigins?.[t.aid] != null;
+      const newAid = await saveSheetFromFile(newFile, title);
       replaceSongSheet(t.songId, t.aid, newAid, crop);
-      removeSheetEverywhere(t.aid);
+      // keep the untouched image so the crop can be undone later
+      if (!hadOrigin && source && crop && (crop.w < 0.995 || crop.h < 0.995)) {
+        const originAid = await saveSheetFromFile(source, title);
+        setSongSheetOrigin(t.songId, newAid, { aid: originAid, crop });
+      } else {
+        removeSheetEverywhere(t.aid);
+      }
     }
+  };
+  const restoreOriginal = (songId: string, aid: string) => {
+    setSheetMenu(null);
+    if (restoreSongSheetOriginal(songId, aid)) removeSheetEverywhere(aid);
   };
   const deleteSheet = (songId: string, aid: string) => {
     setSheetMenu(null);
@@ -351,15 +364,27 @@ export default function ContiView({
                 </svg>
                 <span className="text-sm font-semibold">텍스트</span>
               </button>
-              <button
-                onClick={() => setSheetMenu(null)}
-                className="flex flex-col items-center gap-1.5 rounded-2xl bg-slate-50 py-4 text-slate-500 transition active:scale-95 active:bg-slate-100 dark:bg-slate-700/50 dark:text-slate-400 dark:active:bg-slate-700"
-              >
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-                <span className="text-sm font-semibold">취소</span>
-              </button>
+              {attach[sheetMenu.songId]?.sheetOrigins?.[sheetMenu.aid] ? (
+                <button
+                  onClick={() => restoreOriginal(sheetMenu.songId, sheetMenu.aid)}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl bg-slate-50 py-4 text-slate-700 transition active:scale-95 active:bg-slate-100 dark:bg-slate-700/50 dark:text-slate-200 dark:active:bg-slate-700"
+                >
+                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 9h11a5 5 0 0 1 0 10h-3M4 9l4-4M4 9l4 4" />
+                  </svg>
+                  <span className="text-sm font-semibold">원본으로</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setSheetMenu(null)}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl bg-slate-50 py-4 text-slate-500 transition active:scale-95 active:bg-slate-100 dark:bg-slate-700/50 dark:text-slate-400 dark:active:bg-slate-700"
+                >
+                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                  <span className="text-sm font-semibold">취소</span>
+                </button>
+              )}
               <button
                 onClick={() => deleteSheet(sheetMenu.songId, sheetMenu.aid)}
                 className="flex flex-col items-center gap-1.5 rounded-2xl bg-rose-50 py-4 text-rose-600 transition active:scale-95 active:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:active:bg-rose-500/20"

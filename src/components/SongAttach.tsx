@@ -9,8 +9,10 @@ import {
   setSongSheets,
   setSongSheetKey,
   setSongSheetDraws,
+  setSongSheetOrigin,
   setSongSheetTexts,
   setSongYoutube,
+  restoreSongSheetOriginal,
   useSongAttach,
 } from "../lib/songAttach";
 import {
@@ -39,6 +41,9 @@ const TEXT_SIZES: { label: string; value: number }[] = [
 // stroke widths (fraction of image width) for 아주작게/작게/보통/크게, per tool
 const PEN_WIDTHS = [0.0025, 0.004, 0.008, 0.014];
 const HL_WIDTHS = [0.02, 0.03, 0.05, 0.08];
+type Crop = { x: number; y: number; w: number; h: number };
+/** did the user actually take a piece out of the image? */
+const isCropped = (c?: Crop) => !!c && (c.w < 0.995 || c.h < 0.995);
 const HL_DEFAULT_COLOR = "#ffe600"; // yellow marker
 const PEN_DEFAULT_COLOR = "#ff1e1e"; // red pen
 
@@ -65,6 +70,7 @@ export default function SongAttachEditor({
   // a song with several keys can hold a separate sheet per key
   const songKeys = getSongById(songId)?.keys ?? [];
   const sheetKeys = a?.sheetKeys ?? {};
+  const sheetOrigins = a?.sheetOrigins ?? {};
 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -154,14 +160,28 @@ export default function SongAttachEditor({
       /* ignore */
     }
   };
-  const onRecropDone = async (newFile: File | null, crop?: { x: number; y: number; w: number; h: number }) => {
+  const onRecropDone = async (newFile: File | null, crop?: Crop) => {
     const t = recrop;
     setRecrop(null);
     if (newFile && t) {
+      const hadOrigin = sheetOrigins[t.aid] != null;
       const newAid = await saveSheetFromFile(newFile, songTitle);
+      // replaceSongSheet carries an existing original over to the new id
       replaceSongSheet(songId, t.aid, newAid, crop);
-      removeSheetEverywhere(t.aid);
+      if (!hadOrigin && isCropped(crop)) {
+        // nothing was kept before (an older sheet, or one added uncropped):
+        // the image being cropped right now becomes the original
+        const originAid = await saveSheetFromFile(t.file, songTitle);
+        setSongSheetOrigin(songId, newAid, { aid: originAid, crop });
+      } else {
+        removeSheetEverywhere(t.aid);
+      }
     }
+  };
+  const restoreOriginal = async (aid: string) => {
+    setSheetMenu(null);
+    const restored = restoreSongSheetOriginal(songId, aid);
+    if (restored) removeSheetEverywhere(aid);
   };
   const deleteSheetFromMenu = (aid: string) => {
     setSheetMenu(null);
@@ -217,14 +237,20 @@ export default function SongAttachEditor({
     return () => window.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const onCropDone = async (cropped: File | null) => {
+  const onCropDone = async (cropped: File | null, crop?: Crop) => {
     // always advance the queue, even if a save fails, so the crop view can't get stuck
+    const source = cropQueue[0]?.file;
     if (cropped) {
       setBusy(true);
       setErr(null);
       try {
         const aid = await saveSheetFromFile(cropped, songTitle);
         addSongSheet(songId, aid);
+        // a real crop keeps the untouched upload around, so it can be restored
+        if (source && isCropped(crop)) {
+          const originAid = await saveSheetFromFile(source, songTitle);
+          setSongSheetOrigin(songId, aid, { aid: originAid, crop });
+        }
       } catch {
         setErr("악보 저장에 실패했어요");
       } finally {
@@ -479,6 +505,14 @@ export default function SongAttachEditor({
             >
               자르기
             </button>
+            {sheetOrigins[sheetMenu] && (
+              <button
+                onClick={() => restoreOriginal(sheetMenu)}
+                className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-slate-700 active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-700"
+              >
+                원본으로 되돌리기
+              </button>
+            )}
             <button
               onClick={() => deleteSheetFromMenu(sheetMenu)}
               className="block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold text-rose-500 active:bg-rose-50 dark:active:bg-rose-500/10"

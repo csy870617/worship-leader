@@ -16,6 +16,13 @@ export interface SongAttach {
   /** Which key each sheet belongs to (attachment id → key, e.g. "G").
    *  A sheet with no entry is shared: it shows for every key. */
   sheetKeys?: Record<string, string>;
+  /** The untouched upload a cropped sheet came from, so a crop can always be
+   *  undone: cropped attachment id → { the original's id, the crop taken }. */
+  sheetOrigins?: Record<string, SheetOrigin>;
+}
+export interface SheetOrigin {
+  aid: string;
+  crop?: { x: number; y: number; w: number; h: number };
 }
 
 /** Sheets to show for a chosen key: the ones tagged with that key plus every
@@ -98,6 +105,20 @@ function sanitizeAttach(a: any): SongAttach | null {
       if (typeof v === "string" && v) sk[k] = v;
     }
     if (Object.keys(sk).length) out.sheetKeys = sk;
+  }
+  // the untouched upload behind a cropped sheet
+  if (a.sheetOrigins && typeof a.sheetOrigins === "object" && !Array.isArray(a.sheetOrigins)) {
+    const so: Record<string, SheetOrigin> = {};
+    for (const [k, v] of Object.entries(a.sheetOrigins as Record<string, any>)) {
+      if (!liveSheets.has(k) || !v || typeof v.aid !== "string" || !v.aid) continue;
+      const o: SheetOrigin = { aid: v.aid };
+      const c = v.crop;
+      if (c && ["x", "y", "w", "h"].every((f) => typeof c[f] === "number")) {
+        o.crop = { x: c.x, y: c.y, w: c.w, h: c.h };
+      }
+      so[k] = o;
+    }
+    if (Object.keys(so).length) out.sheetOrigins = so;
   }
   return Object.keys(out).length ? out : null;
 }
@@ -205,8 +226,68 @@ export function removeSongSheet(id: string, aid: string) {
     delete sd[aid];
     const sk = { ...(a.sheetKeys ?? {}) };
     delete sk[aid];
-    return { ...a, sheets, sheetTexts: st, sheetDraws: sd, sheetKeys: sk };
+    const so = { ...(a.sheetOrigins ?? {}) };
+    delete so[aid];
+    return { ...a, sheets, sheetTexts: st, sheetDraws: sd, sheetKeys: sk, sheetOrigins: so };
   });
+}
+/** The untouched upload a sheet was cropped from, if it was kept. */
+export function sheetOrigin(id: string, aid: string): SheetOrigin | undefined {
+  return store[id]?.sheetOrigins?.[aid];
+}
+/** Remember the upload a cropped sheet came from. */
+export function setSongSheetOrigin(
+  id: string,
+  aid: string,
+  origin: SheetOrigin
+) {
+  update(id, (a) => ({ ...a, sheetOrigins: { ...(a.sheetOrigins ?? {}), [aid]: origin } }));
+}
+/**
+ * Put the untouched upload back in place of its cropped sheet. Text and strokes
+ * move with it — the crop mapping run backwards, so what sat on the cropped
+ * image lands on the same spot of the full one.
+ */
+export function restoreSongSheetOriginal(id: string, aid: string): string | null {
+  const origin = store[id]?.sheetOrigins?.[aid];
+  if (!origin) return null;
+  const crop = origin.crop;
+  update(id, (a) => {
+    const sheets = (a.sheets ?? []).map((x) => (x === aid ? origin.aid : x));
+    const st = { ...(a.sheetTexts ?? {}) };
+    const oldT = st[aid];
+    delete st[aid];
+    if (oldT && oldT.length) {
+      st[origin.aid] = crop
+        ? oldT.map((t) => ({
+            ...t,
+            x: crop.x + t.x * crop.w,
+            y: crop.y + t.y * crop.h,
+            size: t.size * crop.w,
+          }))
+        : oldT;
+    }
+    const sd = { ...(a.sheetDraws ?? {}) };
+    const oldD = sd[aid];
+    delete sd[aid];
+    if (oldD && oldD.length) {
+      sd[origin.aid] = crop
+        ? oldD.map((s) => ({
+            ...s,
+            points: s.points.map((p) => ({ x: crop.x + p.x * crop.w, y: crop.y + p.y * crop.h })),
+            width: s.width * crop.w,
+          }))
+        : oldD;
+    }
+    const sk = { ...(a.sheetKeys ?? {}) };
+    const key = sk[aid];
+    delete sk[aid];
+    if (key) sk[origin.aid] = key;
+    const so = { ...(a.sheetOrigins ?? {}) };
+    delete so[aid];
+    return { ...a, sheets, sheetTexts: st, sheetDraws: sd, sheetKeys: sk, sheetOrigins: so };
+  });
+  return origin.aid;
 }
 export function replaceSongSheet(
   id: string,
@@ -253,7 +334,27 @@ export function replaceSongSheet(
     const oldKey = sk[oldAid];
     delete sk[oldAid];
     if (oldKey) sk[newAid] = oldKey;
-    return { ...a, sheets, sheetTexts: st, sheetDraws: sd, sheetKeys: sk };
+    // a second crop still points back at the very first upload, and the crop
+    // it records is the two crops combined
+    const so = { ...(a.sheetOrigins ?? {}) };
+    const prev = so[oldAid];
+    delete so[oldAid];
+    if (prev) {
+      const pc = prev.crop;
+      so[newAid] =
+        pc && crop
+          ? {
+              aid: prev.aid,
+              crop: {
+                x: pc.x + crop.x * pc.w,
+                y: pc.y + crop.y * pc.h,
+                w: pc.w * crop.w,
+                h: pc.h * crop.h,
+              },
+            }
+          : { aid: prev.aid, crop: pc ?? crop };
+    }
+    return { ...a, sheets, sheetTexts: st, sheetDraws: sd, sheetKeys: sk, sheetOrigins: so };
   });
 }
 export function setSongSheetTexts(id: string, aid: string, list: SheetText[]) {
