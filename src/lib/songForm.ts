@@ -125,8 +125,9 @@ export function formBoxColors(color: string): { bg: string; fg: string; border: 
   const c = hex(color);
   if (!c) return NEUTRAL_BOX;
   const mix = (v: number, w: number) => v + (255 - v) * w;
-  const wash = (v: number) => mix(v, 0.84);
-  const edge = (v: number) => mix(v, 0.55);
+  // as pale as the neutral box above, so a row of boxes reads as one family
+  const wash = (v: number) => mix(v, 0.9);
+  const edge = (v: number) => mix(v, 0.7);
   const deep = (v: number) => v * 0.78;
   return {
     bg: toHex(wash(c.r), wash(c.g), wash(c.b)),
