@@ -429,7 +429,10 @@ function DropMark() {
   return <span aria-hidden className="h-6 w-0.5 shrink-0 rounded-full bg-indigo-500" />;
 }
 
-/** An input that is exactly as wide as what it holds. */
+/** An input that is exactly as wide as what it holds: a hidden copy of the text
+ *  sets the width, and the real input is laid over it. (Leaving the input in
+ *  flow doesn't work — a text input reserves a couple of characters' width on
+ *  its own, so every typed box came out the same size whatever was in it.) */
 function AutoInput({
   id,
   textSize,
@@ -446,19 +449,15 @@ function AutoInput({
   onBlur: () => void;
 }) {
   return (
-    <span className="relative inline-grid">
-      {/* the sizer and the input share a grid cell, so the cell is as wide as
-          the text and the input stretches to it */}
+    <span className="relative inline-block">
       <span
         aria-hidden
-        className={`invisible col-start-1 row-start-1 whitespace-pre px-0.5 font-bold leading-6 ${textSize}`}
+        className={`invisible whitespace-pre px-0.5 font-bold leading-6 ${textSize}`}
       >
         {value || "글자"}
       </span>
       <input
         data-box={id}
-        // an <input> asks for ~20 characters of width by default, which would
-        // decide the grid column instead of the sizer next to it
         size={1}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -467,7 +466,7 @@ function AutoInput({
         onPointerDown={(e) => e.stopPropagation()}
         placeholder="글자"
         // the same line box as a preset, so every box in a row is one height
-        className={`col-start-1 row-start-1 w-full bg-transparent p-0 px-0.5 font-bold leading-6 outline-none placeholder:font-normal placeholder:opacity-60 ${textSize}`}
+        className={`absolute inset-0 w-full min-w-0 bg-transparent p-0 px-0.5 font-bold leading-6 outline-none placeholder:font-normal placeholder:opacity-60 ${textSize}`}
       />
     </span>
   );
