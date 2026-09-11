@@ -1,12 +1,15 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   type FormItem,
+  MAX_REPEAT,
   NEUTRAL_BOX,
   formBoxColors,
   itemColor,
   parseForm,
   serializeForm,
+  splitRepeat,
   subscribePresetColors,
+  withRepeat,
 } from "../lib/songForm";
 
 /**
@@ -304,10 +307,21 @@ export default function SongFormBoxes({
       endDrag();
       return;
     }
-    // a plain tap selects the box (and a text box also takes the caret)
+    // First tap selects the box. Tapping the selected preset box again counts
+    // it up — C, Cx2, Cx3 … — so "play it twice" is two taps. Past the cap it
+    // starts over at one, which is also how a count is taken back off.
+    if (sel === item.id && item.preset) {
+      const { base, times } = splitRepeat(item.text);
+      const nextTimes = times >= MAX_REPEAT ? 1 : times + 1;
+      const text = withRepeat(base, nextTimes);
+      commit(itemsRef.current.map((i) => (i.id === item.id ? { ...i, text } : i)));
+      onSelect?.(base);
+      return;
+    }
     const next = sel === item.id ? null : item.id;
     setSel(next);
-    onSelect?.(next ? item.text : "");
+    // color edits act on the preset itself, not on "Cx2"
+    onSelect?.(next ? (item.preset ? splitRepeat(item.text).base : item.text) : "");
   };
 
   const removeItem = (id: string) => {

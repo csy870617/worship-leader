@@ -167,6 +167,20 @@ export interface FormItem {
 const SEP = "\u001f";
 const isPresetName = (t: string) => ALL_PRESETS.includes(t);
 
+/** A preset box can carry a repeat count — "Cx2" is the C box played twice.
+ *  Splits a label into the preset it is and how many times it repeats. */
+export function splitRepeat(text: string): { base: string; times: number } {
+  const m = /^(.+?)x(\d{1,2})$/.exec(text);
+  if (m && isPresetName(m[1])) return { base: m[1], times: Math.max(1, Number(m[2])) };
+  return { base: text, times: 1 };
+}
+/** Label for a preset box repeated `times` times. */
+export function withRepeat(base: string, times: number): string {
+  return times > 1 ? `${base}x${times}` : base;
+}
+/** How many times a box may be repeated before the count starts over. */
+export const MAX_REPEAT = 9;
+
 /** Read a stored form as its boxes. */
 export function parseForm(value: string): FormItem[] {
   const raw = value ?? "";
@@ -182,7 +196,8 @@ export function parseForm(value: string): FormItem[] {
   parts.forEach((text, i) => {
     // "(Rit)" was how Rit used to go in — show it as the Rit box now
     const t = /^\((.+)\)$/.test(text) && isPresetName(text.slice(1, -1)) ? text.slice(1, -1) : text;
-    out.push({ id: `b${i}`, text: t, preset: isPresetName(t) });
+    // "Cx2" is still the C box, just repeated
+    out.push({ id: `b${i}`, text: t, preset: isPresetName(splitRepeat(t).base) });
   });
   return out;
 }
@@ -199,7 +214,9 @@ export function formPlainText(value: string): string {
     .join(" ");
 }
 
-/** The color a box is drawn in ("" = plain, no box). */
+/** The color a box is drawn in ("" = plain, no box). A repeat count doesn't
+ *  change the color: "Cx2" is drawn like "C". */
 export function itemColor(item: FormItem): string {
-  return presetColor(item.text.trim());
+  const t = item.text.trim();
+  return presetColor(item.preset ? splitRepeat(t).base : t);
 }
