@@ -2,7 +2,7 @@ import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
 import { getSongAttach, sheetsForKey } from "./songAttach";
-import { formBoxColors, itemColor, parseForm } from "./songForm";
+import { NEUTRAL_BOX, formBoxColors, itemColor, parseForm } from "./songForm";
 import { youtubePlaylistUrl } from "./share";
 
 const esc = (s: string) =>
@@ -18,7 +18,7 @@ function formHtml(text: string): string {
       const color = itemColor(item);
       const { bg, fg, border } = color
         ? formBoxColors(color)
-        : { bg: "#f1f5f9", fg: "#475569", border: "#e2e8f0" };
+        : NEUTRAL_BOX;
       return (
         `<span style="display:inline-block;background:${bg};color:${fg};border:1px solid ${border};` +
         `border-radius:6px;padding:3px 9px;margin:0 7px 5px 0;line-height:1.25;vertical-align:top;">` +

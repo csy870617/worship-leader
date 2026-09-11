@@ -707,7 +707,7 @@ function NoteEditor({
   const restorePresetFocus = () => keepPresetBar();
   useEffect(() => () => keepPresetBar(), []);
   return (
-    <div className={`${indent} mt-1 space-y-0.5`}>
+    <div className={`${indent} mt-1 space-y-2`}>
       <SongFormBoxes
         value={a?.note ?? ""}
         onChange={(v) => setSongNote(songId, v)}

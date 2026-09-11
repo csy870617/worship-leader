@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   type FormItem,
+  NEUTRAL_BOX,
   formBoxColors,
   itemColor,
   parseForm,
@@ -366,7 +367,7 @@ export default function SongFormBoxes({
                 ? { background: box.bg, color: box.fg, border: `1px solid ${box.border}` }
                 : dark
                 ? { background: "rgba(255,255,255,.14)", color: "#fff", border: "1px solid rgba(255,255,255,.25)" }
-                : { background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0" }),
+                : { background: NEUTRAL_BOX.bg, color: NEUTRAL_BOX.fg, border: `1px solid ${NEUTRAL_BOX.border}` }),
             }}
             className={
               `inline-flex cursor-grab select-none items-center gap-1 rounded-md px-1.5 py-0.5 font-bold leading-6 active:cursor-grabbing ${textSize} ` +

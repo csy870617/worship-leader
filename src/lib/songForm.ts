@@ -109,15 +109,21 @@ const hex = (c: string) => {
 const toHex = (r: number, g: number, b: number) =>
   "#" + [r, g, b].map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0")).join("");
 
+/** The one light grey every neutral box uses — the structural presets
+ *  (Int4, Tag, Out, /, …) and the boxes the user types in. Kept as a fixed
+ *  triple instead of a wash of SLATE so they all match exactly. */
+export const NEUTRAL_BOX = { bg: "#f2f4f7", fg: "#5a6573", border: "#e3e7ed" };
+
 /**
  * The soft two-tone pair a song-form box is drawn with: a pale wash of the
  * chosen color behind its own, deeper shade of text. Reads calmly next to the
  * plain text around it, and stays legible on white and on the dark sheet
- * screen because the wash is opaque.
+ * screen because the wash is opaque. Neutral boxes take the fixed grey above.
  */
 export function formBoxColors(color: string): { bg: string; fg: string; border: string } {
+  if (!color || color.toLowerCase() === SLATE) return NEUTRAL_BOX;
   const c = hex(color);
-  if (!c) return { bg: "#e2e8f0", fg: "#334155", border: "#cbd5e1" };
+  if (!c) return NEUTRAL_BOX;
   const mix = (v: number, w: number) => v + (255 - v) * w;
   const wash = (v: number) => mix(v, 0.84);
   const edge = (v: number) => mix(v, 0.55);
