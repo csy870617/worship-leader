@@ -10,7 +10,7 @@
 export const PRESET_ROWS = [
   ["Int4", "Int8", "V", "V1", "V2", "V3"],
   ["PC", "C", "C1", "C2", "C3", "C4"],
-  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit", "/"],
+  ["B", "Itl4", "Itl8", "Tag", "Out", "Rit"],
 ];
 export const ALL_PRESETS = PRESET_ROWS.flat();
 
@@ -30,7 +30,7 @@ export const DEFAULT_PRESET_COLORS: Record<string, string> = {
   C4: RED,
   B: GREEN,
   // structural markers all share one calm tone
-  Int4: SLATE, Int8: SLATE, Itl4: SLATE, Itl8: SLATE, Tag: SLATE, Out: SLATE, Rit: SLATE, "/": SLATE,
+  Int4: SLATE, Int8: SLATE, Itl4: SLATE, Itl8: SLATE, Tag: SLATE, Out: SLATE, Rit: SLATE,
 };
 
 /** palette offered when recoloring a preset ("" = no color / inherit) */
@@ -110,7 +110,7 @@ const toHex = (r: number, g: number, b: number) =>
   "#" + [r, g, b].map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0")).join("");
 
 /** The one light grey every neutral box uses — the structural presets
- *  (Int4, Tag, Out, /, …) and the boxes the user types in. Kept as a fixed
+ *  (Int4, Tag, Out, …) and the boxes the user types in. Kept as a fixed
  *  triple instead of a wash of SLATE so they all match exactly. */
 export const NEUTRAL_BOX = { bg: "#f2f4f7", fg: "#5a6573", border: "#e3e7ed" };
 
