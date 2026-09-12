@@ -103,7 +103,53 @@ export default function SongFormBoxes({
   const onBlurRef = useRef(onBlur);
   onBlurRef.current = onBlur;
 
-  const commit = (next: FormItem[]) => onChange(serializeForm(next));
+  // ---- undo / redo (⌘Z, ⇧⌘Z / Ctrl+Y) ----
+  // Every change goes through commit(), so the value before it is all the undo
+  // stack needs. Typing is coalesced: a burst of keystrokes is one step.
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
+  const undoRef = useRef<string[]>([]);
+  const redoRef = useRef<string[]>([]);
+  const lastPush = useRef({ at: 0, typing: false });
+
+  const commit = (next: FormItem[], typing = false) => {
+    const now = Date.now();
+    const coalesce = typing && lastPush.current.typing && now - lastPush.current.at < 700;
+    if (!coalesce) undoRef.current = [...undoRef.current.slice(-49), valueRef.current];
+    lastPush.current = { at: now, typing };
+    redoRef.current = [];
+    onChange(serializeForm(next));
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      const k = e.key.toLowerCase();
+      const redo = (k === "z" && e.shiftKey) || (k === "y" && !e.shiftKey);
+      const undo = k === "z" && !e.shiftKey;
+      if (!undo && !redo) return;
+      // only the field the user last worked in answers
+      if (activeCtl !== myCtl.current) return;
+      const from = redo ? redoRef.current : undoRef.current;
+      const to = redo ? undoRef.current : redoRef.current;
+      const v = from.pop();
+      if (v == null) return;
+      e.preventDefault();
+      e.stopPropagation();
+      to.push(valueRef.current);
+      lastPush.current = { at: 0, typing: false };
+      setSel(null);
+      onSelectRef.current?.("");
+      onChangeRef.current(v);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
   const activate = () => {
     const ctl: Ctl = {
       hover: () => false,
@@ -331,7 +377,7 @@ export default function SongFormBoxes({
     commit(next);
   };
   const setText = (id: string, text: string) => {
-    commit(itemsRef.current.map((i) => (i.id === id ? { ...i, text, preset: false } : i)));
+    commit(itemsRef.current.map((i) => (i.id === id ? { ...i, text, preset: false } : i)), true);
   };
 
   const shown = order ?? items;
