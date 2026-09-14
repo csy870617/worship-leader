@@ -379,18 +379,17 @@ export default function Conti() {
     setParams(p, { replace: true });
   };
 
-  // plain-text setlist (works with Web Share text/url, which PWAs allow)
+  // Plain-text setlist shared alongside the PDF: the conti's name, then every
+  // song's title with its YouTube link under it. Works with Web Share text/url,
+  // which installed PWAs allow.
   const buildShareText = () => {
     const blocks = conti.map((c, i) => {
       const s = songById.get(c.id);
       if (!s) return `${i + 1}.`;
-      const key = c.key ? ` (${c.key})` : s.keys.length ? ` (${s.keys.join("/")})` : "";
-      const note = attach[c.id]?.note;
-      let block = `${i + 1}. ${s.title}${key}`;
-      if (note) block += `\n${note}`;
-      return block;
+      const link = attach[c.id]?.youtube;
+      return link ? `${s.title}\n${link}` : s.title;
     });
-    let text = `🎵 ${active.name} (${conti.length}곡)\n\n${blocks.join("\n\n")}`;
+    let text = `${active.name} (${conti.length}곡)\n\n${blocks.join("\n\n")}`;
     if (playlistUrl) text += `\n\n▶ 유튜브 재생목록: ${playlistUrl}`;
     return text;
   };
@@ -842,10 +841,18 @@ export default function Conti() {
                     flash("PDF 생성에 실패했어요");
                     return;
                   }
-                  // try to share the PDF file directly; if it's blocked (installed
-                  // PWA, lost user-activation, or unsupported) flow straight into
-                  // the drive-link share — no extra tap.
+                  // Share the PDF with the setlist text next to it. Not every
+                  // platform takes both, so the text-with-file payload is only
+                  // used when it says it can; otherwise the file goes alone and
+                  // the text still reaches the drive-link / fallback screens.
                   try {
+                    const text = buildShareText();
+                    const withText = { files: [built.file], text, title: active.name };
+                    if (navigator.canShare?.(withText)) {
+                      await navigator.share(withText);
+                      setToast(null);
+                      return;
+                    }
                     if (navigator.canShare?.({ files: [built.file] })) {
                       await navigator.share({ files: [built.file] });
                       setToast(null);
