@@ -43,6 +43,9 @@ export default function Conti() {
   const [shareReady, setShareReady] = useState<File | null>(null);
   const [shareErr, setShareErr] = useState<string | null>(null);
   const [driveLink, setDriveLink] = useState<string | null>(null);
+  // after the PDF goes out: offer the song list as its own message, because
+  // KakaoTalk (and other chat apps) drop the text when a file is attached
+  const [listPrompt, setListPrompt] = useState<string | null>(null);
   const [showView, setShowView] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [memoFocused, setMemoFocused] = useState(false);
@@ -56,6 +59,7 @@ export default function Conti() {
   useBackDismiss(confirmDelete, () => setConfirmDelete(false));
   useBackDismiss(shareReady != null, () => { setShareReady(null); setShareErr(null); });
   useBackDismiss(driveLink != null, () => setDriveLink(null));
+  useBackDismiss(listPrompt != null, () => setListPrompt(null));
   useBackDismiss(reorderContis, () => setReorderContis(false));
 
   // ---- drag-to-reorder + long-press/right-click delete ----
@@ -851,11 +855,13 @@ export default function Conti() {
                     if (navigator.canShare?.(withText)) {
                       await navigator.share(withText);
                       setToast(null);
+                      setListPrompt(text);
                       return;
                     }
                     if (navigator.canShare?.({ files: [built.file] })) {
                       await navigator.share({ files: [built.file] });
                       setToast(null);
+                      setListPrompt(text);
                       return;
                     }
                   } catch (e) {
@@ -968,6 +974,56 @@ export default function Conti() {
               </svg>
               드라이브 링크 공유
             </button>
+          </div>
+        </>
+      )}
+
+      {listPrompt && (
+        <>
+          <button
+            aria-hidden
+            tabIndex={-1}
+            onClick={() => setListPrompt(null)}
+            className="fixed inset-0 z-30 cursor-default bg-black/30"
+          />
+          <div className="fixed inset-x-0 bottom-24 z-40 flex flex-col items-center gap-3 px-4">
+            <div className="max-w-xs rounded-lg bg-slate-800 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-white shadow dark:bg-slate-700">
+              카톡은 파일과 글을 함께 받지 못해요.
+              <br />
+              곡 목록은 따로 한 번 더 보내세요.
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  const text = listPrompt;
+                  try {
+                    await navigator.share({ title: active.name, text });
+                    setListPrompt(null);
+                  } catch (e) {
+                    if ((e as { name?: string })?.name === "AbortError") return;
+                    const ok = await copyText(text);
+                    setListPrompt(null);
+                    flash(ok ? "곡 목록을 복사했어요" : "공유에 실패했어요");
+                  }
+                }}
+                className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg active:bg-indigo-700"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                </svg>
+                곡 목록 공유
+              </button>
+              <button
+                onClick={async () => {
+                  const ok = await copyText(listPrompt);
+                  setListPrompt(null);
+                  flash(ok ? "곡 목록을 복사했어요 · 붙여넣기 하세요" : "복사에 실패했어요");
+                }}
+                className="rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-lg ring-1 ring-slate-200 active:bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
+              >
+                복사
+              </button>
+            </div>
           </div>
         </>
       )}
