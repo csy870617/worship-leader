@@ -135,6 +135,10 @@ export default function SongFormBoxes({
       if (!undo && !redo) return;
       // only the field the user last worked in answers
       if (activeCtl !== myCtl.current) return;
+      // while the sheet editor is open, ⌘Z undoes what was drawn or typed on
+      // the sheet — unless this very form is the one inside that editor
+      const sheetEditor = document.querySelector("[data-sheet-editor]");
+      if (sheetEditor && !sheetEditor.contains(rowRef.current)) return;
       const from = redo ? redoRef.current : undoRef.current;
       const to = redo ? undoRef.current : redoRef.current;
       const v = from.pop();

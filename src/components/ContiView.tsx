@@ -563,8 +563,10 @@ function SheetFigure({
           color: t.color,
           fontSize: width ? t.size * width : 16,
           fontWeight: 700,
-          lineHeight: 1,
-          whiteSpace: "nowrap",
+          lineHeight: 1.15,
+          // a label can hold more than one line
+          whiteSpace: "pre",
+          textAlign: "center",
         }}
       >
         {t.text}

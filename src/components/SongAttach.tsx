@@ -532,6 +532,28 @@ export default function SongAttachEditor({
   );
 }
 
+/** How many rows at the bottom of the canvas are blank, looking at most
+ *  `limit` rows up. "Blank" is near-white: scanner grey and JPEG noise count. */
+function blankRowsAtBottom(ctx: CanvasRenderingContext2D, w: number, h: number, limit: number): number {
+  const rows = Math.min(h, limit);
+  if (rows <= 0) return 0;
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, h - rows, w, rows).data;
+  } catch {
+    return 0; // tainted canvas — just add the full strip
+  }
+  const step = Math.max(1, Math.floor(w / 200)); // sampling is plenty for "is it white?"
+  for (let r = rows - 1; r >= 0; r--) {
+    for (let c = 0; c < w; c += step) {
+      const i = (r * w + c) * 4;
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (lum < 225) return rows - 1 - r; // ink: the blank run ends here
+    }
+  }
+  return rows;
+}
+
 export function CropModal({
   file,
   onDone,
@@ -635,9 +657,31 @@ export function CropModal({
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, cw, ch);
     ctx.drawImage(img, Math.round(x * nw), Math.round(y * nh), cw, ch, 0, 0, cw, ch);
-    const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.92));
+
+    // A tight crop leaves nowhere to write under the last staff, so the sheet
+    // keeps a strip of white at the bottom. Only what's missing is added: the
+    // blank rows the image already ends with count toward it, so cropping the
+    // same sheet twice doesn't stack strip on strip.
+    const want = Math.round(Math.max(48, ch * 0.08));
+    const have = blankRowsAtBottom(ctx, cw, ch, want);
+    const extra = Math.max(0, want - have);
+    let out = canvas;
+    if (extra > 0) {
+      const padded = document.createElement("canvas");
+      padded.width = cw;
+      padded.height = ch + extra;
+      const pctx = padded.getContext("2d")!;
+      pctx.fillStyle = "#fff";
+      pctx.fillRect(0, 0, cw, ch + extra);
+      pctx.drawImage(canvas, 0, 0);
+      out = padded;
+    }
+    const blob: Blob | null = await new Promise((res) => out.toBlob(res, "image/jpeg", 0.92));
     setWorking(false);
-    finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null, { x, y, w, h });
+    // annotations are mapped through this rect; the strip makes the saved image
+    // taller than the crop, so the height it reports has to grow with it
+    const hOut = extra > 0 ? (h * (ch + extra)) / ch : h;
+    finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null, { x, y, w, h: hOut });
   };
 
   const corner = (c: string): React.CSSProperties => ({
@@ -900,7 +944,7 @@ export function SheetLightbox({
   const [canRedo, setCanRedo] = useState(false);
   const [hasCopied, setHasCopied] = useState(false); // a text was copied → show 붙여넣기
   const boxRef = useRef<HTMLDivElement>(null);
-  const editRef = useRef<HTMLInputElement>(null);
+  const editRef = useRef<HTMLTextAreaElement>(null);
   // canvas 2D context reused to measure the in-place edit text's real width
   const measureCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const annosRef = useRef<SheetText[]>([]);
@@ -1429,6 +1473,9 @@ export function SheetLightbox({
 
   return (
     <div
+      // marks the sheet editor as open: ⌘Z belongs to the drawing/text history
+      // here, not to a song form somewhere behind this screen
+      data-sheet-editor
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/90 p-4"
       onClick={close}
     >
@@ -1588,8 +1635,9 @@ export function SheetLightbox({
                   color: a.color,
                   fontSize: boxW ? a.size * boxW : 16,
                   fontWeight: 700,
-                  lineHeight: 1,
-                  whiteSpace: "nowrap",
+                  lineHeight: 1.15,
+                  whiteSpace: "pre",
+                  textAlign: "center",
                   cursor: "move",
                   touchAction: "none",
                   pointerEvents: drawing || erasing || editing ? "none" : "auto",
@@ -1605,8 +1653,9 @@ export function SheetLightbox({
             ))}
             {/* in-place text input — always mounted so it can be focused within
                 the tap gesture (mobile keyboard); parked off-screen when idle */}
-            <input
+            <textarea
               ref={editRef}
+              rows={1}
               value={editing?.value ?? ""}
               onChange={(e) => {
                 const v = e.target.value;
@@ -1616,12 +1665,23 @@ export function SheetLightbox({
               onClick={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
               onKeyDown={(e) => {
-                if (e.key === "Enter") { e.preventDefault(); commitEditing(); editRef.current?.blur(); }
-                else if (e.key === "Escape") { e.preventDefault(); editingRef.current = null; setEditing(null); editRef.current?.blur(); }
+                // Enter starts a second line; ⌘/Ctrl+Enter is "done", and so is
+                // tapping anywhere off the label
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  commitEditing();
+                  editRef.current?.blur();
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
+                  editingRef.current = null;
+                  setEditing(null);
+                  editRef.current?.blur();
+                }
+                e.stopPropagation();
               }}
               onBlur={commitEditing}
               placeholder="입력"
-              enterKeyHint="done"
+              enterKeyHint="enter"
               style={
                 editing && boxW
                   ? (() => {
@@ -1634,12 +1694,14 @@ export function SheetLightbox({
                       if (!measureCtxRef.current)
                         measureCtxRef.current = document.createElement("canvas").getContext("2d");
                       const mctx = measureCtxRef.current;
+                      const lines = (editing.value || "입력").split("\n");
                       let tw = 0;
                       if (mctx) {
                         mctx.font = `700 ${fs}px Pretendard, system-ui, -apple-system, sans-serif`;
-                        tw = mctx.measureText(editing.value || "입력").width;
+                        for (const line of lines) tw = Math.max(tw, mctx.measureText(line || " ").width);
                       }
                       const width = Math.min(boxW * 0.96, Math.max(fs * 2, tw + fs * 0.6 + 12));
+                      const height = Math.round(lines.length * fs * 1.15 + 6);
                       // keep the (centered) input inside the sheet horizontally
                       const cx = Math.min(Math.max(editing.x * boxW, width / 2), boxW - width / 2);
                       return {
@@ -1650,8 +1712,12 @@ export function SheetLightbox({
                         color: editing.i != null ? annos[editing.i]?.color ?? color : color,
                         fontSize: fs,
                         fontWeight: 700,
-                        lineHeight: 1.1,
+                        lineHeight: 1.15,
                         textAlign: "center" as const,
+                        height,
+                        resize: "none" as const,
+                        overflow: "hidden" as const,
+                        whiteSpace: "pre" as const,
                         background: "rgba(255,255,255,0.92)",
                         border: "1px solid #6366f1",
                         borderRadius: 4,

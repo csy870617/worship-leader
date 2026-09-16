@@ -132,7 +132,11 @@ async function compositeSheet(
       const fs = Math.max(1, Math.round(t.size * W)); // size is a fraction of width (same as the editor)
       ctx.font = `700 ${fs}px Pretendard, system-ui, -apple-system, sans-serif`;
       ctx.fillStyle = t.color;
-      ctx.fillText(t.text, t.x * W, t.y * H);
+      // a label can be several lines; they sit centered on its anchor
+      const lines = String(t.text).split("\n");
+      const lh = fs * 1.15;
+      const top = t.y * H - ((lines.length - 1) * lh) / 2;
+      lines.forEach((line, i) => ctx.fillText(line, t.x * W, top + i * lh));
     }
     return canvas.toDataURL("image/jpeg", 0.92);
   } catch {
