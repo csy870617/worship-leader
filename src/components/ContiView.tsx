@@ -582,7 +582,9 @@ function SheetFigure({
           alt="악보"
           onLoad={measure}
           onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(); } : undefined}
-          className="block max-h-full max-w-full"
+          // w-full, not max-w-full: a low-resolution sheet (a pasted screenshot)
+          // fills the same room as a photographed one instead of shrinking
+          className="block h-auto w-full max-h-full"
         />
         {box && (
           <div className="pointer-events-none absolute" style={{ left: box.l, top: box.t, width: box.w, height: box.h }}>

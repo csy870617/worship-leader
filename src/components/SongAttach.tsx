@@ -356,8 +356,9 @@ export default function SongAttachEditor({
                     {idx + 1}
                   </span>
                 )}
+                {/* bottom-left: the top-right corner belongs to 삭제(×) */}
                 {sheetKeys[aid] && (
-                  <span className="pointer-events-none absolute right-0.5 top-0.5 rounded-md bg-emerald-600 px-1 text-[10px] font-bold leading-4 text-white shadow">
+                  <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded-md bg-emerald-600 px-1 text-[10px] font-bold leading-4 text-white shadow">
                     {sheetKeys[aid]}
                   </span>
                 )}
@@ -369,7 +370,7 @@ export default function SongAttachEditor({
                     onPointerCancel={onGripUp}
                     title="끌어서 순서 변경"
                     style={{ touchAction: "none" }}
-                    className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex cursor-grab items-center justify-center rounded-md bg-slate-900/70 px-1.5 py-0.5 text-white active:cursor-grabbing"
+                    className="absolute bottom-0.5 right-0.5 flex cursor-grab items-center justify-center rounded-md bg-slate-900/70 px-1.5 py-0.5 text-white active:cursor-grabbing"
                   >
                     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                       <circle cx="8" cy="7" r="1.4" /><circle cx="16" cy="7" r="1.4" />
@@ -554,6 +555,18 @@ function blankRowsAtBottom(ctx: CanvasRenderingContext2D, w: number, h: number, 
   return rows;
 }
 
+/** How wide a sheet should be drawn on screen.
+ *  A pasted screenshot usually has fewer pixels than a photographed sheet, and
+ *  sizing by the natural width alone would show it much smaller. The frame
+ *  fills the room available instead, and only the height cap can narrow it, so
+ *  every sheet looks the same size no matter where the image came from. */
+function sheetFrameWidth(natW: number, natH: number, maxVH: number) {
+  if (!natW || !natH) return 0;
+  const availW = Math.min(window.innerWidth - 32, 900);
+  const maxH = window.innerHeight * maxVH;
+  return Math.max(1, Math.round(Math.min(availW, (maxH * natW) / natH)));
+}
+
 export function CropModal({
   file,
   onDone,
@@ -568,7 +581,18 @@ export function CropModal({
   const [rect, setRect] = useState({ x: 0, y: 0, w: 1, h: 1 });
   const dragRef = useRef<{ mode: string; sx: number; sy: number; sr: typeof rect } | null>(null);
   const [working, setWorking] = useState(false);
+  const [frameW, setFrameW] = useState(0);
   const MIN = 0.08;
+
+  // keep the frame right when the window (or the phone's address bar) resizes
+  useEffect(() => {
+    const onResize = () => {
+      const img = imgRef.current;
+      if (img?.naturalWidth) setFrameW(sheetFrameWidth(img.naturalWidth, img.naturalHeight, 0.68));
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -700,9 +724,21 @@ export function CropModal({
           onPointerMove={onMove}
           onPointerUp={onUp}
           onPointerCancel={onUp}
+          style={{ width: frameW || undefined }}
           className="relative inline-block touch-none select-none"
         >
-          {src && <img ref={imgRef} src={src} alt="악보" draggable={false} className="block max-h-[68vh] max-w-full" />}
+          {src && (
+            <img
+              ref={imgRef}
+              src={src}
+              alt="악보"
+              draggable={false}
+              onLoad={(e) =>
+                setFrameW(sheetFrameWidth(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight, 0.68))
+              }
+              className="block w-full max-w-full"
+            />
+          )}
           <div
             onPointerDown={(e) => startDrag(e, "move")}
             className="absolute cursor-move border-2 border-white"
@@ -935,6 +971,10 @@ export function SheetLightbox({
   const [sizeIdx, setSizeIdx] = useState(1); // 기본 글자 크기 '작게' (0은 '아주작게')
   const [boxW, setBoxW] = useState(0);
   const [boxH, setBoxH] = useState(0);
+  // width the sheet is drawn at — the same for every sheet, whatever the
+  // source image's own resolution was (see sheetFrameWidth)
+  const [frameW, setFrameW] = useState(0);
+  const natRef = useRef<{ w: number; h: number } | null>(null);
   const [strokes, setStrokes] = useState<SheetStroke[]>([]);
   const [liveStroke, setLiveStroke] = useState<{ x: number; y: number }[] | null>(null);
   // in-place text input: type directly on the sheet at (x,y). i=null → new text,
@@ -1037,6 +1077,8 @@ export function SheetLightbox({
   }, [currentId]);
 
   const measure = () => {
+    const n = natRef.current;
+    if (n) setFrameW(sheetFrameWidth(n.w, n.h, 0.62));
     const el = boxRef.current;
     if (el) {
       const r = el.getBoundingClientRect();
@@ -1048,7 +1090,9 @@ export function SheetLightbox({
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [url]);
+    // re-measure once the frame width has been applied to the layout
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, frameW]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1516,10 +1560,19 @@ export function SheetLightbox({
             onPointerUp={onBoxPointerUp}
             onPointerCancel={onBoxPointerUp}
             onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(currentId); } : undefined}
-            style={drawing || erasing ? { touchAction: "none" } : undefined}
+            style={{ width: frameW || undefined, ...(drawing || erasing ? { touchAction: "none" } : null) }}
             className={"relative inline-block " + (placing || drawing || erasing ? "cursor-crosshair" : "")}
           >
-            <img src={url} alt="악보" onLoad={measure} draggable={false} className="block max-h-[62vh] max-w-full" />
+            <img
+              src={url}
+              alt="악보"
+              onLoad={(e) => {
+                natRef.current = { w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight };
+                measure();
+              }}
+              draggable={false}
+              className="block w-full max-w-full"
+            />
             {(strokes.length > 0 || liveStroke) && boxW > 0 && (
               <svg
                 width={boxW}
