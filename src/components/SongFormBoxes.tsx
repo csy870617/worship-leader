@@ -88,6 +88,13 @@ export default function SongFormBoxes({
   itemsRef.current = items;
 
   const [sel, setSel] = useState<string | null>(null);
+  // Box being typed into. What a box *is* isn't stored — it is read back from
+  // its text — so a 빈 박스 holding "Tag" would turn into the Tag preset box
+  // mid-word and take the caret with it. While a box is being typed in it stays
+  // a text box whatever it says, so "Tag2" can be finished.
+  const [typingId, setTypingId] = useState<string | null>(null);
+  const typingIdRef = useRef<string | null>(null);
+  typingIdRef.current = typingId;
   const [dropAt, setDropAt] = useState<number | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [order, setOrder] = useState<FormItem[] | null>(null);
@@ -360,7 +367,7 @@ export default function SongFormBoxes({
     // First tap selects the box. Tapping the selected preset box again counts
     // it up — C, Cx2, Cx3 … — so "play it twice" is two taps. Past the cap it
     // starts over at one, which is also how a count is taken back off.
-    if (sel === item.id && item.preset) {
+    if (sel === item.id && item.preset && typingIdRef.current !== item.id) {
       const { base, times } = splitRepeat(item.text);
       const nextTimes = times >= MAX_REPEAT ? 1 : times + 1;
       const text = withRepeat(base, nextTimes);
@@ -439,7 +446,7 @@ export default function SongFormBoxes({
               (selected ? "ring-2 ring-indigo-400" : "")
             }
           >
-            {item.preset ? (
+            {item.preset && typingId !== item.id ? (
               item.text
             ) : (
               <AutoInput
@@ -449,10 +456,12 @@ export default function SongFormBoxes({
                 onChange={(v) => setText(item.id, v)}
                 onFocus={() => {
                   activate();
+                  setTypingId(item.id);
                   setSel(item.id);
                   onSelect?.(item.text);
                 }}
                 onBlur={() => {
+                  setTypingId((id) => (id === item.id ? null : id));
                   // an abandoned empty box removes itself
                   if (!item.text.trim()) removeItem(item.id);
                 }}
