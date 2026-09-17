@@ -407,10 +407,6 @@ export default function ContiView({
           start={0}
           texts={{ [textTarget.aid]: attach[textTarget.songId]?.sheetTexts?.[textTarget.aid] ?? [] }}
           draws={{ [textTarget.aid]: attach[textTarget.songId]?.sheetDraws?.[textTarget.aid] ?? [] }}
-          note={attach[textTarget.songId]?.note}
-          memo={attach[textTarget.songId]?.memo}
-          onNote={(v) => setSongNote(textTarget.songId, v)}
-          onMemo={(v) => setSongMemo(textTarget.songId, v)}
           onTexts={(aid, list) => setSongSheetTexts(textTarget.songId, aid, list)}
           onDraws={(aid, list) => setSongSheetDraws(textTarget.songId, aid, list)}
           onClose={() => setTextTarget(null)}

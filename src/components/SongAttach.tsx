@@ -28,7 +28,6 @@ import { copyText, openExternal, openYouTube } from "../lib/share";
 import { sheetSearchUrl } from "../data";
 import { registerBack, useBackDismiss } from "../lib/backStack";
 import { PRESET_ROWS } from "../lib/songForm";
-import SongFormBoxes from "./SongFormBoxes";
 
 // vivid, near-primary swatches (the previous yellow read as a dull mustard)
 const TEXT_COLORS = ["#ff1e1e", "#000000", "#ffffff", "#1a4bff", "#00b81d", "#ffe600"];
@@ -423,10 +422,6 @@ export default function SongAttachEditor({
             start={viewer}
             texts={sheetTexts}
             draws={a?.sheetDraws ?? {}}
-            note={a?.note}
-            memo={a?.memo}
-            onNote={(v) => setSongNote(songId, v)}
-            onMemo={(v) => setSongMemo(songId, v)}
             onTexts={(aid, list) => setSongSheetTexts(songId, aid, list)}
             onDraws={(aid, list) => setSongSheetDraws(songId, aid, list)}
             onMenu={(aid) => setSheetMenu(aid)}
@@ -881,65 +876,11 @@ function SheetThumb({
   );
 }
 
-/** Dark, auto-growing 송폼/메모 field shown above the sheet in the lightbox. */
-function LightboxNote({
-  value,
-  onChange,
-  placeholder,
-  boxes = false,
-}: {
-  value: string;
-  onChange?: (v: string) => void;
-  placeholder: string;
-  /** 송폼: draw preset tokens as colored boxes (메모 stays plain text) */
-  boxes?: boolean;
-}) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-  const resize = () => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  };
-  useEffect(resize, [value]);
-  if (boxes) {
-    return (
-      <SongFormBoxes
-        value={value}
-        onChange={onChange ?? (() => {})}
-        placeholder={placeholder}
-        variant="dark"
-        className="justify-center rounded-lg bg-white/10 px-3 py-1.5"
-      />
-    );
-  }
-  if (!onChange) {
-    return value ? (
-      <p className="max-w-full whitespace-pre-wrap text-center text-sm text-white/80">{value}</p>
-    ) : null;
-  }
-  return (
-    <textarea
-      ref={ref}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      onInput={resize}
-      rows={1}
-      placeholder={placeholder}
-      className="w-full resize-none overflow-hidden rounded-lg bg-white/10 px-3 py-1.5 text-center text-sm text-white/90 outline-none placeholder:text-white/40 focus:bg-white/15"
-    />
-  );
-}
-
 export function SheetLightbox({
   ids,
   start,
   texts,
   draws,
-  note,
-  memo,
-  onNote,
-  onMemo,
   onTexts,
   onDraws,
   onMenu,
@@ -949,10 +890,6 @@ export function SheetLightbox({
   start: number;
   texts: Record<string, SheetText[]>;
   draws?: Record<string, SheetStroke[]>;
-  note?: string;
-  memo?: string;
-  onNote?: (v: string) => void;
-  onMemo?: (v: string) => void;
   onTexts: (aid: string, list: SheetText[]) => void;
   onDraws?: (aid: string, list: SheetStroke[]) => void;
   onMenu?: (aid: string) => void;
@@ -1533,22 +1470,9 @@ export function SheetLightbox({
         </svg>
       </button>
 
+      {/* the sheet editor is for the sheet alone — 송폼과 메모는 악보 화면
+          바깥에서 적는다 */}
       <div className="my-auto flex flex-col items-center gap-3">
-        {onNote || onMemo ? (
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md space-y-1.5">
-            <LightboxNote value={note ?? ""} onChange={onNote} placeholder="송폼 입력" boxes />
-            <LightboxNote value={memo ?? ""} onChange={onMemo} placeholder="메모 추가" />
-          </div>
-        ) : (
-          note && (
-            <p
-              onClick={(e) => e.stopPropagation()}
-              className="max-w-full whitespace-pre-wrap text-center text-sm text-white/80"
-            >
-              {note}
-            </p>
-          )
-        )}
         {loading ? (
           <span className="text-sm text-white/70">불러오는 중…</span>
         ) : url ? (
