@@ -88,6 +88,14 @@ export default function SongFormBoxes({
   itemsRef.current = items;
 
   const [sel, setSel] = useState<string | null>(null);
+  const selRef = useRef<string | null>(null);
+  selRef.current = sel;
+  // Where the next chip lands: beside the box last tapped, on the side it was
+  // tapped. Shown as a thin bar, so "맨 앞" is reachable by tapping the left
+  // half of the first box. No caret (null) = at the end.
+  const [caret, setCaret] = useState<{ id: string; side: "before" | "after" } | null>(null);
+  const caretRef = useRef<typeof caret>(null);
+  caretRef.current = caret;
   // Box being typed into. What a box *is* isn't stored — it is read back from
   // its text — so a 빈 박스 holding "Tag" would turn into the Tag preset box
   // mid-word and take the caret with it. While a box is being typed in it stays
@@ -167,12 +175,19 @@ export default function SongFormBoxes({
       drop: () => false,
       cancelHover: () => {},
       insert: (text: string, preset: boolean) => {
+        // read the insertion point from a ref: this closure is built on
+        // pointerdown, before the tap's own selection has been applied
         const cur = itemsRef.current;
-        const at = sel ? cur.findIndex((i) => i.id === sel) : -1;
+        const c = caretRef.current;
+        const i = c ? cur.findIndex((it) => it.id === c.id) : -1;
+        const at = i < 0 ? cur.length : c!.side === "after" ? i + 1 : i;
         const box: FormItem = { id: "new", text, preset };
-        const next = at >= 0 ? [...cur.slice(0, at + 1), box, ...cur.slice(at + 1)] : [...cur, box];
-        // keep the caret on a freshly added text box so it can be typed into
-        focusIdRef.current = preset ? null : `b${at >= 0 ? at + 1 : cur.length}`;
+        const next = [...cur.slice(0, at), box, ...cur.slice(at)];
+        // keep the caret on a freshly added text box so it can be typed into,
+        // and leave the insertion point right after it so the next chip
+        // continues the row instead of jumping to the end
+        focusIdRef.current = preset ? null : `b${at}`;
+        setCaret({ id: `b${at}`, side: "after" });
         setSel(null);
         onSelect?.("");
         commit(next);
@@ -190,6 +205,7 @@ export default function SongFormBoxes({
       const cur = itemsRef.current;
       const next = [...cur.slice(0, at), { id: "new", text, preset }, ...cur.slice(at)];
       focusIdRef.current = preset ? null : `b${at}`;
+      setCaret({ id: `b${at}`, side: "after" });
       setSel(null);
       onSelect?.("");
       commit(next);
@@ -208,6 +224,7 @@ export default function SongFormBoxes({
         // selection (that's where the color palette and the chips act on it)
         if (t?.closest?.("[data-preset-bar]")) return;
         setSel(null);
+        setCaret(null);
         setDropAt(null);
         onSelect?.("");
         onBlurRef.current?.();
@@ -364,6 +381,15 @@ export default function SongFormBoxes({
       endDrag();
       return;
     }
+    // which side of the box was tapped — that's where the next chip goes
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const side: "before" | "after" = e.clientX < r.left + r.width / 2 ? "before" : "after";
+    const hadCaret = caretRef.current;
+    // tapping the other end of the selected box only moves the insertion point
+    if (sel === item.id && hadCaret?.id === item.id && hadCaret.side !== side) {
+      setCaret({ id: item.id, side });
+      return;
+    }
     // First tap selects the box. Tapping the selected preset box again counts
     // it up — C, Cx2, Cx3 … — so "play it twice" is two taps. Past the cap it
     // starts over at one, which is also how a count is taken back off.
@@ -377,6 +403,7 @@ export default function SongFormBoxes({
     }
     const next = sel === item.id ? null : item.id;
     setSel(next);
+    setCaret(next ? { id: item.id, side } : null);
     // color edits act on the preset itself, not on "Cx2"
     onSelect?.(next ? (item.preset ? splitRepeat(item.text).base : item.text) : "");
   };
@@ -384,6 +411,7 @@ export default function SongFormBoxes({
   const removeItem = (id: string) => {
     const next = itemsRef.current.filter((i) => i.id !== id);
     setSel(null);
+    setCaret(null);
     onSelect?.("");
     commit(next);
   };
@@ -403,6 +431,8 @@ export default function SongFormBoxes({
         if (e.target === e.currentTarget) {
           activate();
           setSel(null);
+          // no insertion point = the next chip goes at the end
+          setCaret(null);
           onSelect?.("");
         }
       }}
@@ -458,6 +488,7 @@ export default function SongFormBoxes({
                   activate();
                   setTypingId(item.id);
                   setSel(item.id);
+                  setCaret({ id: item.id, side: "after" });
                   onSelect?.(item.text);
                 }}
                 onBlur={() => {
@@ -484,13 +515,17 @@ export default function SongFormBoxes({
             )}
           </span>
         );
-        return dropAt === idx + 1 ? (
+        // where the next chip lands — hidden while a chip is being dragged over
+        // the field, since the drop mark says it better
+        const caretSide = dropAt == null && !dragId && caret?.id === item.id ? caret.side : null;
+        if (!caretSide && dropAt !== idx + 1) return node;
+        return (
           <Fragment key={`${item.id}-w`}>
+            {caretSide === "before" && <InsertCaret dark={dark} />}
             {node}
-            <DropMark />
+            {caretSide === "after" && <InsertCaret dark={dark} />}
+            {dropAt === idx + 1 && <DropMark />}
           </Fragment>
-        ) : (
-          node
         );
       })}
     </div>
@@ -501,6 +536,17 @@ export default function SongFormBoxes({
 /** Where a dragged chip would land. */
 function DropMark() {
   return <span aria-hidden className="h-6 w-0.5 shrink-0 rounded-full bg-indigo-500" />;
+}
+
+/** Where the next chip tapped in the bar will go — the form's caret. */
+function InsertCaret({ dark }: { dark: boolean }) {
+  return (
+    <span
+      aria-hidden
+      title="여기에 들어갑니다"
+      className={`-mx-0.5 h-5 w-[3px] shrink-0 rounded-full ${dark ? "bg-white/70" : "bg-indigo-400"}`}
+    />
+  );
 }
 
 /** An input that is exactly as wide as what it holds: a hidden copy of the text

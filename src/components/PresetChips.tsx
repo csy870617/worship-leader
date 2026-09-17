@@ -297,7 +297,7 @@ export default function PresetChips({
 
         {!editMode && (
           <p className={`mt-2 text-center text-[11px] ${muted}`}>
-            눌러서 추가 · 끌어서 원하는 자리에
+            누른 박스 옆에 추가 · 끌어서 원하는 자리에
           </p>
         )}
       </div>
