@@ -21,6 +21,12 @@ const preventScroll = (e: TouchEvent) => e.preventDefault();
 // remember the 묵상노트 textarea's user-resized height across visits (device-local)
 const NOTE_HEIGHT_KEY = "wl.contiNoteHeight";
 
+// 콘티 순서 변경: ten rows' worth of height (a row plus the gap under it), so an
+// eleventh conti scrolls instead of stretching the sheet down the screen
+// (a sliver of the eleventh row stays in view, so it is obvious there is more)
+const CONTI_ROW_H = 49 + 6;
+const CONTI_ROWS_MAX = CONTI_ROW_H * 10 + 14;
+
 
 export default function Conti() {
   const {
@@ -149,6 +155,43 @@ export default function Conti() {
     }
     return lis.length - 1;
   };
+  /** Move the dragged conti to wherever the pointer is now. */
+  const cReorderTo = (y: number) => {
+    const order = cOrderRef.current;
+    if (!order || !cDragIdRef.current) return;
+    const to = cIndexFromY(y);
+    const from = order.indexOf(cDragIdRef.current);
+    if (to < 0 || from < 0 || to === from) return;
+    const next = order.slice();
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    cOrderRef.current = next;
+    setCOrder(next);
+  };
+  // when the list scrolls, a conti has to be draggable past its edges: hold the
+  // dragged row near the top or bottom and the list keeps scrolling by itself
+  const cPointerY = useRef(0);
+  const cAutoRaf = useRef<number | null>(null);
+  const cAutoScroll = () => {
+    const list = cListRef.current;
+    if (!cDragIdRef.current || !list) {
+      cAutoRaf.current = null;
+      return;
+    }
+    const r = list.getBoundingClientRect();
+    const edge = 44;
+    const y = cPointerY.current;
+    const dy =
+      y < r.top + edge ? -Math.ceil((r.top + edge - y) / 5) - 2
+      : y > r.bottom - edge ? Math.ceil((y - (r.bottom - edge)) / 5) + 2
+      : 0;
+    if (dy) {
+      const before = list.scrollTop;
+      list.scrollTop += dy;
+      if (list.scrollTop !== before) cReorderTo(y);
+    }
+    cAutoRaf.current = requestAnimationFrame(cAutoScroll);
+  };
   const cBeginDrag = (id: string) => {
     cDragIdRef.current = id;
     const snap = contis.map((c) => c.id);
@@ -156,6 +199,7 @@ export default function Conti() {
     setCDragId(id);
     setCOrder(snap);
     window.addEventListener("touchmove", preventScroll, { passive: false });
+    if (cAutoRaf.current == null) cAutoRaf.current = requestAnimationFrame(cAutoScroll);
   };
   const cEndDrag = () => {
     cCancelLP();
@@ -165,10 +209,15 @@ export default function Conti() {
     setCDragId(null);
     setCOrder(null);
     window.removeEventListener("touchmove", preventScroll);
+    if (cAutoRaf.current != null) {
+      cancelAnimationFrame(cAutoRaf.current);
+      cAutoRaf.current = null;
+    }
     if (order) setContiOrder(order);
   };
   const cPointerDown = (e: React.PointerEvent, id: string) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
+    cPointerY.current = e.clientY;
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     if (e.pointerType === "mouse") {
       e.preventDefault();
@@ -184,22 +233,14 @@ export default function Conti() {
     }, 250);
   };
   const cPointerMove = (e: React.PointerEvent) => {
+    cPointerY.current = e.clientY;
     if (!cDragIdRef.current) {
       // a real finger move before the hold completes = scrolling, not a drag
       const s = cLpStart.current;
       if (s && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 10) cCancelLP();
       return;
     }
-    const order = cOrderRef.current;
-    if (!order) return;
-    const to = cIndexFromY(e.clientY);
-    const from = order.indexOf(cDragIdRef.current);
-    if (to < 0 || from < 0 || to === from) return;
-    const next = order.slice();
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    cOrderRef.current = next;
-    setCOrder(next);
+    cReorderTo(e.clientY);
   };
   const cPointerUp = (e: React.PointerEvent) => {
     try {
@@ -219,6 +260,7 @@ export default function Conti() {
     window.removeEventListener("touchmove", preventScroll);
     cancelLP();
     cCancelLP();
+    if (cAutoRaf.current != null) cancelAnimationFrame(cAutoRaf.current);
   }, []);
 
   const indexFromY = (y: number) => {
@@ -1108,7 +1150,7 @@ export default function Conti() {
           onClick={() => setReorderContis(false)}
         >
           <div
-            className="max-h-[70vh] w-full max-w-sm overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/10"
+            className="flex max-h-[80vh] w-full max-w-sm flex-col overflow-hidden rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/10"
             onClick={(e) => e.stopPropagation()}
             style={{ animation: "wlSheetUp .18s ease-out" }}
           >
@@ -1119,7 +1161,13 @@ export default function Conti() {
             <p className="mb-3 mt-0.5 text-center text-xs text-slate-400 dark:text-slate-500">
               끌어서(모바일은 길게 눌러서) 옮기세요
             </p>
-            <ul className="space-y-1.5" ref={cListRef}>
+            {/* past ten contis the list gets its own scroll, so 콘티 순서 변경
+                keeps its title and 완료 button in place */}
+            <ul
+              className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain"
+              style={{ maxHeight: contis.length > 10 ? CONTI_ROWS_MAX : undefined }}
+              ref={cListRef}
+            >
               {orderedContis.map((c, i) => (
                 <li
                   key={c.id}
