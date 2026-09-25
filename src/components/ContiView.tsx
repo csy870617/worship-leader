@@ -11,6 +11,11 @@ import SongFormBoxes, { insertFormBox } from "./SongFormBoxes";
 import PresetChips from "./PresetChips";
 import { presetInsertText } from "../lib/songForm";
 
+/** How wide a sheet may be drawn. Past this a sheet stops growing with the
+ *  window: a whole staff stretched across a desktop screen reads worse than a
+ *  page-shaped one, and the proportions stay those of the sheet itself. */
+const MAX_SHEET_W = 720;
+
 type Page =
   | { kind: "info"; item: ContiItem; song: Song; aid?: string; n: number }
   | { kind: "sheet"; item: ContiItem; song: Song; aid: string; n: number };
@@ -474,6 +479,10 @@ function SheetFigure({
   const [w, setW] = useState(0);
   const [h, setH] = useState(0);
   const [box, setBox] = useState<{ l: number; t: number; w: number; h: number } | null>(null);
+  // the size the sheet is drawn at in 한 장씩 view — worked out here rather than
+  // left to CSS, because a plain `width:100%` keeps its width when max-height
+  // clips it and the sheet comes out stretched sideways
+  const [fitBox, setFitBox] = useState<{ w: number; h: number } | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -493,8 +502,15 @@ function SheetFigure({
     const img = imgRef.current;
     if (!img) return;
     if (fit && wrapRef.current) {
-      const ir = img.getBoundingClientRect();
       const cr = wrapRef.current.getBoundingClientRect();
+      if (img.naturalWidth && img.naturalHeight && cr.width && cr.height) {
+        // fill the space the page gives it, keep the sheet's own proportions,
+        // and stop short of stretching right across a wide screen
+        const scale = Math.min(cr.width / img.naturalWidth, cr.height / img.naturalHeight, MAX_SHEET_W / img.naturalWidth);
+        const next = { w: Math.round(img.naturalWidth * scale), h: Math.round(img.naturalHeight * scale) };
+        setFitBox((p) => (p && p.w === next.w && p.h === next.h ? p : next));
+      }
+      const ir = img.getBoundingClientRect();
       setBox({ l: ir.left - cr.left, t: ir.top - cr.top, w: ir.width, h: ir.height });
     } else {
       setW(img.clientWidth);
@@ -518,8 +534,9 @@ function SheetFigure({
       window.removeEventListener("resize", measure);
       window.visualViewport?.removeEventListener("resize", measure);
     };
+    // fitBox: once the computed size is applied, measure the drawn image again
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url]);
+  }, [url, fitBox]);
 
   const sync = async () => {
     const u = await fetchSheetInteractive(aid);
@@ -578,9 +595,10 @@ function SheetFigure({
           alt="악보"
           onLoad={measure}
           onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(); } : undefined}
-          // w-full, not max-w-full: a low-resolution sheet (a pasted screenshot)
-          // fills the same room as a photographed one instead of shrinking
-          className="block h-auto w-full max-h-full"
+          // sized in measure(): fills the space whatever the source image's own
+          // resolution was (a pasted screenshot holds fewer pixels than a photo)
+          style={fitBox ? { width: fitBox.w, height: fitBox.h } : undefined}
+          className="block max-h-full max-w-full"
         />
         {box && (
           <div className="pointer-events-none absolute" style={{ left: box.l, top: box.t, width: box.w, height: box.h }}>
@@ -600,6 +618,8 @@ function SheetFigure({
           alt="악보"
           onLoad={measure}
           onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(); } : undefined}
+          // 스크롤 view: as wide as the column, but no wider than is comfortable
+          style={{ maxWidth: MAX_SHEET_W }}
           className="block w-full"
         />
         {strokeSvg(w, h)}
