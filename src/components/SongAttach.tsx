@@ -1902,13 +1902,13 @@ export function SheetLightbox({
             {tool !== "erase" && (
             <div className="space-y-1.5">
               {PRESET_ROWS.map((row, ri) => (
-                <div key={ri} className="flex flex-wrap items-center justify-center gap-1.5">
+                <div key={ri} className="grid grid-cols-7 items-center gap-1.5">
                   {row.map((p) => (
                     <button
                       key={p}
                       onClick={() => addPreset(p)}
                       className={
-                        "rounded-md px-2.5 py-1 text-xs font-bold text-white active:bg-white/30 " +
+                        "w-full min-w-0 rounded-md px-1 py-1 text-xs font-bold text-white active:bg-white/30 " +
                         (pendingText === p ? "bg-indigo-600" : "bg-white/15")
                       }
                     >

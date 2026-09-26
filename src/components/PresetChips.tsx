@@ -193,7 +193,9 @@ export default function PresetChips({
 
         <div className="space-y-1.5">
           {PRESET_ROWS.map((row, ri) => (
-            <div key={ri} className="flex flex-wrap items-center justify-center gap-1.5">
+            // seven to a row, lined up in columns: with seven presets per row a
+            // wrapping flex row broke into two ragged lines on a phone
+            <div key={ri} className="grid grid-cols-7 items-center gap-1.5">
               {row.map((p) => {
                 const c = presetColor(p);
                 const box = c ? formBoxColors(c) : null;
@@ -219,7 +221,7 @@ export default function PresetChips({
                     onPointerCancel={(e) => {
                       if (!editMode) chipPointerUp(e);
                     }}
-                    className={`min-w-[3rem] rounded-lg px-2 py-1.5 text-xs font-bold leading-4 transition ${
+                    className={`w-full min-w-0 rounded-lg px-1 py-1.5 text-xs font-bold leading-4 transition ${
                       box ? "" : plainChip
                     } ${
                       editing === p
@@ -247,13 +249,13 @@ export default function PresetChips({
                   }}
                   onPointerCancel={chipPointerUp}
                   style={{ touchAction: "pan-y" }}
-                  className={`min-w-[3rem] rounded-lg border border-dashed px-2 py-1.5 text-xs font-bold leading-4 ${
+                  className={`w-full min-w-0 whitespace-nowrap rounded-lg border border-dashed px-1 py-1.5 text-[10px] font-bold leading-4 ${
                     dark
                       ? "border-white/40 text-white/80"
                       : "border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400"
                   }`}
                 >
-                  ＋ 글자
+                  ＋글자
                 </button>
               )}
             </div>
