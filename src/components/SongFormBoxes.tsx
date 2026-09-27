@@ -56,6 +56,9 @@ export function formDragCancel() {
 // block page scrolling while a box is being dragged
 const preventScroll = (e: TouchEvent) => e.preventDefault();
 
+/** how close two taps on one box must be to count as a double tap */
+const DOUBLE_TAP_MS = 400;
+
 export default function SongFormBoxes({
   value,
   onChange,
@@ -103,6 +106,8 @@ export default function SongFormBoxes({
   const [typingId, setTypingId] = useState<string | null>(null);
   const typingIdRef = useRef<string | null>(null);
   typingIdRef.current = typingId;
+  // last tap on a box, for pairing two of them into a double tap
+  const lastTapRef = useRef<{ id: string; t: number } | null>(null);
   const [dropAt, setDropAt] = useState<number | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [order, setOrder] = useState<FormItem[] | null>(null);
@@ -384,28 +389,30 @@ export default function SongFormBoxes({
     // which side of the box was tapped — that's where the next chip goes
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const side: "before" | "after" = e.clientX < r.left + r.width / 2 ? "before" : "after";
-    const hadCaret = caretRef.current;
-    // tapping the other end of the selected box only moves the insertion point
-    if (sel === item.id && hadCaret?.id === item.id && hadCaret.side !== side) {
-      setCaret({ id: item.id, side });
-      return;
-    }
-    // First tap selects the box. Tapping the selected preset box again counts
-    // it up — C, Cx2, Cx3 … — so "play it twice" is two taps. Past the cap it
-    // starts over at one, which is also how a count is taken back off.
-    if (sel === item.id && item.preset && typingIdRef.current !== item.id) {
+
+    // A double click / double tap counts the box up one step — C, Cx2, Cx3 …
+    // Past the cap it starts over at one, which is how a count comes back off.
+    // (iOS has no dblclick on these, so the two taps are paired here.)
+    const now = Date.now();
+    const last = lastTapRef.current;
+    const isDouble = last != null && last.id === item.id && now - last.t < DOUBLE_TAP_MS;
+    // a third tap starts a fresh pair, so three clicks don't count up twice
+    lastTapRef.current = isDouble ? null : { id: item.id, t: now };
+    if (isDouble && item.preset && typingIdRef.current !== item.id) {
       const { base, times } = splitRepeat(item.text);
       const nextTimes = times >= MAX_REPEAT ? 1 : times + 1;
       const text = withRepeat(base, nextTimes);
       commit(itemsRef.current.map((i) => (i.id === item.id ? { ...i, text } : i)));
+      setSel(item.id);
+      setCaret({ id: item.id, side });
       onSelect?.(base);
       return;
     }
-    const next = sel === item.id ? null : item.id;
-    setSel(next);
-    setCaret(next ? { id: item.id, side } : null);
+    // a single tap only picks the box out (and marks where a chip would land)
+    setSel(item.id);
+    setCaret({ id: item.id, side });
     // color edits act on the preset itself, not on "Cx2"
-    onSelect?.(next ? (item.preset ? splitRepeat(item.text).base : item.text) : "");
+    onSelect?.(item.preset ? splitRepeat(item.text).base : item.text);
   };
 
   const removeItem = (id: string) => {
@@ -515,16 +522,14 @@ export default function SongFormBoxes({
             )}
           </span>
         );
-        // where the next chip lands — hidden while a chip is being dragged over
-        // the field, since the drop mark says it better
-        const caretSide = dropAt == null && !dragId && caret?.id === item.id ? caret.side : null;
-        if (!caretSide && dropAt !== idx + 1) return node;
+        // the insertion point itself isn't drawn — the box's own highlight is
+        // enough — but a chip being dragged over the field still shows where
+        // it would land
+        if (dropAt !== idx + 1) return node;
         return (
           <Fragment key={`${item.id}-w`}>
-            {caretSide === "before" && <InsertCaret dark={dark} />}
             {node}
-            {caretSide === "after" && <InsertCaret dark={dark} />}
-            {dropAt === idx + 1 && <DropMark />}
+            <DropMark />
           </Fragment>
         );
       })}
@@ -538,16 +543,6 @@ function DropMark() {
   return <span aria-hidden className="h-6 w-0.5 shrink-0 rounded-full bg-indigo-500" />;
 }
 
-/** Where the next chip tapped in the bar will go — the form's caret. */
-function InsertCaret({ dark }: { dark: boolean }) {
-  return (
-    <span
-      aria-hidden
-      title="여기에 들어갑니다"
-      className={`-mx-0.5 h-5 w-[3px] shrink-0 rounded-full ${dark ? "bg-white/70" : "bg-indigo-400"}`}
-    />
-  );
-}
 
 /** An input that is exactly as wide as what it holds: a hidden copy of the text
  *  sets the width, and the real input is laid over it. (Leaving the input in

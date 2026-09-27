@@ -7,10 +7,11 @@
 // still show up as boxes.
 
 /** quick-insert chips, in display order: verse family, chorus family, the rest */
+// (the ＋글자 chip rides at the head of the first row, so it holds seven too)
 export const PRESET_ROWS = [
-  ["Int2", "Int4", "Int8", "V", "V1", "V2", "V3"],
+  ["Int4", "Int8", "V", "V1", "V2", "V3"],
   ["PC", "C", "C1", "C2", "C3", "C4", "B"],
-  ["Itl2", "Itl4", "Itl8", "Tag", "Out", "Rit"],
+  ["Itl2", "Itl4", "Itl8", "Tag", "Out", "Rit", "Next"],
 ];
 export const ALL_PRESETS = PRESET_ROWS.flat();
 
@@ -30,9 +31,11 @@ export const DEFAULT_PRESET_COLORS: Record<string, string> = {
   C4: RED,
   B: GREEN,
   // structural markers all share one calm tone
-  Int2: SLATE, Int4: SLATE, Int8: SLATE,
+  Int4: SLATE, Int8: SLATE,
   Itl2: SLATE, Itl4: SLATE, Itl8: SLATE,
-  Tag: SLATE, Out: SLATE, Rit: SLATE,
+  Tag: SLATE, Out: SLATE, Rit: SLATE, Next: SLATE,
+  // Int2 was a chip for a while: a form that already holds one keeps its look
+  Int2: SLATE,
 };
 
 /** palette offered when recoloring a preset ("" = no color / inherit) */
@@ -60,9 +63,9 @@ function load(): ColorMap {
   }
 }
 
-/** The intro boxes read as one family, so Int4 and Int8 are brought into line
- *  with Int2 — a color edit made back when Int2 didn't exist yet left them
- *  looking different from it. Once only: recolor any of them afterwards and
+/** The intro boxes read as one family, so a stale color edit on Int4 or Int8 —
+ *  which left them looking unlike the other structural boxes — is dropped and
+ *  they go back to the built-in color. Once only: recolor them afterwards and
  *  that choice stands. */
 const INT_FAMILY_DONE = "wl.presetColors.intFamily";
 function alignIntFamily(map: ColorMap): ColorMap {

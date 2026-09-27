@@ -196,6 +196,25 @@ export default function PresetChips({
             // seven to a row, lined up in columns: with seven presets per row a
             // wrapping flex row broke into two ragged lines on a phone
             <div key={ri} className="grid grid-cols-7 items-center gap-1.5">
+              {/* the typed box opens the first row */}
+              {ri === 0 && onInsertText && (
+                <button
+                  onPointerDown={(e) => chipPointerDown(e, "", false)}
+                  onPointerMove={chipPointerMove}
+                  onPointerUp={(e) => {
+                    if (!chipPointerUp(e)) onInsertText();
+                  }}
+                  onPointerCancel={chipPointerUp}
+                  style={{ touchAction: "pan-y" }}
+                  className={`w-full min-w-0 whitespace-nowrap rounded-lg border border-dashed px-1 py-1.5 text-[10px] font-bold leading-4 ${
+                    dark
+                      ? "border-white/40 text-white/80"
+                      : "border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  ＋글자
+                </button>
+              )}
               {row.map((p) => {
                 const c = presetColor(p);
                 const box = c ? formBoxColors(c) : null;
@@ -239,25 +258,6 @@ export default function PresetChips({
                   </button>
                 );
               })}
-              {/* the typed box rides along at the end of the last row */}
-              {ri === PRESET_ROWS.length - 1 && onInsertText && (
-                <button
-                  onPointerDown={(e) => chipPointerDown(e, "", false)}
-                  onPointerMove={chipPointerMove}
-                  onPointerUp={(e) => {
-                    if (!chipPointerUp(e)) onInsertText();
-                  }}
-                  onPointerCancel={chipPointerUp}
-                  style={{ touchAction: "pan-y" }}
-                  className={`w-full min-w-0 whitespace-nowrap rounded-lg border border-dashed px-1 py-1.5 text-[10px] font-bold leading-4 ${
-                    dark
-                      ? "border-white/40 text-white/80"
-                      : "border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  ＋글자
-                </button>
-              )}
             </div>
           ))}
         </div>
