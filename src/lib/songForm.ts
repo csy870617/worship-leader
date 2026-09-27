@@ -60,7 +60,41 @@ function load(): ColorMap {
   }
 }
 
-let overrides: ColorMap = load();
+/** The intro boxes read as one family, so Int4 and Int8 are brought into line
+ *  with Int2 — a color edit made back when Int2 didn't exist yet left them
+ *  looking different from it. Once only: recolor any of them afterwards and
+ *  that choice stands. */
+const INT_FAMILY_DONE = "wl.presetColors.intFamily";
+function alignIntFamily(map: ColorMap): ColorMap {
+  try {
+    if (localStorage.getItem(INT_FAMILY_DONE)) return map;
+  } catch {
+    return map; // no storage: nothing was saved to bring into line anyway
+  }
+  const out = { ...map };
+  let changed = false;
+  for (const name of ["Int4", "Int8"]) {
+    // Int2 unedited → let these fall back to the built-in color as well
+    if (map.Int2 === undefined) {
+      if (name in out) {
+        delete out[name];
+        changed = true;
+      }
+    } else if (out[name] !== map.Int2) {
+      out[name] = map.Int2;
+      changed = true;
+    }
+  }
+  try {
+    localStorage.setItem(INT_FAMILY_DONE, "1");
+    if (changed) localStorage.setItem(LS, JSON.stringify(out));
+  } catch {
+    /* quota — the alignment just won't persist */
+  }
+  return out;
+}
+
+let overrides: ColorMap = alignIntFamily(load());
 const listeners = new Set<() => void>();
 let version = 0;
 
