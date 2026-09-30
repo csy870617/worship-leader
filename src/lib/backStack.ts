@@ -5,19 +5,41 @@
 // time instead of all at once (or closing their parent).
 import { useEffect, useRef } from "react";
 
-type Entry = { onBack: () => void };
+type Entry = { onBack: () => void; consumed: boolean };
 const stack: Entry[] = [];
 let ignore = 0; // popstate events caused by our own history.back() to swallow
 let seq = 0;
 let listening = false;
+// History entries whose popup is gone but whose entry is still in the browser
+// history — e.g. a parent closed the popup directly, or a menu and the viewer
+// under it closed together (only the top entry can be popped right away). Left
+// alone, the next back press would just land on such an entry and do nothing.
+const dead = new Set<number>();
+
+const currentId = () => (window.history.state as { __wlBack?: number } | null)?.__wlBack;
+
+/** If the entry we're on belongs to a popup that's already gone, step past it. */
+function skipDead() {
+  const cur = currentId();
+  if (cur != null && dead.has(cur)) {
+    dead.delete(cur);
+    ignore++;
+    window.history.back();
+  }
+}
 
 function handlePop() {
   if (ignore > 0) {
     ignore--;
-    return;
+  } else {
+    const top = stack.pop();
+    if (top) {
+      top.consumed = true; // its entry is already off history
+      top.onBack();
+    }
   }
-  const top = stack.pop();
-  top?.onBack();
+  // keep going past any dead entries this back press (or our own) exposed
+  skipDead();
 }
 
 /**
@@ -34,19 +56,23 @@ export function registerBack(onBack: () => void): (popHistory: boolean) => void 
     listening = true;
   }
   const id = ++seq;
-  const entry: Entry = { onBack };
+  const entry: Entry = { onBack, consumed: false };
   stack.push(entry);
   window.history.pushState({ __wlBack: id }, "");
   let removed = false;
-  return (popHistory: boolean) => {
+  // `popHistory` is kept for callers' clarity; the entry is now always cleaned
+  // up: popped if it's on top, otherwise skipped once back reaches it
+  return (_popHistory: boolean) => {
     if (removed) return;
     removed = true;
     const idx = stack.lastIndexOf(entry);
     if (idx !== -1) stack.splice(idx, 1);
-    if (popHistory && (window.history.state as any)?.__wlBack === id) {
-      ignore++;
-      window.history.back();
-    }
+    if (entry.consumed) return; // the back press already took its entry
+    dead.add(id);
+    // after this tick: several popups closing together (or React StrictMode's
+    // unmount/remount) settle first, so only a truly orphaned top entry pops.
+    // A navigation that already moved past it just leaves it to be skipped.
+    queueMicrotask(skipDead);
   };
 }
 
