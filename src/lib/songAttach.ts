@@ -217,7 +217,11 @@ export function setSongSheets(id: string, order: string[]) {
     return { ...a, sheets: next };
   });
 }
-export function removeSongSheet(id: string, aid: string) {
+/** Remove a sheet from a song. Returns the id of the untouched original it was
+ *  cropped from (when one was kept and isn't itself still on the song), so the
+ *  caller can delete that file too instead of leaving it orphaned. */
+export function removeSongSheet(id: string, aid: string): string | null {
+  const originAid = store[id]?.sheetOrigins?.[aid]?.aid ?? null;
   update(id, (a) => {
     const sheets = (a.sheets ?? []).filter((x) => x !== aid);
     const st = { ...(a.sheetTexts ?? {}) };
@@ -230,6 +234,7 @@ export function removeSongSheet(id: string, aid: string) {
     delete so[aid];
     return { ...a, sheets, sheetTexts: st, sheetDraws: sd, sheetKeys: sk, sheetOrigins: so };
   });
+  return originAid && !(store[id]?.sheets ?? []).includes(originAid) ? originAid : null;
 }
 /** The untouched upload a sheet was cropped from, if it was kept. */
 export function sheetOrigin(id: string, aid: string): SheetOrigin | undefined {

@@ -85,8 +85,10 @@ function snapshotLocal(): LocalSnapshot {
   };
 }
 
-/** Union merge — only used for the first login (preserve local + remote). */
-function mergeUnion(local: LocalSnapshot, remote: Partial<CloudDoc>): LocalSnapshot {
+/** Union merge — used for the first login (preserve local + remote) and for
+ *  conflicts. `firstSync`: this device has never synced, so its untouched
+ *  default conti ("콘티 1", nothing in it) is not real data. */
+function mergeUnion(local: LocalSnapshot, remote: Partial<CloudDoc>, firstSync = false): LocalSnapshot {
   const byId = new Map<string, Song>();
   for (const s of remote.userSongs ?? []) byId.set(s.id, s);
   for (const s of local.userSongs) byId.set(s.id, s);
@@ -109,11 +111,21 @@ function mergeUnion(local: LocalSnapshot, remote: Partial<CloudDoc>): LocalSnaps
   // contis: union by id (local wins); prefer local active selection
   const lc = readContis(local);
   const rc = readContis(remote);
+  // A new device always starts with an empty "콘티 1" under a fresh id. Unioned
+  // in, it was added to the account on every new device/browser and — being the
+  // local active one — replaced the user's real conti on screen. Drop it when
+  // the account already has contis.
+  const remoteIds = new Set(rc.contis.map((c) => c.id));
+  const localContis =
+    firstSync && rc.contis.length
+      ? lc.contis.filter((c) => remoteIds.has(c.id) || (c.items?.length ?? 0) > 0 || !!c.note)
+      : lc.contis;
   const cById = new Map<string, Conti>();
   for (const c of rc.contis) cById.set(c.id, c);
-  for (const c of lc.contis) cById.set(c.id, c);
+  for (const c of localContis) cById.set(c.id, c);
   const contis = [...cById.values()];
-  const activeContiId = lc.activeContiId || rc.activeContiId || contis[0]?.id || "";
+  const localActive = localContis.some((c) => c.id === lc.activeContiId) ? lc.activeContiId : "";
+  const activeContiId = localActive || rc.activeContiId || contis[0]?.id || "";
 
   return { userSongs: [...byId.values()], favorites, contis, activeContiId, history, hidden, overrides, songAttach };
 }
@@ -151,6 +163,14 @@ let applyingRemote = false;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
 let currentUser: User | null = null;
 let unsubscribeDoc: (() => void) | null = null;
+// true once this login's first reconcile with the cloud has finished. Until
+// then a local edit must not push: a full-replace write of the not-yet-merged
+// local state would overwrite whatever other devices saved (and an offline
+// start whose first read failed would do exactly that once back online).
+let ready = false;
+// bumped on every local edit, so a push can tell whether more edits arrived
+// while it was in flight (and must not mark them as already pushed)
+let localSeq = 0;
 
 const userRef = (uid: string) => doc(db!, "users", uid);
 
@@ -210,24 +230,27 @@ function applyDoc(d: Partial<CloudDoc> | LocalSnapshot) {
 async function pushNow() {
   if (!db || !currentUser) return;
   const uid = currentUser.uid;
+  const seq = localSeq;
   const payload: CloudDoc = clean({ ...snapshotLocal(), updatedAt: Date.now() });
   try {
     await setDoc(userRef(uid), payload); // full replace → deletions propagate
-    if (currentUser?.uid === uid) saveMeta(uid, payload.updatedAt, false);
+    // edits made while this write was in flight aren't in it: stay dirty so
+    // they are still pushed (a quick close would otherwise drop them)
+    if (currentUser?.uid === uid) saveMeta(uid, payload.updatedAt, localSeq !== seq);
   } catch (e) {
     console.warn("[sync] push failed", e);
   }
 }
 
 function schedulePush() {
-  if (!currentUser) return;
+  if (!currentUser || !ready) return;
   if (pushTimer) clearTimeout(pushTimer);
   pushTimer = setTimeout(pushNow, 800);
 }
 
 /** Push any pending local changes immediately (e.g. when the app is backgrounded). */
 function flush() {
-  if (!currentUser) return;
+  if (!currentUser || !ready) return;
   const m = getMeta();
   if (!m || !m.dirty) return; // nothing un-pushed
   if (pushTimer) {
@@ -239,13 +262,17 @@ function flush() {
 
 function onLocalChange() {
   if (applyingRemote) return;
+  localSeq++;
   markDirty();
   schedulePush();
 }
 
+let reconciling = false;
 async function onLogin(user: User) {
   currentUser = user;
-  if (!db) return;
+  if (!db || reconciling) return;
+  ready = false;
+  reconciling = true;
   try {
     const snap = await getDoc(userRef(user.uid));
     if (currentUser?.uid !== user.uid) return; // auth changed during await
@@ -253,7 +280,13 @@ async function onLogin(user: User) {
     const remote = snap.exists() ? (snap.data() as CloudDoc) : null;
     const meta = getMeta();
 
-    if (!remote) {
+    if (!remote && meta && meta.uid !== user.uid) {
+      // a different account used this device and this one has no cloud data
+      // yet: what's here is the previous account's (safe in ITS cloud doc).
+      // Seeding would copy it into this account — start this one empty instead.
+      applyDoc({});
+      saveMeta(user.uid, 0, false);
+    } else if (!remote) {
       // mark dirty before pushing so a failed/offline push doesn't leave sync
       // meta permanently unset (which would silently disable dirty-tracking)
       if (!meta) saveMeta(user.uid, 0, true);
@@ -261,7 +294,7 @@ async function onLogin(user: User) {
     } else if (!meta) {
       // first sync ever on this device → union so pre-login local survives
       saveMeta(user.uid, 0, true);
-      applyDoc(mergeUnion(snapshotLocal(), remote));
+      applyDoc(mergeUnion(snapshotLocal(), remote, true));
       await pushNow();
     } else if (meta.uid !== user.uid) {
       // different account on this device → take cloud as truth
@@ -284,15 +317,31 @@ async function onLogin(user: User) {
       saveMeta(user.uid, remote.updatedAt, false); // already in sync
     }
     // keep pulling changes other devices make while this one stays open
-    if (currentUser?.uid === user.uid) startLiveListener(user.uid);
+    if (currentUser?.uid === user.uid) {
+      startLiveListener(user.uid);
+      ready = true;
+      // edits made while reconciling were held back — send them now
+      if (getMeta()?.dirty) schedulePush();
+    }
   } catch (e) {
+    // stays not-ready (no pushes) — retried when back online / visible
     console.warn("[sync] initial sync failed", e);
     applyingRemote = false;
+  } finally {
+    reconciling = false;
+    // the account changed while we were reconciling the previous one
+    if (currentUser && currentUser.uid !== user.uid && !ready) void onLogin(currentUser);
   }
+}
+
+/** Retry a first reconcile that failed (e.g. the app was opened offline). */
+function retryLogin() {
+  if (currentUser && !ready && !reconciling) void onLogin(currentUser);
 }
 
 function onLogout() {
   currentUser = null;
+  ready = false;
   unsubscribeDoc?.();
   unsubscribeDoc = null;
   if (pushTimer) {
@@ -317,8 +366,10 @@ export function initSync() {
   // edit-then-close doesn't wait until the next login to reach the cloud
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flush();
+    else retryLogin();
   });
   window.addEventListener("pagehide", flush);
+  window.addEventListener("online", retryLogin);
 
   onAuth((user) => {
     if (user) onLogin(user);

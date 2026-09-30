@@ -41,7 +41,14 @@ export function subscribeHistory(cb: () => void) {
   return () => listeners.delete(l);
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+// the LOCAL calendar date. toISOString() is UTC, so in Korea (UTC+9) anything
+// marked before 09:00 — a Sunday-morning service — was recorded as the day
+// before, while daysSince() reads the date back as local midnight.
+const today = () => {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
 export function daysSince(iso: string): number {
   const then = new Date(iso + "T00:00:00").getTime();

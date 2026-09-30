@@ -42,6 +42,10 @@ export default function ContiView({
   const cropTarget = useRef<{ songId: string; aid: string } | null>(null);
   const [textTarget, setTextTarget] = useState<{ songId: string; aid: string } | null>(null);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
+  // what's open on top of the viewer, for the Esc key (read from a ref: the
+  // key listener is registered once)
+  const overlayRef = useRef<"menu" | "editor" | null>(null);
+  overlayRef.current = sheetMenu ? "menu" : cropFile || textTarget ? "editor" : null;
 
   const startText = (songId: string, aid: string) => {
     setSheetMenu(null);
@@ -62,18 +66,24 @@ export default function ContiView({
   };
   const onCropDone = async (newFile: File | null, crop?: { x: number; y: number; w: number; h: number }) => {
     const t = cropTarget.current;
-    const source = cropFile;
     cropTarget.current = null;
     setCropFile(null);
     if (newFile && t) {
       const title = songById.get(t.songId)?.title ?? "";
       const hadOrigin = attach[t.songId]?.sheetOrigins?.[t.aid] != null;
-      const newAid = await saveSheetFromFile(newFile, title);
+      let newAid: string;
+      try {
+        newAid = await saveSheetFromFile(newFile, title);
+      } catch (e) {
+        console.warn("[conti view] crop save failed", e); // the sheet stays as it was
+        return;
+      }
       replaceSongSheet(t.songId, t.aid, newAid, crop);
-      // keep the untouched image so the crop can be undone later
-      if (!hadOrigin && source && crop && (crop.w < 0.995 || crop.h < 0.995)) {
-        const originAid = await saveSheetFromFile(source, title);
-        setSongSheetOrigin(t.songId, newAid, { aid: originAid, crop });
+      // keep the untouched image so the crop can be undone later. It is already
+      // stored as t.aid, so keep that file instead of uploading a second copy
+      // (which orphaned the first).
+      if (!hadOrigin && crop && (crop.w < 0.995 || crop.h < 0.995)) {
+        setSongSheetOrigin(t.songId, newAid, { aid: t.aid, crop });
       } else {
         removeSheetEverywhere(t.aid);
       }
@@ -85,8 +95,9 @@ export default function ContiView({
   };
   const deleteSheet = (songId: string, aid: string) => {
     setSheetMenu(null);
-    removeSongSheet(songId, aid);
+    const orphan = removeSongSheet(songId, aid);
     removeSheetEverywhere(aid);
+    if (orphan) removeSheetEverywhere(orphan);
   };
 
   const rows = useMemo(
@@ -127,7 +138,14 @@ export default function ContiView({
       closedRef.current = true;
       onCloseRef.current();
     });
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    // Esc closes only the topmost thing: the sheet menu if it's open; nothing
+    // while the crop / text editor is up (it handles its own Esc — closing the
+    // whole viewer underneath would throw that work away); else the viewer
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (overlayRef.current === "menu") setSheetMenu(null);
+      else if (!overlayRef.current) close();
+    };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
@@ -522,9 +540,13 @@ function SheetFigure({
     // re-measure after layout settles (flex / fold / address-bar changes)
     const raf = requestAnimationFrame(measure);
     let ro: ResizeObserver | undefined;
-    if (fit && wrapRef.current && "ResizeObserver" in window) {
+    // scroll mode sizes its overlays from the image itself, which also changes
+    // width without a window resize (e.g. a scrollbar appearing as more sheets
+    // load) — watch it too, or the text/strokes drift off the notes
+    const target = fit ? wrapRef.current : imgRef.current;
+    if (target && "ResizeObserver" in window) {
       ro = new ResizeObserver(() => measure());
-      ro.observe(wrapRef.current);
+      ro.observe(target);
     }
     window.addEventListener("resize", measure);
     window.visualViewport?.addEventListener("resize", measure);

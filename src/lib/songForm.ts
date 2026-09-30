@@ -224,7 +224,10 @@ export const MAX_REPEAT = 9;
 export function parseForm(value: string): FormItem[] {
   const raw = value ?? "";
   if (!raw) return [];
-  const parts = raw.includes(SEP)
+  const parts = raw.startsWith(SEP)
+    ? // explicitly boxed (see serializeForm): one box, or a leading empty box
+      raw.slice(1).split(SEP)
+    : raw.includes(SEP)
     ? raw.split(SEP)
     : // legacy plain text: every word is its own box, and the separators the
       // form used to be written with ("-") are dropped
@@ -243,7 +246,13 @@ export function parseForm(value: string): FormItem[] {
 
 /** Write boxes back to the stored string. */
 export function serializeForm(items: FormItem[]): string {
-  return items.map((it) => it.text).join(SEP);
+  if (!items.length) return "";
+  const joined = items.map((it) => it.text).join(SEP);
+  // A single box joins to a string with no separator, which reads back as
+  // legacy text — so a lone typed box lost its spaces (one box became several)
+  // and a lone empty box vanished before it could be typed in. Mark those (and
+  // a leading empty box, whose join would be ambiguous) with a leading SEP.
+  return items.length === 1 || items[0].text === "" ? SEP + joined : joined;
 }
 
 /** Plain, separator-free text of a form — for anything that just needs to read it. */

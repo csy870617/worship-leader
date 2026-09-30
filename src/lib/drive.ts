@@ -45,6 +45,10 @@ function loadGis(): Promise<void> {
 let tokenClient: any = null;
 let token: string | null = null;
 let tokenExp = 0;
+// whose Drive the cached token opens: after a sign-out / account switch the old
+// token would otherwise keep writing the new user's sheets into the previous
+// user's Drive for up to an hour
+let tokenUid: string | null = null;
 let inflight: Promise<string> | null = null;
 
 async function ensureClient() {
@@ -66,6 +70,7 @@ function requestToken(prompt: "" | "none"): Promise<string> {
           if (resp?.error) return reject(new Error(resp.error));
           token = resp.access_token;
           tokenExp = Date.now() + ((resp.expires_in ?? 3600) - 60) * 1000;
+          tokenUid = auth?.currentUser?.uid ?? null;
           resolve(token!);
         };
         tokenClient.error_callback = (err: any) => reject(new Error(err?.type || "auth_error"));
@@ -76,8 +81,15 @@ function requestToken(prompt: "" | "none"): Promise<string> {
 }
 
 async function getToken(interactive: boolean): Promise<string> {
+  if (token && tokenUid !== (auth?.currentUser?.uid ?? null)) {
+    token = null; // issued for a different signed-in account
+    tokenExp = 0;
+  }
   if (token && Date.now() < tokenExp) return token;
-  if (inflight) return inflight;
+  // a silent request already running would reject with "needs consent" — an
+  // interactive caller (a user tap) must fall back to the consent prompt then,
+  // not inherit that failure
+  if (inflight) return interactive ? inflight.catch(() => requestToken("")) : inflight;
   const p = (async () => {
     try {
       return await requestToken("none"); // silent first

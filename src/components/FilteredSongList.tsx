@@ -22,9 +22,15 @@ const CAT_LABEL: Record<string, string> = { hymn: "찬송가", ccm: "CCM" };
 // 템포만 다중 선택, 나머지(분류·코드·주제)는 단일 선택
 const MULTI_AXES = new Set<Axis>(["tempo"]);
 
-// Code filter groups Eb+E under "E" and Bb+B under "B"; other keys stand alone.
+// Code filter groups a flat with its natural (Db+D, Eb+E, Ab+A, Bb+B) — the same
+// grouping as 둘러보기, so Db/Ab songs aren't unreachable here; others stand alone.
 const KEY_GROUPS = ["C", "D", "E", "F", "G", "A", "B"];
-const KEY_MEMBERS: Record<string, string[]> = { E: ["Eb", "E"], B: ["Bb", "B"] };
+const KEY_MEMBERS: Record<string, string[]> = {
+  D: ["Db", "D"],
+  E: ["Eb", "E"],
+  A: ["Ab", "A"],
+  B: ["Bb", "B"],
+};
 const keyMembers = (group: string) => KEY_MEMBERS[group] ?? [group];
 
 // rank a song by its lowest key using the chip order (C, D, Eb, …)

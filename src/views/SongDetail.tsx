@@ -13,6 +13,13 @@ import { useConti } from "../lib/useConti";
 export default function SongDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // leave this page after hiding/deleting the song: go back when the app has a
+  // page to go back to; opened directly (fresh launch, shared link) there is
+  // none — navigate(-1) would then do nothing or leave the app entirely
+  const leave = () => {
+    if (((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0) navigate(-1);
+    else navigate("/browse", { replace: true });
+  };
   const { songById } = useSongs();
   const song = id ? songById.get(id) : undefined;
   const { lastUsed, clearUsed } = useHistory();
@@ -126,7 +133,7 @@ export default function SongDetail() {
             onClick={() => {
               if (confirm("이 곡을 삭제할까요?")) {
                 removeSong(song.id);
-                navigate(-1);
+                leave();
               }
             }}
             className="rounded-lg bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-600 active:bg-rose-100 dark:bg-rose-500/15 dark:text-rose-400"
@@ -137,7 +144,7 @@ export default function SongDetail() {
           <button
             onClick={() => {
               hideSong(song.id);
-              navigate(-1);
+              leave();
             }}
             className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
           >

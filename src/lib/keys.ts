@@ -8,7 +8,10 @@ const PITCH: Record<string, number> = {
 };
 
 export function pitchClass(key: string): number | null {
-  return key in PITCH ? PITCH[key] : null;
+  // a minor key ("Am", "F#m") is scored by its tonic like any other key;
+  // without this, minor-key songs never got a transition suggestion
+  const k = key in PITCH ? key : key.replace(/m$/, "");
+  return k in PITCH ? PITCH[k] : null;
 }
 
 export interface Relation {

@@ -168,6 +168,7 @@ export default function SongFormBoxes({
       to.push(valueRef.current);
       lastPush.current = { at: 0, typing: false };
       setSel(null);
+      setCaret(null); // positional id — may name a different box after undo
       onSelectRef.current?.("");
       onChangeRef.current(v);
     };
@@ -326,7 +327,10 @@ export default function SongFormBoxes({
     window.addEventListener("pointerup", onWindowUp);
     window.addEventListener("pointercancel", onWindowUp);
   };
-  const onWindowUp = () => endDragRef.current();
+  // one function for the component's lifetime: a fresh arrow every render meant
+  // endDrag / unmount removed a different function than beginDrag added, so
+  // each drag left two window listeners behind
+  const onWindowUp = useRef(() => endDragRef.current()).current;
   const endDrag = () => {
     const next = orderRef.current;
     dragIdRef.current = null;
@@ -336,7 +340,14 @@ export default function SongFormBoxes({
     window.removeEventListener("touchmove", preventScroll);
     window.removeEventListener("pointerup", onWindowUp);
     window.removeEventListener("pointercancel", onWindowUp);
-    if (next && next.some((it, i) => it.id !== itemsRef.current[i]?.id)) commit(next);
+    if (next && next.some((it, i) => it.id !== itemsRef.current[i]?.id)) {
+      // box ids are positions ("b0", "b1", …), so after a reorder the stored
+      // selection / insertion point would name a different box — drop them
+      setSel(null);
+      setCaret(null);
+      onSelectRef.current?.("");
+      commit(next);
+    }
   };
   endDragRef.current = () => {
     if (dragIdRef.current) endDrag();

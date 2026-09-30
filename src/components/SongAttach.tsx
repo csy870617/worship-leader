@@ -164,14 +164,21 @@ export default function SongAttachEditor({
     setRecrop(null);
     if (newFile && t) {
       const hadOrigin = sheetOrigins[t.aid] != null;
-      const newAid = await saveSheetFromFile(newFile, songTitle);
+      let newAid: string;
+      try {
+        newAid = await saveSheetFromFile(newFile, songTitle);
+      } catch {
+        setErr("악보 저장에 실패했어요");
+        return;
+      }
       // replaceSongSheet carries an existing original over to the new id
       replaceSongSheet(songId, t.aid, newAid, crop);
       if (!hadOrigin && isCropped(crop)) {
         // nothing was kept before (an older sheet, or one added uncropped):
-        // the image being cropped right now becomes the original
-        const originAid = await saveSheetFromFile(t.file, songTitle);
-        setSongSheetOrigin(songId, newAid, { aid: originAid, crop });
+        // the image being cropped right now becomes the original. It is
+        // already stored as t.aid, so keep that file rather than uploading a
+        // second copy and orphaning the first.
+        setSongSheetOrigin(songId, newAid, { aid: t.aid, crop });
       } else {
         removeSheetEverywhere(t.aid);
       }
@@ -185,8 +192,9 @@ export default function SongAttachEditor({
   const deleteSheetFromMenu = (aid: string) => {
     setSheetMenu(null);
     setViewer(null);
-    removeSongSheet(songId, aid);
+    const orphan = removeSongSheet(songId, aid);
     removeSheetEverywhere(aid);
+    if (orphan) removeSheetEverywhere(orphan);
   };
 
   /** Send image files through the crop dialog, one after another. */
@@ -346,8 +354,9 @@ export default function SongAttachEditor({
                   aid={aid}
                   onOpen={() => setViewer(idx)}
                   onRemove={() => {
-                    removeSongSheet(songId, aid);
+                    const orphan = removeSongSheet(songId, aid);
                     removeSheetEverywhere(aid);
+                    if (orphan) removeSheetEverywhere(orphan);
                   }}
                 />
                 {orderedIds.length > 1 && (
@@ -927,6 +936,9 @@ export function SheetLightbox({
   const annosRef = useRef<SheetText[]>([]);
   const strokesRef = useRef<SheetStroke[]>([]);
   const strokeDragRef = useRef<{ x: number; y: number }[] | null>(null);
+  // the one pointer drawing/erasing right now — a second finger landing
+  // mid-stroke must not restart it or have its moves mixed into it
+  const activePointerRef = useRef<number | null>(null);
   // drag state for a text label: start pointer position + the label's original
   // spot, so movement is slop-gated and applied as a delta (no jump-to-finger)
   const dragRef = useRef<{ i: number; moved: boolean; sx: number; sy: number; ox: number; oy: number } | null>(null);
@@ -950,6 +962,8 @@ export function SheetLightbox({
   sizeIdxRef.current = sizeIdx;
   const many = ids.length > 1;
   const currentId = ids[index];
+  const currentIdRef = useRef(currentId);
+  currentIdRef.current = currentId;
   const drawing = tool === "draw" || tool === "highlight" || tool === "line";
   const erasing = tool === "erase";
   const placing = tool === "text";
@@ -989,6 +1003,13 @@ export function SheetLightbox({
     setLiveStroke(null);
     setEditing(null);
     strokeDragRef.current = null;
+    activePointerRef.current = null;
+    // a nudge still waiting to be recorded belongs to the previous sheet's
+    // history, which is being replaced — drop it (the move itself is saved)
+    if (nudgeTimer.current) {
+      clearTimeout(nudgeTimer.current);
+      nudgeTimer.current = null;
+    }
     const init = texts[ids[index]] ?? [];
     setAnnos(init);
     annosRef.current = init;
@@ -1044,6 +1065,26 @@ export function SheetLightbox({
   // keyboard actions on the selected text (PC): delete, copy, cut, edit, and
   // arrow-key nudging (1px per press, Shift = 10px) for fine positioning
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // record a burst of arrow-key nudges as one undo step. Also called before any
+  // other history change (and undo/redo), so a pending nudge can't later be
+  // pushed on top of — and wipe — whatever happened in between.
+  const flushNudge = () => {
+    if (!nudgeTimer.current) return;
+    clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = null;
+    const hist = historyRef.current.slice(0, histIndexRef.current + 1);
+    hist.push({ annos: annosRef.current, strokes: strokesRef.current });
+    historyRef.current = hist;
+    histIndexRef.current = hist.length - 1;
+    setCanUndo(true);
+    setCanRedo(false);
+  };
+  useEffect(
+    () => () => {
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    },
+    []
+  );
   useEffect(() => {
     const arrows = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
     const onKey = (e: KeyboardEvent) => {
@@ -1094,14 +1135,7 @@ export function SheetLightbox({
         // becomes ONE history entry once the keys go quiet
         writeState(next, strokesRef.current);
         if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
-        nudgeTimer.current = setTimeout(() => {
-          const hist = historyRef.current.slice(0, histIndexRef.current + 1);
-          hist.push({ annos: annosRef.current, strokes: strokesRef.current });
-          historyRef.current = hist;
-          histIndexRef.current = hist.length - 1;
-          setCanUndo(true);
-          setCanRedo(false);
-        }, 600);
+        nudgeTimer.current = setTimeout(flushNudge, 600);
       }
     };
     window.addEventListener("keydown", onKey, true);
@@ -1136,6 +1170,7 @@ export function SheetLightbox({
   };
   // commit an edit AND record it on the undo stack (drops any redo tail)
   const pushState = (nextAnnos: SheetText[], nextStrokes: SheetStroke[]) => {
+    flushNudge();
     writeState(nextAnnos, nextStrokes);
     const hist = historyRef.current.slice(0, histIndexRef.current + 1);
     hist.push({ annos: nextAnnos, strokes: nextStrokes });
@@ -1145,6 +1180,7 @@ export function SheetLightbox({
     setCanRedo(false);
   };
   const undo = () => {
+    flushNudge(); // a just-made nudge is the step to undo
     if (histIndexRef.current <= 0) return;
     editingRef.current = null;
     setEditing(null);
@@ -1156,6 +1192,7 @@ export function SheetLightbox({
     setCanRedo(true);
   };
   const redo = () => {
+    flushNudge();
     if (histIndexRef.current >= historyRef.current.length - 1) return;
     editingRef.current = null;
     setEditing(null);
@@ -1308,6 +1345,8 @@ export function SheetLightbox({
     if (e.pointerType === "mouse" && e.button !== 0) return; // ignore right/middle click
     if (erasing) {
       e.stopPropagation();
+      if (activePointerRef.current != null) return; // another finger is already erasing
+      activePointerRef.current = e.pointerId;
       boxRef.current?.setPointerCapture?.(e.pointerId);
       erasingActiveRef.current = true;
       eraseChangedRef.current = false;
@@ -1316,12 +1355,15 @@ export function SheetLightbox({
     }
     if (!drawing) return;
     e.stopPropagation();
+    if (activePointerRef.current != null) return; // another finger is already drawing
+    activePointerRef.current = e.pointerId;
     boxRef.current?.setPointerCapture?.(e.pointerId);
     const p = ptInBox(e.clientX, e.clientY);
     strokeDragRef.current = [p];
     setLiveStroke([p]);
   };
   const onBoxPointerMove = (e: React.PointerEvent) => {
+    if (activePointerRef.current != null && e.pointerId !== activePointerRef.current) return;
     if (erasing) {
       if (erasingActiveRef.current) eraseAt(e.clientX, e.clientY);
       return;
@@ -1334,12 +1376,15 @@ export function SheetLightbox({
     setLiveStroke(next);
   };
   const onBoxPointerUp = (e: React.PointerEvent) => {
+    if (activePointerRef.current != null && e.pointerId !== activePointerRef.current) return;
+    activePointerRef.current = null;
     if (erasing) {
       if (!erasingActiveRef.current) return;
       erasingActiveRef.current = false;
       boxRef.current?.releasePointerCapture?.(e.pointerId);
       if (eraseChangedRef.current) {
         eraseChangedRef.current = false;
+        flushNudge();
         // record the whole swipe as a single undo step
         const hist = historyRef.current.slice(0, histIndexRef.current + 1);
         hist.push({ annos: annosRef.current, strokes: strokesRef.current });
@@ -1356,19 +1401,30 @@ export function SheetLightbox({
     strokeDragRef.current = null;
     setLiveStroke(null);
     if (pts.length >= 2) {
-      const stroke: SheetStroke = { points: pts, color, width: strokeWidth() };
+      // 4 decimals = 1/10000 of the sheet (well under a pixel) — full float
+      // precision roughly tripled the size of every synced stroke, and all of
+      // them live in one cloud document with a 1 MiB cap
+      const r4 = (v: number) => Math.round(v * 1e4) / 1e4;
+      const points = pts.map((p) => ({ x: r4(p.x), y: r4(p.y) }));
+      const stroke: SheetStroke = { points, color, width: strokeWidth() };
       if (tool === "highlight") stroke.highlight = true;
       pushState(annosRef.current, [...strokesRef.current, stroke]);
     }
   };
 
+  // the label a color/size pick applies to: the selected one, or the existing
+  // one being retyped in place (a brand-new label just picks up `color`/`size`)
+  const styleTarget = () => sel ?? editingRef.current?.i ?? null;
   const applyColor = (c: string) => {
     setColor(c);
-    if (sel != null) pushState(annos.map((a, i) => (i === sel ? { ...a, color: c } : a)), strokesRef.current);
+    const t = styleTarget();
+    if (t != null) pushState(annosRef.current.map((a, i) => (i === t ? { ...a, color: c } : a)), strokesRef.current);
   };
   const applySize = (idx: number) => {
     setSizeIdx(idx);
-    if (sel != null) pushState(annos.map((a, i) => (i === sel ? { ...a, size: TEXT_SIZES[idx].value } : a)), strokesRef.current);
+    const t = styleTarget();
+    if (t != null)
+      pushState(annosRef.current.map((a, i) => (i === t ? { ...a, size: TEXT_SIZES[idx].value } : a)), strokesRef.current);
   };
   const editAt = (i: number) => {
     const a = annosRef.current[i];
@@ -1409,6 +1465,7 @@ export function SheetLightbox({
   // and size — slightly offset from the source, and select it. No tap needed.
   const pasteViaKeyboard = async () => {
     const c = copiedRef.current;
+    const sheetId = currentId;
     let text = c?.text ?? null;
     let color = c?.color ?? colorRef.current;
     let size = c?.size ?? TEXT_SIZES[sizeIdxRef.current].value;
@@ -1420,6 +1477,9 @@ export function SheetLightbox({
       } catch {
         /* clipboard blocked */
       }
+      // the sheet was changed while the clipboard was being read: this
+      // closure would write the new sheet's labels under the old sheet's id
+      if (currentIdRef.current !== sheetId) return;
     }
     if (!text) return;
     setHasCopied(true);
@@ -1531,6 +1591,8 @@ export function SheetLightbox({
             {many && (
               <>
                 <button
+                  // keep a tap here from starting a stroke / erase underneath
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); go(-1); }}
                   aria-label="이전"
                   className="absolute left-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white active:bg-black/60"
@@ -1540,6 +1602,7 @@ export function SheetLightbox({
                   </svg>
                 </button>
                 <button
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); go(1); }}
                   aria-label="다음"
                   className="absolute right-1 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white active:bg-black/60"
@@ -1718,6 +1781,24 @@ export function SheetLightbox({
           <div
             className="w-full max-w-2xl space-y-2 rounded-xl bg-black/60 p-3 backdrop-blur"
             onClick={(e) => e.stopPropagation()}
+            // While a label is being typed, a tap on this bar must not blur the
+            // text box first: the blur commits and selects the label, which adds
+            // buttons and re-centres this row between press and release, so the
+            // tap missed its button (the tool never turned on). Keep focus on
+            // press, then finish the label here — just before the button acts.
+            onPointerDownCapture={(e) => {
+              if (editingRef.current) e.preventDefault();
+            }}
+            onMouseDownCapture={(e) => {
+              if (editingRef.current) e.preventDefault();
+            }}
+            onClickCapture={(e) => {
+              if (!editingRef.current) return;
+              // color / size restyle the label being typed and keep typing
+              if ((e.target as HTMLElement).closest("[data-keep-editing]")) return;
+              commitEditing();
+              editRef.current?.blur();
+            }}
           >
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
@@ -1872,6 +1953,7 @@ export function SheetLightbox({
                 {TEXT_COLORS.map((c) => (
                   <button
                     key={c}
+                    data-keep-editing
                     onClick={() => applyColor(c)}
                     aria-label={`색 ${c}`}
                     className={
@@ -1887,6 +1969,7 @@ export function SheetLightbox({
                 {TEXT_SIZES.map((s, i) => (
                   <button
                     key={s.value}
+                    data-keep-editing
                     onClick={() => applySize(i)}
                     className={
                       "rounded-md px-2 py-1 text-xs font-semibold " +

@@ -120,13 +120,12 @@ export default function Conti() {
       setMemoFocused(false);
     }, delay);
   };
-  /** After a tap inside the bar, put the caret back in the field. If the
-   *  browser refuses, arm a slower hide so the bar can't get stuck open. */
+  /** A tap inside the bar keeps it up. (It used to also re-focus the old memo
+   *  textarea and, failing that, arm a 2.5 s hide — but the 송폼 is boxes now,
+   *  that textarea is gone, so the hide fired after every tap on the bar and
+   *  closed it mid-edit. The field's own outside-tap blur is what closes it.) */
   const restorePresetFocus = () => {
     keepPresetBar();
-    const el = memoElRef.current;
-    if (el && document.activeElement !== el) el.focus();
-    if (!memoElRef.current || document.activeElement !== memoElRef.current) hidePresetBarSoon(2500);
   };
   useEffect(() => () => keepPresetBar(), []);
 
@@ -283,7 +282,10 @@ export default function Conti() {
   // preview the reorder locally during the drag, commit once on drop
   const beginDrag = (id: string) => {
     dragIdRef.current = id;
-    const snap = conti.slice();
+    // only the rows that are drawn: indexFromY counts rendered <li>s, and an
+    // item whose song no longer exists isn't one of them — keeping it here put
+    // every drop one slot off. endDrag re-applies this order to the full conti.
+    const snap = conti.filter((it) => songById.has(it.id));
     dragOrderRef.current = snap;
     setDragId(id);
     setDragOrder(snap);
@@ -340,7 +342,9 @@ export default function Conti() {
   const onRowPointerDown = (e: React.PointerEvent, id: string) => {
     if (e.pointerType === "mouse") return; // mouse uses right-click
     const t = e.target as HTMLElement;
-    if (t.closest("button, input, a, textarea, [data-drag-handle]")) return;
+    // a held 송폼 box is starting its own drag (at 250 ms), not asking to
+    // remove the song
+    if (t.closest("button, input, a, textarea, [data-drag-handle], [data-boxwrap]")) return;
     lpStart.current = { x: e.clientX, y: e.clientY };
     lpTimer.current = setTimeout(() => setConfirmRemove(id), 500);
   };
@@ -429,13 +433,15 @@ export default function Conti() {
   // song's title with its YouTube link under it. Works with Web Share text/url,
   // which installed PWAs allow.
   const buildShareText = () => {
-    const blocks = conti.map((c, i) => {
-      const s = songById.get(c.id);
-      if (!s) return `${i + 1}.`;
+    // a song deleted from the catalog is still referenced by the conti but not
+    // shown on it — leave it out here too (it used to go out as a bare "2.")
+    const present = conti.filter((c) => songById.has(c.id));
+    const blocks = present.map((c) => {
+      const s = songById.get(c.id)!;
       const link = attach[c.id]?.youtube;
       return link ? `${s.title}\n${link}` : s.title;
     });
-    let text = `${active.name} (${conti.length}곡)\n\n${blocks.join("\n\n")}`;
+    let text = `${active.name} (${present.length}곡)\n\n${blocks.join("\n\n")}`;
     if (playlistUrl) text += `\n\n▶ 유튜브 재생목록: ${playlistUrl}`;
     return text;
   };
@@ -658,7 +664,7 @@ export default function Conti() {
                 onContextMenu={(e) => {
                   e.preventDefault();
                   if (dragIdRef.current) return; // mid-drag long-press, not a delete
-                  if ((e.target as HTMLElement).closest("button, input, textarea, a, [data-drag-handle]")) return;
+                  if ((e.target as HTMLElement).closest("button, input, textarea, a, [data-drag-handle], [data-boxwrap]")) return;
                   setConfirmRemove(r.id);
                 }}
                 className={
