@@ -158,10 +158,13 @@ export async function removeSheetEverywhere(id: string): Promise<void> {
   if (driveEnabled()) await deleteDriveFile(id);
 }
 
+/** Longest side, in px, a sheet image is stored at. */
+export const SHEET_MAX = 1600;
+
 /** Read an image File, downscale it, and return a compact JPEG data URL. */
 export async function fileToSheetDataUrl(
   file: File,
-  max = 1600,
+  max = SHEET_MAX,
   quality = 0.82
 ): Promise<string> {
   const dataUrl = await new Promise<string>((res, rej) => {

@@ -21,6 +21,7 @@ import {
   loadSheet,
   removeSheetEverywhere,
   saveSheetFromFile,
+  SHEET_MAX,
 } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
 import { getSongById } from "../lib/catalog";
@@ -71,7 +72,10 @@ export default function SongAttachEditor({
   const sheetKeys = a?.sheetKeys ?? {};
   const sheetOrigins = a?.sheetOrigins ?? {};
 
-  const [busy, setBusy] = useState(false);
+  // sheets still being saved in the background (each shows a "저장 중" tile)
+  const [saving, setSaving] = useState(0);
+  const busy = saving > 0;
+  const addChain = useRef<Promise<void>>(Promise.resolve());
   const [err, setErr] = useState<string | null>(null);
   const [viewer, setViewer] = useState<number | null>(null);
   // queued crops carry an id: the crop dialog must be a *fresh* component per
@@ -245,26 +249,43 @@ export default function SongAttachEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const onCropDone = async (cropped: File | null, crop?: Crop) => {
-    // always advance the queue, even if a save fails, so the crop view can't get stuck
     const source = cropQueue[0]?.file;
-    if (cropped) {
-      setBusy(true);
-      setErr(null);
-      try {
-        const aid = await saveSheetFromFile(cropped, songTitle);
-        addSongSheet(songId, aid);
-        // a real crop keeps the untouched upload around, so it can be restored
-        if (source && isCropped(crop)) {
-          const originAid = await saveSheetFromFile(source, songTitle);
-          setSongSheetOrigin(songId, aid, { aid: originAid, crop });
-        }
-      } catch {
-        setErr("악보 저장에 실패했어요");
-      } finally {
-        setBusy(false);
-      }
-    }
+    // close the crop view right away (or move on to the next photo) — saving
+    // (and a Drive upload) carries on behind it with a "저장 중" tile in the list,
+    // instead of the dialog sitting there looking frozen until it's all done
     setCropQueue((q) => q.slice(1));
+    if (!cropped) return;
+    setSaving((n) => n + 1);
+    setErr(null);
+    try {
+      // a real crop keeps the untouched upload around, so it can be restored —
+      // saved alongside the cropped sheet, not after it
+      const keepOrigin = !!source && isCropped(crop);
+      const saved = Promise.allSettled([
+        saveSheetFromFile(cropped, songTitle),
+        keepOrigin ? saveSheetFromFile(source!, songTitle) : Promise.resolve(null),
+      ]);
+      // saves run side by side, but sheets are added in the order they were
+      // cropped — several pages picked at once must keep their page order
+      const prev = addChain.current;
+      const done = (async () => {
+        await prev;
+        const [sheet, origin] = await saved;
+        if (sheet.status === "rejected") {
+          setErr("악보 저장에 실패했어요");
+          // don't leave a stored original behind for a sheet that never got added
+          if (origin.status === "fulfilled" && origin.value) removeSheetEverywhere(origin.value);
+          return;
+        }
+        addSongSheet(songId, sheet.value);
+        if (origin.status === "fulfilled" && origin.value)
+          setSongSheetOrigin(songId, sheet.value, { aid: origin.value, crop: crop! });
+      })();
+      addChain.current = done.catch(() => {});
+      await done;
+    } finally {
+      setSaving((n) => n - 1);
+    }
   };
 
   return (
@@ -335,7 +356,7 @@ export default function SongAttachEditor({
         <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
           악보
         </label>
-        {orderedIds.length > 0 && (
+        {(orderedIds.length > 0 || saving > 0) && (
           <div ref={gridRef} className="mb-2 flex flex-wrap gap-2">
             {orderedIds.map((aid, idx) => (
               <div key={aid} className="flex flex-col items-center gap-1">
@@ -423,6 +444,19 @@ export default function SongAttachEditor({
               )}
               </div>
             ))}
+            {/* sheets still saving in the background, where they will appear */}
+            {Array.from({ length: saving }, (_, i) => (
+              <div
+                key={`saving-${i}`}
+                className="flex h-20 w-16 flex-col items-center justify-center gap-1 rounded-lg bg-slate-50 text-[10px] font-semibold text-slate-400 dark:bg-slate-800 dark:text-slate-500"
+              >
+                <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <circle className="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-90" d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                저장 중
+              </div>
+            ))}
           </div>
         )}
         {viewer !== null && (
@@ -442,16 +476,19 @@ export default function SongAttachEditor({
               natively activates the file input, which is the most reliable way to
               open the picker across Android/iOS (an opacity-0 overlaid input can
               silently swallow the tap on some Android browsers) */}
-          <label
-            className={
-              "inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300 " +
-              (busy ? "pointer-events-none opacity-60" : "")
-            }
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            {busy ? "추가 중…" : "악보 추가"}
+          {/* stays usable while earlier sheets save in the background */}
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            {busy ? (
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <circle className="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" />
+                <path className="opacity-90" d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            )}
+            {busy ? "저장 중…" : "악보 추가"}
             <input
               type="file"
               accept="image/*"
@@ -467,7 +504,6 @@ export default function SongAttachEditor({
           {/* paste an image straight from the clipboard (screenshot, copied sheet) */}
           <button
             onClick={pasteFromClipboard}
-            disabled={busy}
             className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 disabled:opacity-60 dark:bg-slate-800 dark:text-slate-300"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
@@ -673,18 +709,26 @@ export function CropModal({
     const img = imgRef.current;
     if (!img || !img.naturalWidth) return finish(null);
     setWorking(true);
+    // let "처리 중…" paint before the heavy canvas work blocks the main thread
+    await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
     const { x, y, w, h } = rect;
     const nw = img.naturalWidth;
     const nh = img.naturalHeight;
-    const cw = Math.max(1, Math.round(w * nw));
-    const ch = Math.max(1, Math.round(h * nh));
+    const sw = Math.max(1, Math.round(w * nw));
+    const sh = Math.max(1, Math.round(h * nh));
+    // Draw straight at the size the sheet is stored at (saveSheetFromFile keeps
+    // at most SHEET_MAX px). Encoding a full-resolution phone photo here only for
+    // it to be decoded and shrunk again right after was most of the wait.
+    const scale = Math.min(1, SHEET_MAX / Math.max(sw, sh));
+    const cw = Math.max(1, Math.round(sw * scale));
+    const ch = Math.max(1, Math.round(sh * scale));
     const canvas = document.createElement("canvas");
     canvas.width = cw;
     canvas.height = ch;
     const ctx = canvas.getContext("2d")!;
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, cw, ch);
-    ctx.drawImage(img, Math.round(x * nw), Math.round(y * nh), cw, ch, 0, 0, cw, ch);
+    ctx.drawImage(img, Math.round(x * nw), Math.round(y * nh), sw, sh, 0, 0, cw, ch);
 
     // A tight crop leaves nowhere to write under the last staff, so the sheet
     // keeps a strip of white at the bottom. Only what's missing is added: the
