@@ -76,6 +76,18 @@ export function registerBack(onBack: () => void): (popHistory: boolean) => void 
   };
 }
 
+/** How many app pages lie behind this one in the tab's history (react-router's
+ *  index). 0 = opened directly (fresh launch, shared link): navigate(-1) would
+ *  do nothing, or leave the app. */
+export function historyIdx(): number {
+  return (window.history.state as { idx?: number } | null)?.idx ?? 0;
+}
+
+/** How many popups/overlays are open right now (0 = just the page). */
+export function backStackDepth(): number {
+  return stack.length;
+}
+
 /**
  * Hook: while `open`, the back button (and our history entry) will close the
  * popup via `onClose` instead of navigating away. Pair with a backdrop/outside

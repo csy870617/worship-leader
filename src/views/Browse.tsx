@@ -28,14 +28,17 @@ const CAT_LABEL: Record<string, string> = { hymn: "찬송가", ccm: "CCM" };
 // axes that allow picking multiple values at once (분류는 전체 칩이 있어 단일 선택)
 const MULTI_AXES = new Set(["tempo"]);
 
-// Code filter groups a flat with its natural (Db+D, Eb+E, Ab+A, Bb+B); other
-// keys stand alone.
+// Code filter groups a flat with its natural (Db+D, Eb+E, Ab+A, Bb+B); the sharp
+// and minor keys a song can also be saved in (C#, F#, Am, Bm) go under their
+// letter too — without a chip, such a song never showed up under any of them.
 const KEY_GROUPS = ["C", "D", "E", "F", "G", "A", "B"];
 const KEY_MEMBERS: Record<string, string[]> = {
+  C: ["C", "C#"],
   D: ["Db", "D"],
   E: ["Eb", "E"],
-  A: ["Ab", "A"],
-  B: ["Bb", "B"],
+  F: ["F", "F#"],
+  A: ["Ab", "A", "Am"],
+  B: ["Bb", "B", "Bm"],
 };
 const keyMembers = (group: string) => KEY_MEMBERS[group] ?? [group];
 
@@ -144,7 +147,8 @@ export default function Browse() {
   return (
     <div>
       <div className="sticky top-14 md:top-0 z-10 space-y-2 border-b border-slate-100 bg-white/95 px-4 pt-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-        <div className="flex items-center gap-2">
+        {/* narrow phones: search wraps to its own line instead of sliding under the sort menu */}
+        <div className="flex flex-wrap items-center gap-2 min-[480px]:flex-nowrap">
           {/* axis selector (which chip row to show) */}
           <div className="flex shrink-0 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
             {AXES.map((a) => (
@@ -162,7 +166,7 @@ export default function Browse() {
             ))}
           </div>
           {/* quick title search (between the axis chips and the sort menu) */}
-          <div className="relative min-w-0 flex-1">
+          <div className="relative order-last min-w-0 flex-1 basis-full min-[480px]:order-none min-[480px]:basis-auto">
             <svg className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
               <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.82l3.64 3.64a.75.75 0 1 0 1.06-1.06l-3.64-3.64A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clipRule="evenodd" />
             </svg>
@@ -184,7 +188,7 @@ export default function Browse() {
             value={sort}
             onChange={(e) => patch({ sort: e.target.value })}
             aria-label="정렬"
-            className="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            className="ml-auto shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           >
             <option value="key">코드순</option>
             <option value="title">가나다순</option>

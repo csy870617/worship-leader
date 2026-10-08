@@ -21,6 +21,9 @@ import { formDragCancel, formDragDrop, formDragOver } from "./SongFormBoxes";
  */
 let keptEditMode = false;
 let keptEditing: string | null = null;
+// one stable function (not one per render): the drag that adds it re-renders
+// before it ends, and removing a different copy left page scrolling blocked
+const noScroll = (e: TouchEvent) => e.preventDefault();
 
 export default function PresetChips({
   onInsert,
@@ -64,7 +67,6 @@ export default function PresetChips({
       holdRef.current = null;
     }
   };
-  const noScroll = (e: TouchEvent) => e.preventDefault();
   const beginDrag = (x: number, y: number, text: string, preset: boolean) => {
     stopHold();
     setDrag({ text, preset, x, y });

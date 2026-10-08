@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SheetStroke, SheetText } from "../lib/useConti";
 import {
   addSongSheet,
+  getSongAttach,
   removeSongSheet,
   replaceSongSheet,
   setSongMemo,
@@ -27,7 +28,7 @@ import { driveEnabled } from "../lib/drive";
 import { getSongById } from "../lib/catalog";
 import { copyText, openExternal, openYouTube } from "../lib/share";
 import { sheetSearchUrl } from "../data";
-import { registerBack, useBackDismiss } from "../lib/backStack";
+import { backStackDepth, registerBack, useBackDismiss } from "../lib/backStack";
 import { PRESET_ROWS } from "../lib/songForm";
 
 // vivid, near-primary swatches (the previous yellow read as a dull mustard)
@@ -163,11 +164,10 @@ export default function SongAttachEditor({
       /* ignore */
     }
   };
-  const onRecropDone = async (newFile: File | null, crop?: Crop) => {
+  const onRecropDone = async (newFile: File | null, crop?: Crop, wasCropped?: boolean) => {
     const t = recrop;
     setRecrop(null);
     if (newFile && t) {
-      const hadOrigin = sheetOrigins[t.aid] != null;
       let newAid: string;
       try {
         newAid = await saveSheetFromFile(newFile, songTitle);
@@ -175,9 +175,17 @@ export default function SongAttachEditor({
         setErr("악보 저장에 실패했어요");
         return;
       }
+      // the save can take seconds (Drive): if the sheet was re-cropped or
+      // removed meanwhile, leave it — and its file, which may now be another
+      // sheet's kept original — alone and drop this upload
+      if (!getSongAttach(songId)?.sheets?.includes(t.aid)) {
+        removeSheetEverywhere(newAid);
+        return;
+      }
+      const hadOrigin = getSongAttach(songId)?.sheetOrigins?.[t.aid] != null;
       // replaceSongSheet carries an existing original over to the new id
       replaceSongSheet(songId, t.aid, newAid, crop);
-      if (!hadOrigin && isCropped(crop)) {
+      if (!hadOrigin && wasCropped) {
         // nothing was kept before (an older sheet, or one added uncropped):
         // the image being cropped right now becomes the original. It is
         // already stored as t.aid, so keep that file rather than uploading a
@@ -196,6 +204,8 @@ export default function SongAttachEditor({
   const deleteSheetFromMenu = (aid: string) => {
     setSheetMenu(null);
     setViewer(null);
+    // a menu left open across a background re-crop still names the old file
+    if (!getSongAttach(songId)?.sheets?.includes(aid)) return;
     const orphan = removeSongSheet(songId, aid);
     removeSheetEverywhere(aid);
     if (orphan) removeSheetEverywhere(orphan);
@@ -205,6 +215,8 @@ export default function SongAttachEditor({
   const queueCrops = (files: File[]) => {
     const imgs = files.filter((f) => f.type.startsWith("image/"));
     if (!imgs.length) return false;
+    // cleared per batch, not per page: a failed earlier page must stay reported
+    setErr(null);
     setCropQueue((q) => [
       ...q,
       ...imgs.map((file, i) => ({ id: `cq_${Date.now().toString(36)}_${cropSeq.current + i}`, file })),
@@ -241,6 +253,8 @@ export default function SongAttachEditor({
     const onPaste = (e: ClipboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      // a viewer/dialog on top (e.g. 콘티보기 over the conti list) hides this song
+      if (backStackDepth() > 0) return;
       const files = Array.from(e.clipboardData?.files ?? []);
       if (queueCrops(files)) e.preventDefault();
     };
@@ -248,7 +262,7 @@ export default function SongAttachEditor({
     return () => window.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const onCropDone = async (cropped: File | null, crop?: Crop) => {
+  const onCropDone = async (cropped: File | null, crop?: Crop, wasCropped?: boolean) => {
     const source = cropQueue[0]?.file;
     // close the crop view right away (or move on to the next photo) — saving
     // (and a Drive upload) carries on behind it with a "저장 중" tile in the list,
@@ -256,11 +270,10 @@ export default function SongAttachEditor({
     setCropQueue((q) => q.slice(1));
     if (!cropped) return;
     setSaving((n) => n + 1);
-    setErr(null);
     try {
       // a real crop keeps the untouched upload around, so it can be restored —
       // saved alongside the cropped sheet, not after it
-      const keepOrigin = !!source && isCropped(crop);
+      const keepOrigin = !!source && !!wasCropped;
       const saved = Promise.allSettled([
         saveSheetFromFile(cropped, songTitle),
         keepOrigin ? saveSheetFromFile(source!, songTitle) : Promise.resolve(null),
@@ -329,7 +342,9 @@ export default function SongAttachEditor({
             type="url"
             inputMode="url"
             defaultValue={youtubeUrl ?? ""}
-            key={songId}
+            // re-keyed on the stored link too: a link changed by sync must show
+            // here, or blurring the stale field would write the old one back
+            key={`${songId}|${youtubeUrl ?? ""}`}
             onBlur={(e) => {
               const v = e.target.value.trim();
               if (v !== (youtubeUrl ?? "")) setSongYoutube(songId, v || null);
@@ -469,6 +484,7 @@ export default function SongAttachEditor({
             onDraws={(aid, list) => setSongSheetDraws(songId, aid, list)}
             onMenu={(aid) => setSheetMenu(aid)}
             onClose={() => setViewer(null)}
+            suspended={sheetMenu != null || recrop != null}
           />
         )}
         <div className="flex flex-wrap items-center gap-1.5">
@@ -612,7 +628,9 @@ export function CropModal({
   onDone,
 }: {
   file: File;
-  onDone: (cropped: File | null, crop?: { x: number; y: number; w: number; h: number }) => void;
+  /** `wasCropped`: the user's frame took a piece out of the image (the crop's
+   *  `h` also counts the white strip added below, so it can't tell) */
+  onDone: (cropped: File | null, crop?: { x: number; y: number; w: number; h: number }, wasCropped?: boolean) => void;
 }) {
   const [src, setSrc] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
@@ -645,10 +663,10 @@ export function CropModal({
   onDoneRef.current = onDone;
   const closedRef = useRef(false);
   const dismissRef = useRef<((popHistory: boolean) => void) | null>(null);
-  const finish = (result: File | null, crop?: { x: number; y: number; w: number; h: number }) => {
+  const finish = (result: File | null, crop?: { x: number; y: number; w: number; h: number }, wasCropped?: boolean) => {
     if (closedRef.current) return;
     closedRef.current = true;
-    onDoneRef.current(result, crop);
+    onDoneRef.current(result, crop, wasCropped);
     dismissRef.current?.(true);
   };
   // Re-arm for every file: when several photos are cropped in a row the dialog
@@ -753,7 +771,7 @@ export function CropModal({
     // annotations are mapped through this rect; the strip makes the saved image
     // taller than the crop, so the height it reports has to grow with it
     const hOut = extra > 0 ? (h * (ch + extra)) / ch : h;
-    finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null, { x, y, w, h: hOut });
+    finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null, { x, y, w, h: hOut }, isCropped(rect));
   };
 
   const corner = (c: string): React.CSSProperties => ({
@@ -938,6 +956,7 @@ export function SheetLightbox({
   onDraws,
   onMenu,
   onClose,
+  suspended = false,
 }: {
   ids: string[];
   start: number;
@@ -947,7 +966,11 @@ export function SheetLightbox({
   onDraws?: (aid: string, list: SheetStroke[]) => void;
   onMenu?: (aid: string) => void;
   onClose: () => void;
+  /** a menu / crop dialog is open on top: keyboard shortcuts belong to it */
+  suspended?: boolean;
 }) {
+  const suspendedRef = useRef(suspended);
+  suspendedRef.current = suspended;
   const [index, setIndex] = useState(start);
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1065,11 +1088,13 @@ export function SheetLightbox({
     histIndexRef.current = 0;
     setCanUndo(false);
     setCanRedo(false);
-    loadSheet(ids[index]).then((u) => {
-      if (!alive) return;
-      setUrl(u ?? null);
-      setLoading(false);
-    });
+    loadSheet(ids[index])
+      .catch(() => undefined)
+      .then((u) => {
+        if (!alive) return;
+        setUrl(u ?? null);
+        setLoading(false);
+      });
     return () => {
       alive = false;
     };
@@ -1077,6 +1102,13 @@ export function SheetLightbox({
     // text edit doesn't reload the image and steal the in-flight tap
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
+  // a sheet removed while open (sync from another device) must not leave the
+  // index past the end, stuck on "불러오는 중…"
+  useEffect(() => {
+    if (!ids.length) close();
+    else if (index >= ids.length) setIndex(ids.length - 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids.length]);
 
   const measure = () => {
     const n = natRef.current;
@@ -1098,7 +1130,7 @@ export function SheetLightbox({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (editingRef.current) return; // let the in-place input keep focus/keys
+      if (editingRef.current || suspendedRef.current) return; // let the in-place input keep focus/keys
       if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
@@ -1132,7 +1164,7 @@ export function SheetLightbox({
   useEffect(() => {
     const arrows = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
     const onKey = (e: KeyboardEvent) => {
-      if (editingRef.current) return; // let the in-place input keep focus/keys
+      if (editingRef.current || suspendedRef.current) return; // let the in-place input keep focus/keys
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       // The editor is modal: arrow keys belong to it and must never reach the
@@ -1190,7 +1222,7 @@ export function SheetLightbox({
   // ---- undo / redo: Ctrl/Cmd+Z, Ctrl+Shift+Z or Ctrl+Y (ignored while typing) ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey)) return;
+      if (!(e.ctrlKey || e.metaKey) || suspendedRef.current) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       const k = e.key.toLowerCase();
@@ -1254,7 +1286,9 @@ export function SheetLightbox({
     setSel(null);
     setPendingText(null);
     pendingStyleRef.current = null;
-    if (tool === t) {
+    // an armed preset / paste also runs as "text", but the T button shows off
+    // then — tapping it means "type my own text", not "turn text off"
+    if (tool === t && !(t === "text" && pendingText != null)) {
       setTool(null);
       return;
     }

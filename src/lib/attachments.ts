@@ -21,6 +21,11 @@ function openDB(): Promise<IDBDatabase> {
 
 const newAid = () => "s_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
+// A quota failure surfaces at commit time as an `abort` (no `error` event), so
+// writes listen for it too — otherwise the promise never settles and whatever
+// awaits it (the sheet add chain) hangs for good.
+const aborted = (tx: IDBTransaction) => tx.error ?? new DOMException("transaction aborted", "AbortError");
+
 export async function putSheet(dataUrl: string): Promise<string> {
   const id = newAid();
   const db = await openDB();
@@ -30,6 +35,7 @@ export async function putSheet(dataUrl: string): Promise<string> {
       tx.objectStore(STORE).put(dataUrl, id);
       tx.oncomplete = () => res();
       tx.onerror = () => rej(tx.error);
+      tx.onabort = () => rej(aborted(tx));
     });
   } finally {
     db.close();
@@ -59,6 +65,7 @@ export async function deleteSheet(id: string): Promise<void> {
       tx.objectStore(STORE).delete(id);
       tx.oncomplete = () => res();
       tx.onerror = () => res();
+      tx.onabort = () => res();
     });
   } finally {
     db.close();
@@ -73,6 +80,7 @@ async function putSheetAt(id: string, dataUrl: string): Promise<void> {
       tx.objectStore(STORE).put(dataUrl, id);
       tx.oncomplete = () => res();
       tx.onerror = () => rej(tx.error);
+      tx.onabort = () => rej(aborted(tx));
     });
   } finally {
     db.close();
@@ -101,9 +109,21 @@ export async function saveSheetFromFile(file: File, title: string): Promise<stri
   return putSheet(dataUrl);
 }
 
+/** The local copy, or undefined — a broken IndexedDB (iOS "connection lost",
+ *  Chrome backing-store errors) counts as a cache miss so Drive still gets
+ *  tried, instead of rejecting and leaving the sheet "loading" forever. */
+async function getCached(id: string): Promise<string | undefined> {
+  try {
+    return await getSheet(id);
+  } catch (e) {
+    console.warn("[attachments] local cache read failed", e);
+    return undefined;
+  }
+}
+
 /** Resolve an attachment id to a data URL (cache → silent Drive download). */
 export async function loadSheet(id: string): Promise<string | undefined> {
-  const cached = await getSheet(id);
+  const cached = await getCached(id);
   if (cached) return cached;
   if (driveEnabled()) {
     try {
@@ -137,7 +157,7 @@ export async function fetchSheetInteractive(id: string): Promise<string | undefi
 export async function fetchSheetInteractiveResult(
   id: string
 ): Promise<{ url: string | undefined; missing: boolean }> {
-  const cached = await getSheet(id);
+  const cached = await getCached(id);
   if (cached) return { url: cached, missing: false };
   try {
     const dataUrl = await downloadSheet(id, true);

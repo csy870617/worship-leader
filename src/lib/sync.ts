@@ -191,7 +191,11 @@ function startLiveListener(uid: string) {
       const remote = snap.data() as CloudDoc;
       const meta = getMeta();
       if (!meta || meta.uid !== uid) return;
-      if (remote.updatedAt > meta.at) {
+      // any stamp other than the one this device last wrote/applied means
+      // another device wrote. Not ">": stamps come from each device's own clock,
+      // so a device whose clock runs ahead would ignore everyone else's edits
+      // (and then overwrite them with its next push)
+      if (remote.updatedAt !== meta.at) {
         if (meta.dirty) {
           // another device pushed while we hold un-pushed edits → merge both
           // sides (never drop either's memo) and push the reconciled result,
@@ -300,8 +304,9 @@ async function onLogin(user: User) {
       // different account on this device → take cloud as truth
       applyDoc(remote);
       saveMeta(user.uid, remote.updatedAt, false);
-    } else if (remote.updatedAt > meta.at) {
-      // same user returning → document-level last-write-wins
+    } else if (remote.updatedAt !== meta.at) {
+      // same user returning, and another device wrote since (see the live
+      // listener on why this isn't a ">" clock comparison)
       if (meta.dirty) {
         // both sides changed → union (avoids data loss in this rare conflict)
         applyDoc(mergeUnion(snapshotLocal(), remote));

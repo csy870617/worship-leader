@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useLayoutEffect } from "react";
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { useTheme } from "./lib/useTheme";
 import { useConti } from "./lib/useConti";
 import { useSongs } from "./lib/catalog";
@@ -39,12 +39,24 @@ export default function App() {
     return cleanup;
   }, []);
 
+  // A newly opened page starts at the top. The window is what scrolls, so it
+  // otherwise kept the last page's offset (a tab opened at the bottom of its
+  // list, a song page halfway down). Back/forward keeps the browser's restore.
+  const navType = useNavigationType();
+  useLayoutEffect(() => {
+    if (navType !== "POP") window.scrollTo(0, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   // detail / edit get a full-bleed screen on mobile (their own back button)
   const hideMobileChrome =
     location.pathname.startsWith("/song/") || location.pathname.startsWith("/edit");
 
-  // 둘러보기 tab restores the last filters (recomputed each render on navigation)
-  const browseTo = getLastBrowse();
+  // 둘러보기 tab restores the last filters (recomputed each render on navigation).
+  // While on 둘러보기 itself, use the live URL: Browse records it in an effect,
+  // after this render, so the stored one is a step behind — tapping the active
+  // tab then undid the filter just picked.
+  const browseTo = location.pathname === "/browse" ? "/browse" + location.search : getLastBrowse();
   const tabTo = (to: string) => (to === "/browse" ? browseTo : to);
 
   // header / sidebar controls (shared)
@@ -122,7 +134,8 @@ export default function App() {
             </header>
           )}
 
-          <main className="flex-1 pb-20 md:pb-10">
+          {/* room for the bottom nav, which also grows by the iPhone home-bar inset */}
+          <main className="flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-10">
             <Routes>
               <Route path="/" element={<Navigate to="/conti" replace />} />
               <Route path="/browse" element={<Browse />} />

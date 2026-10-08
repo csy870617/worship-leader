@@ -257,6 +257,9 @@ export function restoreSongSheetOriginal(id: string, aid: string): string | null
   const origin = store[id]?.sheetOrigins?.[aid];
   if (!origin) return null;
   const crop = origin.crop;
+  // what was written in the white strip a crop adds below the sheet has no
+  // spot on the original (it maps past its bottom edge): keep it on the image
+  const c01 = (v: number) => Math.min(1, Math.max(0, v));
   update(id, (a) => {
     const sheets = (a.sheets ?? []).map((x) => (x === aid ? origin.aid : x));
     const st = { ...(a.sheetTexts ?? {}) };
@@ -266,8 +269,8 @@ export function restoreSongSheetOriginal(id: string, aid: string): string | null
       st[origin.aid] = crop
         ? oldT.map((t) => ({
             ...t,
-            x: crop.x + t.x * crop.w,
-            y: crop.y + t.y * crop.h,
+            x: c01(crop.x + t.x * crop.w),
+            y: c01(crop.y + t.y * crop.h),
             size: t.size * crop.w,
           }))
         : oldT;
@@ -279,7 +282,7 @@ export function restoreSongSheetOriginal(id: string, aid: string): string | null
       sd[origin.aid] = crop
         ? oldD.map((s) => ({
             ...s,
-            points: s.points.map((p) => ({ x: crop.x + p.x * crop.w, y: crop.y + p.y * crop.h })),
+            points: s.points.map((p) => ({ x: c01(crop.x + p.x * crop.w), y: c01(crop.y + p.y * crop.h) })),
             width: s.width * crop.w,
           }))
         : oldD;

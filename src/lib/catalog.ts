@@ -263,5 +263,7 @@ const snapshot = () => version;
 
 export function useSongs() {
   useSyncExternalStore(subscribe, snapshot, snapshot);
-  return { songs, songById: byId, hiddenCount: hidden.size, getHiddenSongs };
+  // count only songs that still exist — the 숨긴 곡 page lists just those, so a
+  // stale id (song deleted elsewhere) left a "숨긴 곡 1" link to an empty page
+  return { songs, songById: byId, hiddenCount: getHiddenSongs().length, getHiddenSongs };
 }

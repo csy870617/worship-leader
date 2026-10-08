@@ -171,6 +171,10 @@ export default function Conti() {
   // dragged row near the top or bottom and the list keeps scrolling by itself
   const cPointerY = useRef(0);
   const cAutoRaf = useRef<number | null>(null);
+  // a mouse press starts the drag at once, so a plain click on a row near the
+  // list's edge used to auto-scroll — and reorder — without any movement
+  const cDragStartY = useRef(0);
+  const cDragMoved = useRef(false);
   const cAutoScroll = () => {
     const list = cListRef.current;
     if (!cDragIdRef.current || !list) {
@@ -180,8 +184,9 @@ export default function Conti() {
     const r = list.getBoundingClientRect();
     const edge = 44;
     const y = cPointerY.current;
-    const dy =
-      y < r.top + edge ? -Math.ceil((r.top + edge - y) / 5) - 2
+    const dy = !cDragMoved.current
+      ? 0
+      : y < r.top + edge ? -Math.ceil((r.top + edge - y) / 5) - 2
       : y > r.bottom - edge ? Math.ceil((y - (r.bottom - edge)) / 5) + 2
       : 0;
     if (dy) {
@@ -191,13 +196,26 @@ export default function Conti() {
     }
     cAutoRaf.current = requestAnimationFrame(cAutoScroll);
   };
+  // A row loses its pointer capture when React moves its <li> past the next one
+  // (dragging down), and then its own move/up handlers never fire — the drag
+  // froze, the order was never saved, and page scrolling stayed blocked. So the
+  // drag is driven from the window too (stable functions, so they come off again).
+  const cDragMoveRef = useRef<(y: number) => void>(() => {});
+  const cDragEndRef = useRef<() => void>(() => {});
+  const onWinCMove = useRef((e: PointerEvent) => cDragMoveRef.current(e.clientY)).current;
+  const onWinCUp = useRef(() => cDragEndRef.current()).current;
   const cBeginDrag = (id: string) => {
     cDragIdRef.current = id;
     const snap = contis.map((c) => c.id);
     cOrderRef.current = snap;
     setCDragId(id);
     setCOrder(snap);
+    cDragStartY.current = cPointerY.current;
+    cDragMoved.current = false;
     window.addEventListener("touchmove", preventScroll, { passive: false });
+    window.addEventListener("pointermove", onWinCMove);
+    window.addEventListener("pointerup", onWinCUp);
+    window.addEventListener("pointercancel", onWinCUp);
     if (cAutoRaf.current == null) cAutoRaf.current = requestAnimationFrame(cAutoScroll);
   };
   const cEndDrag = () => {
@@ -208,6 +226,9 @@ export default function Conti() {
     setCDragId(null);
     setCOrder(null);
     window.removeEventListener("touchmove", preventScroll);
+    window.removeEventListener("pointermove", onWinCMove);
+    window.removeEventListener("pointerup", onWinCUp);
+    window.removeEventListener("pointercancel", onWinCUp);
     if (cAutoRaf.current != null) {
       cancelAnimationFrame(cAutoRaf.current);
       cAutoRaf.current = null;
@@ -231,15 +252,25 @@ export default function Conti() {
       cBeginDrag(id);
     }, 250);
   };
+  const cDragTo = (y: number) => {
+    cPointerY.current = y;
+    if (!cDragIdRef.current) return;
+    if (Math.abs(y - cDragStartY.current) > 4) cDragMoved.current = true;
+    cReorderTo(y);
+  };
+  cDragMoveRef.current = cDragTo;
+  cDragEndRef.current = () => {
+    if (cDragIdRef.current) cEndDrag();
+  };
   const cPointerMove = (e: React.PointerEvent) => {
-    cPointerY.current = e.clientY;
     if (!cDragIdRef.current) {
+      cPointerY.current = e.clientY;
       // a real finger move before the hold completes = scrolling, not a drag
       const s = cLpStart.current;
       if (s && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 10) cCancelLP();
       return;
     }
-    cReorderTo(e.clientY);
+    cDragTo(e.clientY);
   };
   const cPointerUp = (e: React.PointerEvent) => {
     try {
@@ -257,6 +288,12 @@ export default function Conti() {
 
   useEffect(() => () => {
     window.removeEventListener("touchmove", preventScroll);
+    window.removeEventListener("pointermove", onWinCMove);
+    window.removeEventListener("pointerup", onWinCUp);
+    window.removeEventListener("pointercancel", onWinCUp);
+    window.removeEventListener("pointermove", onWinDragMove);
+    window.removeEventListener("pointerup", onWinDragUp);
+    window.removeEventListener("pointercancel", onWinDragUp);
     cancelLP();
     cCancelLP();
     if (cAutoRaf.current != null) cancelAnimationFrame(cAutoRaf.current);
@@ -279,6 +316,13 @@ export default function Conti() {
       lpTimer.current = null;
     }
   };
+  // the grip loses its pointer capture when its row's <li> is moved past the
+  // next one (dragging down) — same as the conti list above, the drag is also
+  // driven from the window so it can't freeze with scrolling blocked
+  const dragMoveRef = useRef<(y: number) => void>(() => {});
+  const dragEndRef = useRef<() => void>(() => {});
+  const onWinDragMove = useRef((e: PointerEvent) => dragMoveRef.current(e.clientY)).current;
+  const onWinDragUp = useRef(() => dragEndRef.current()).current;
   // preview the reorder locally during the drag, commit once on drop
   const beginDrag = (id: string) => {
     dragIdRef.current = id;
@@ -290,6 +334,9 @@ export default function Conti() {
     setDragId(id);
     setDragOrder(snap);
     window.addEventListener("touchmove", preventScroll, { passive: false });
+    window.addEventListener("pointermove", onWinDragMove);
+    window.addEventListener("pointerup", onWinDragUp);
+    window.addEventListener("pointercancel", onWinDragUp);
   };
   const endDrag = () => {
     const order = dragOrderRef.current;
@@ -298,6 +345,9 @@ export default function Conti() {
     setDragId(null);
     setDragOrder(null);
     window.removeEventListener("touchmove", preventScroll);
+    window.removeEventListener("pointermove", onWinDragMove);
+    window.removeEventListener("pointerup", onWinDragUp);
+    window.removeEventListener("pointercancel", onWinDragUp);
     if (!order) return;
     // re-apply the drag's ordering to the *current* conti instead of
     // committing the drag-start snapshot verbatim — otherwise a change synced
@@ -321,11 +371,12 @@ export default function Conti() {
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     beginDrag(id);
   };
-  const onHandleMove = (e: React.PointerEvent) => {
+  const onHandleMove = (e: React.PointerEvent) => moveDragTo(e.clientY);
+  const moveDragTo = (y: number) => {
     const id = dragIdRef.current;
     const order = dragOrderRef.current;
     if (!id || !order) return;
-    const to = indexFromY(e.clientY);
+    const to = indexFromY(y);
     const from = order.findIndex((it) => it.id === id);
     if (to < 0 || from < 0 || to === from) return;
     const next = order.slice();
@@ -333,6 +384,10 @@ export default function Conti() {
     next.splice(to, 0, it);
     dragOrderRef.current = next;
     setDragOrder(next);
+  };
+  dragMoveRef.current = moveDragTo;
+  dragEndRef.current = () => {
+    if (dragIdRef.current) endDrag();
   };
   const onHandleUp = (e: React.PointerEvent) => {
     (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
@@ -372,11 +427,17 @@ export default function Conti() {
   useEffect(() => {
     const el = noteRef.current;
     if (!el) return;
-    const saved = localStorage.getItem(NOTE_HEIGHT_KEY);
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(NOTE_HEIGHT_KEY);
+    } catch {
+      /* storage blocked — keep the default height */
+    }
     if (saved) el.style.height = saved;
-    // re-run once the textarea actually mounts (it's conditional on rows.length)
+    // re-run once the textarea actually mounts (it's conditional on rows.length,
+    // and absent while a shared-link (?d=) banner replaces the page)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows.length > 0]);
+  }, [rows.length > 0, !!sharedItems?.length]);
 
   // drag the corner grip to resize the 묵상노트; the height is saved directly on
   // release (not via a ResizeObserver) so unrelated mobile reflows — the on-screen
@@ -409,8 +470,9 @@ export default function Conti() {
   };
 
   const playlistUrl = useMemo(
-    () => youtubePlaylistUrl(conti.map((c) => attach[c.id]?.youtube)),
-    [conti, attach]
+    // a song deleted from the catalog stays in the conti but isn't shown — or played
+    () => youtubePlaylistUrl(conti.filter((c) => songById.has(c.id)).map((c) => attach[c.id]?.youtube)),
+    [conti, attach, songById]
   );
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -455,6 +517,9 @@ export default function Conti() {
       flash(ok ? "공유 대신 텍스트를 복사했어요" : "공유에 실패했어요");
     }
   };
+  // the message that goes with the uploaded PDF, fixed when the upload starts:
+  // switching to another conti meanwhile must not pair its list with this PDF
+  const driveShareRef = useRef<{ title: string; text: string } | null>(null);
   // PDF-share fallback: upload the PDF to Drive, then offer its link for sharing.
   // Upload runs automatically; the actual share fires from a fresh button tap so
   // the native share sheet reliably opens (a tap after async upload would lose
@@ -462,6 +527,7 @@ export default function Conti() {
   const shareViaDrive = async (file: File) => {
     setShareReady(null);
     setShareErr(null);
+    driveShareRef.current = { title: active.name, text: buildShareText() };
     // the in-progress indication is shown on the share button (shareStage),
     // which stays visible for the whole upload instead of a toast that fades
     try {
@@ -477,9 +543,10 @@ export default function Conti() {
   };
   const shareDriveLink = async () => {
     if (!driveLink) return;
-    const text = `${buildShareText()}\n\n📄 악보 PDF: ${driveLink}`;
+    const msg = driveShareRef.current ?? { title: active.name, text: buildShareText() };
+    const text = `${msg.text}\n\n📄 악보 PDF: ${driveLink}`;
     try {
-      await navigator.share({ title: active.name, text });
+      await navigator.share({ title: msg.title, text });
       setDriveLink(null);
     } catch (e) {
       if ((e as { name?: string })?.name === "AbortError") return;
@@ -530,6 +597,18 @@ export default function Conti() {
 
   return (
     <div className="pb-6">
+      {menuOpen && (
+        // The header's backdrop-blur makes it the containing block of its fixed
+        // children, so the backdrop inside it only covers the header strip — a
+        // tap on the list didn't close the menu (and acted on the row instead).
+        // This one covers the page; the header (later, same z) stays above it.
+        <button
+          aria-hidden
+          tabIndex={-1}
+          onClick={() => setMenuOpen(false)}
+          className="fixed inset-0 z-10 cursor-default"
+        />
+      )}
       {/* setlist picker + manage */}
       <div className="sticky top-14 md:top-0 z-10 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-4 py-2.5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
         <select

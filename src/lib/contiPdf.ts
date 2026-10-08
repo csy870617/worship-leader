@@ -270,8 +270,9 @@ export async function buildContiPdf(
   }
   if (!entries.length) return null;
 
+  // from the songs actually printed: one deleted from the catalog is skipped
   const playlistUrl =
-    youtubePlaylistUrl(items.map((it) => getSongAttach(it.id)?.youtube)) ?? undefined;
+    youtubePlaylistUrl(entries.map((e) => getSongAttach(e.item.id)?.youtube)) ?? undefined;
 
   const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
   let pageAdded = false;
@@ -392,5 +393,8 @@ export function downloadContiFile(file: File) {
   a.href = url;
   a.download = file.name;
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  // Safari asks "download?" first and reads the blob only once that's answered;
+  // revoking after 1s failed the download if the user took longer (FileSaver
+  // waits 40s for the same reason)
+  setTimeout(() => URL.revokeObjectURL(url), 40000);
 }

@@ -43,6 +43,11 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,woff,woff2}"],
         navigateFallback: "index.html",
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // the plugin only turns these on with its own registrar (injectRegister
+        // auto); without them a new build sits "waiting" until every window is
+        // closed, and main.tsx's reload-on-controllerchange never fires
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ],

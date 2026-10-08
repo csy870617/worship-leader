@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "../lib/useConti";
-import { removeSongSheet, replaceSongSheet, restoreSongSheetOriginal, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetOrigin, setSongSheetTexts, sheetsForKey, useSongAttach } from "../lib/songAttach";
+import { getSongAttach, removeSongSheet, replaceSongSheet, restoreSongSheetOriginal, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetOrigin, setSongSheetTexts, sheetsForKey, useSongAttach } from "../lib/songAttach";
 import { youtubePlaylistUrl, openYouTube } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
@@ -33,7 +33,8 @@ export default function ContiView({
   onClose: () => void;
 }) {
   const attach = useSongAttach();
-  const playlistUrl = youtubePlaylistUrl(items.map((c) => attach[c.id]?.youtube));
+  // songs deleted from the catalog stay in the conti but aren't shown — or played
+  const playlistUrl = youtubePlaylistUrl(items.filter((c) => songById.has(c.id)).map((c) => attach[c.id]?.youtube));
   const [mode, setMode] = useState<"scroll" | "page">("page");
   const [page, setPage] = useState(0);
   const swipeRef = useRef<{ x: number; y: number } | null>(null);
@@ -64,13 +65,16 @@ export default function ContiView({
       /* ignore */
     }
   };
-  const onCropDone = async (newFile: File | null, crop?: { x: number; y: number; w: number; h: number }) => {
+  const onCropDone = async (
+    newFile: File | null,
+    crop?: { x: number; y: number; w: number; h: number },
+    wasCropped?: boolean
+  ) => {
     const t = cropTarget.current;
     cropTarget.current = null;
     setCropFile(null);
     if (newFile && t) {
       const title = songById.get(t.songId)?.title ?? "";
-      const hadOrigin = attach[t.songId]?.sheetOrigins?.[t.aid] != null;
       let newAid: string;
       try {
         newAid = await saveSheetFromFile(newFile, title);
@@ -78,11 +82,17 @@ export default function ContiView({
         console.warn("[conti view] crop save failed", e); // the sheet stays as it was
         return;
       }
+      // re-cropped or removed while saving: leave it (and its file) alone
+      if (!getSongAttach(t.songId)?.sheets?.includes(t.aid)) {
+        removeSheetEverywhere(newAid);
+        return;
+      }
+      const hadOrigin = getSongAttach(t.songId)?.sheetOrigins?.[t.aid] != null;
       replaceSongSheet(t.songId, t.aid, newAid, crop);
       // keep the untouched image so the crop can be undone later. It is already
       // stored as t.aid, so keep that file instead of uploading a second copy
       // (which orphaned the first).
-      if (!hadOrigin && crop && (crop.w < 0.995 || crop.h < 0.995)) {
+      if (!hadOrigin && wasCropped) {
         setSongSheetOrigin(t.songId, newAid, { aid: t.aid, crop });
       } else {
         removeSheetEverywhere(t.aid);
@@ -95,6 +105,7 @@ export default function ContiView({
   };
   const deleteSheet = (songId: string, aid: string) => {
     setSheetMenu(null);
+    if (!getSongAttach(songId)?.sheets?.includes(aid)) return; // replaced meanwhile
     const orphan = removeSongSheet(songId, aid);
     removeSheetEverywhere(aid);
     if (orphan) removeSheetEverywhere(orphan);
@@ -157,13 +168,18 @@ export default function ContiView({
   const go = (d: number) => setPage((p) => Math.min(total - 1, Math.max(0, p + d)));
   // flip pages with the mouse wheel / trackpad (one notch = one page)
   const wheelLock = useRef(false);
+  const wheelTimer = useRef<number | undefined>(undefined);
   const onWheel = (e: React.WheelEvent) => {
+    // unlock only once the wheel has been quiet for a moment: a trackpad flick
+    // keeps sending (inertia) events for a second or more, and a fixed timer
+    // let one flick flip several pages
+    window.clearTimeout(wheelTimer.current);
+    wheelTimer.current = window.setTimeout(() => {
+      wheelLock.current = false;
+    }, 350);
     if (Math.abs(e.deltaY) < 8 || wheelLock.current) return;
     wheelLock.current = true;
     go(e.deltaY > 0 ? 1 : -1);
-    window.setTimeout(() => {
-      wheelLock.current = false;
-    }, 350);
   };
   useEffect(() => {
     if (page > total - 1) setPage(Math.max(0, total - 1));
@@ -287,7 +303,9 @@ export default function ContiView({
                           </span>
                         )}
                       </div>
-                      <NoteEditor songId={cur.item.id} attach={attach} indent="ml-7" size="lg" />
+                      {/* keyed per song: flipping pages must not hand one song's
+                          송폼 undo history / chip target to the next song */}
+                      <NoteEditor key={cur.item.id} songId={cur.item.id} attach={attach} indent="ml-7" size="lg" />
                     </div>
                     {cur.aid && (
                       <div className="mt-3 min-h-0 flex-1">
@@ -309,7 +327,7 @@ export default function ContiView({
                       <span className="truncate text-sm font-semibold text-slate-500 dark:text-slate-400">{cur.song.title}</span>
                     </div>
                     <div className="mb-1 shrink-0">
-                      <NoteEditor songId={cur.item.id} attach={attach} indent="ml-5" size="sm" />
+                      <NoteEditor key={cur.item.id} songId={cur.item.id} attach={attach} indent="ml-5" size="sm" />
                     </div>
                     <div className="min-h-0 flex-1">
                       <SheetFigure

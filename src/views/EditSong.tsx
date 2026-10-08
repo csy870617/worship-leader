@@ -11,6 +11,7 @@ import {
   updateSong,
 } from "../lib/catalog";
 import { TEMPO_LABEL, type Tempo } from "../types";
+import { historyIdx } from "../lib/backStack";
 
 const KEY_CHOICES = ["C", "C#", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "Am", "Bm"];
 
@@ -44,6 +45,15 @@ function EditSongForm({ id }: { id?: string }) {
   const toggle = <T,>(arr: T[], v: T, set: (x: T[]) => void) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
+  // An existing song is edited from its own page (수정), which is still the
+  // entry behind this one: go back to it. Replacing this entry with another
+  // /song/… left that page in history twice, so back seemed to do nothing.
+  // Opened directly, there's nothing behind — show the song in place instead.
+  const backToSong = (songId: string) => {
+    if (historyIdx() > 0) navigate(-1);
+    else navigate(`/song/${songId}`, { replace: true });
+  };
+
   const save = () => {
     const t = title.trim();
     if (!t) {
@@ -60,7 +70,7 @@ function EditSongForm({ id }: { id?: string }) {
     };
     if (editing && existing) {
       updateSong(existing.id, input);
-      navigate(`/song/${existing.id}`, { replace: true });
+      backToSong(existing.id);
     } else {
       const song = addSong(input);
       navigate(`/song/${song.id}`, { replace: true });
@@ -77,7 +87,16 @@ function EditSongForm({ id }: { id?: string }) {
   return (
     <div className="px-4 py-5">
       <div className="mb-4 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="text-sm text-slate-500 dark:text-slate-400">
+        <button
+          onClick={() =>
+            existing
+              ? backToSong(existing.id)
+              : historyIdx() > 0
+              ? navigate(-1)
+              : navigate("/browse", { replace: true })
+          }
+          className="text-sm text-slate-500 dark:text-slate-400"
+        >
           취소
         </button>
         <h1 className="text-base font-bold">{editing ? "곡 수정" : "곡 추가"}</h1>
@@ -156,7 +175,10 @@ function EditSongForm({ id }: { id?: string }) {
           onClick={() => {
             if (confirm("이 곡을 삭제할까요?")) {
               removeSong(existing.id);
-              navigate("/browse", { replace: true });
+              // skip the deleted song's own page too (back would show "곡을 찾을
+              // 수 없습니다"): return to wherever it was opened from
+              if (historyIdx() >= 2) navigate(-2);
+              else navigate("/browse", { replace: true });
             }
           }}
           className="mt-8 w-full rounded-lg border border-rose-200 py-2.5 text-sm font-semibold text-rose-500 dark:border-rose-500/30"
@@ -170,7 +192,7 @@ function EditSongForm({ id }: { id?: string }) {
           onClick={() => {
             if (confirm("수정 내용을 지우고 원래대로 되돌릴까요?")) {
               resetOverride(existing.id);
-              navigate(`/song/${existing.id}`, { replace: true });
+              backToSong(existing.id);
             }
           }}
           className="mt-8 w-full rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"

@@ -35,7 +35,12 @@ function loadGis(): Promise<void> {
     s.async = true;
     s.defer = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Google 인증 스크립트를 불러오지 못했어요"));
+    s.onerror = () => {
+      // don't keep the failure (e.g. opened offline): the next call retries
+      gisPromise = null;
+      s.remove();
+      reject(new Error("Google 인증 스크립트를 불러오지 못했어요"));
+    };
     document.head.appendChild(s);
   });
   return gisPromise;

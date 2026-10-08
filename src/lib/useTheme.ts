@@ -5,7 +5,13 @@ export type Theme = "light" | "dark";
 const KEY = "wl.theme";
 
 function getInitial(): Theme {
-  const saved = localStorage.getItem(KEY);
+  // storage can throw (blocked site data): that must not take the app down
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(KEY);
+  } catch {
+    /* fall back to the OS setting */
+  }
   if (saved === "light" || saved === "dark") return saved;
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
@@ -17,7 +23,11 @@ export function useTheme() {
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
     root.style.colorScheme = theme;
-    localStorage.setItem(KEY, theme);
+    try {
+      localStorage.setItem(KEY, theme);
+    } catch {
+      /* not persisted — the theme still applies for this visit */
+    }
   }, [theme]);
 
   const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));

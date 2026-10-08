@@ -119,7 +119,11 @@ export default function SongFormBoxes({
   const focusIdRef = useRef<string | null>(null); // text box to focus after a re-render
 
   const myCtl = useRef<Ctl | null>(null);
-  const outsideRef = useRef<((e: PointerEvent) => void) | null>(null);
+  const outsideRef = useRef<{
+    down: (e: PointerEvent) => void;
+    up: (e: PointerEvent) => void;
+    cancel: () => void;
+  } | null>(null);
   const onBlurRef = useRef(onBlur);
   onBlurRef.current = onBlur;
 
@@ -155,6 +159,15 @@ export default function SongFormBoxes({
       if (!undo && !redo) return;
       // only the field the user last worked in answers
       if (activeCtl !== myCtl.current) return;
+      // …and not while the user types in some other field (묵상노트, 메모, a
+      // link): that field's own undo must work, not silently undo this form
+      const tgt = e.target as HTMLElement | null;
+      if (
+        tgt &&
+        (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA" || tgt.isContentEditable) &&
+        !rowRef.current?.contains(tgt)
+      )
+        return;
       // while the sheet editor is open, ⌘Z undoes what was drawn or typed on
       // the sheet — unless this very form is the one inside that editor
       const sheetEditor = document.querySelector("[data-sheet-editor]");
@@ -175,6 +188,15 @@ export default function SongFormBoxes({
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, []);
+  // Box ids are positions, so a box added in front of the one being typed in
+  // would take over its <input> — the next keystrokes would rewrite the new box.
+  // Typing ends first instead.
+  const endTypingIfShifted = (at: number) => {
+    const ti = typingIdRef.current;
+    if (ti == null || at > Number(ti.slice(1))) return;
+    setTypingId(null);
+    (document.activeElement as HTMLElement | null)?.blur?.();
+  };
   const activate = () => {
     const ctl: Ctl = {
       hover: () => false,
@@ -187,6 +209,7 @@ export default function SongFormBoxes({
         const c = caretRef.current;
         const i = c ? cur.findIndex((it) => it.id === c.id) : -1;
         const at = i < 0 ? cur.length : c!.side === "after" ? i + 1 : i;
+        endTypingIfShifted(at);
         const box: FormItem = { id: "new", text, preset };
         const next = [...cur.slice(0, at), box, ...cur.slice(at)];
         // keep the caret on a freshly added text box so it can be typed into,
@@ -208,6 +231,7 @@ export default function SongFormBoxes({
       const at = dropIndexFromPoint(x, y);
       setDropAt(null);
       if (at == null) return false;
+      endTypingIfShifted(at);
       const cur = itemsRef.current;
       const next = [...cur.slice(0, at), { id: "new", text, preset }, ...cur.slice(at)];
       focusIdRef.current = preset ? null : `b${at}`;
@@ -221,22 +245,40 @@ export default function SongFormBoxes({
     myCtl.current = ctl;
     activeCtl = ctl;
     // the bar belongs to whichever field was last touched; a tap anywhere else
-    // lets the parent put it away (the bar itself cancels that on its own)
+    // lets the parent put it away (the bar itself cancels that on its own).
+    // Only a tap, though: every touch scroll starts with a pointerdown too, and
+    // putting the bar away right then made it — drawn below the song list —
+    // impossible to scroll to.
     if (!outsideRef.current) {
-      const onOutside = (e: PointerEvent) => {
+      let start: { x: number; y: number } | null = null;
+      const down = (e: PointerEvent) => {
+        start = null;
         const t = e.target as Element | null;
         if (rowRef.current?.contains(t as Node)) return;
         // the preset bar is this field's own toolbar: tapping it keeps the
         // selection (that's where the color palette and the chips act on it)
         if (t?.closest?.("[data-preset-bar]")) return;
+        start = { x: e.clientX, y: e.clientY };
+      };
+      const up = (e: PointerEvent) => {
+        const s = start;
+        start = null;
+        if (!s || Math.hypot(e.clientX - s.x, e.clientY - s.y) > 10) return;
         setSel(null);
         setCaret(null);
         setDropAt(null);
-        onSelect?.("");
-        onBlurRef.current?.();
+        onSelectRef.current?.("");
+        // the tap landed on another 송폼 field, which has taken the bar over
+        if (activeCtl === myCtl.current) onBlurRef.current?.();
       };
-      outsideRef.current = onOutside;
-      document.addEventListener("pointerdown", onOutside, true);
+      // the browser took the touch over for scrolling
+      const cancel = () => {
+        start = null;
+      };
+      outsideRef.current = { down, up, cancel };
+      document.addEventListener("pointerdown", down, true);
+      document.addEventListener("pointerup", up, true);
+      document.addEventListener("pointercancel", cancel, true);
     }
     onFocus?.();
   };
@@ -256,7 +298,12 @@ export default function SongFormBoxes({
       window.removeEventListener("pointerup", onWindowUp);
       window.removeEventListener("pointercancel", onWindowUp);
       if (lpTimer.current) clearTimeout(lpTimer.current);
-      if (outsideRef.current) document.removeEventListener("pointerdown", outsideRef.current, true);
+      const o = outsideRef.current;
+      if (o) {
+        document.removeEventListener("pointerdown", o.down, true);
+        document.removeEventListener("pointerup", o.up, true);
+        document.removeEventListener("pointercancel", o.cancel, true);
+      }
       if (activeCtl && activeCtl === myCtl.current) activeCtl = null;
     },
     []
@@ -342,10 +389,12 @@ export default function SongFormBoxes({
     window.removeEventListener("pointercancel", onWindowUp);
     if (next && next.some((it, i) => it.id !== itemsRef.current[i]?.id)) {
       // box ids are positions ("b0", "b1", …), so after a reorder the stored
-      // selection / insertion point would name a different box — drop them
+      // selection / insertion point — and a box being typed in — would name a
+      // different box: drop them
       setSel(null);
       setCaret(null);
       onSelectRef.current?.("");
+      endTypingIfShifted(0);
       commit(next);
     }
   };

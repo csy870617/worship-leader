@@ -20,7 +20,11 @@ export function tryOpenExternal(): boolean {
     return true;
   }
   if (/Line\//i.test(ua)) {
-    location.href = url + (url.includes("?") ? "&" : "?") + "openExternalBrowser=1";
+    // into the real query string: appended to href it landed inside the
+    // #/route hash, which doesn't even reload the page, so LINE never saw it
+    const u = new URL(url);
+    u.searchParams.set("openExternalBrowser", "1");
+    location.href = u.href;
     return true;
   }
   return false;

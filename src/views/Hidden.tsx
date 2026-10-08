@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { unhideSong, useSongs } from "../lib/catalog";
 import { sortKo } from "../data";
 import { SongMeta } from "../components/Badges";
+import { historyIdx } from "../lib/backStack";
 
 export default function Hidden() {
   const navigate = useNavigate();
@@ -11,7 +12,11 @@ export default function Hidden() {
   return (
     <div className="px-0 py-2">
       <div className="flex items-center gap-2 px-4 pb-2">
-        <button onClick={() => navigate(-1)} className="text-sm text-slate-500 dark:text-slate-400">
+        <button
+          // opened directly (no page behind it), back would do nothing / leave the app
+          onClick={() => (historyIdx() > 0 ? navigate(-1) : navigate("/browse", { replace: true }))}
+          className="text-sm text-slate-500 dark:text-slate-400"
+        >
           뒤로
         </button>
         <h1 className="text-base font-bold">숨긴 곡 {list.length}곡</h1>

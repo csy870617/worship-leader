@@ -9,6 +9,7 @@ import SongAttachEditor from "../components/SongAttach";
 import { useHistory } from "../lib/useHistory";
 import { useFavorites } from "../lib/useFavorites";
 import { useConti } from "../lib/useConti";
+import { historyIdx } from "../lib/backStack";
 
 export default function SongDetail() {
   const { id } = useParams();
@@ -17,7 +18,7 @@ export default function SongDetail() {
   // page to go back to; opened directly (fresh launch, shared link) there is
   // none — navigate(-1) would then do nothing or leave the app entirely
   const leave = () => {
-    if (((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0) navigate(-1);
+    if (historyIdx() > 0) navigate(-1);
     else navigate("/browse", { replace: true });
   };
   const { songById } = useSongs();
@@ -44,7 +45,7 @@ export default function SongDetail() {
   return (
     <div className="px-4 py-5">
       <button
-        onClick={() => navigate(-1)}
+        onClick={leave}
         className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 active:text-slate-700 dark:text-slate-400"
       >
         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
