@@ -364,9 +364,15 @@ export default function SongFormBoxes({
   // somewhere else entirely — so the release is watched on the window, not only
   // on the box the drag started from
   const endDragRef = useRef<() => void>(() => {});
+  // the click that follows a mouse drag must not open the box for typing
+  const suppressClickRef = useRef(false);
   const beginDrag = (id: string) => {
     cancelLP();
     dragIdRef.current = id;
+    // a box being typed in — the blank one ＋글자 just added can be picked up
+    // too — lets go of the keyboard for the drag (set after dragIdRef, so its
+    // blur doesn't count as abandoning it); endDrag hands the caret back
+    if (typingIdRef.current != null) (document.activeElement as HTMLElement | null)?.blur?.();
     orderRef.current = itemsRef.current.slice();
     setDragId(id);
     setOrder(itemsRef.current.slice());
@@ -379,7 +385,11 @@ export default function SongFormBoxes({
   // each drag left two window listeners behind
   const onWindowUp = useRef(() => endDragRef.current()).current;
   const endDrag = () => {
-    const next = orderRef.current;
+    const carried = dragIdRef.current;
+    // a blank box whose typing the drag ended is abandoned, as on any blur —
+    // except the one carried, which is still to be typed in where it lands
+    const next =
+      orderRef.current?.filter((it) => it.preset || it.text.trim() || it.id === carried) ?? null;
     dragIdRef.current = null;
     orderRef.current = null;
     setDragId(null);
@@ -387,7 +397,8 @@ export default function SongFormBoxes({
     window.removeEventListener("touchmove", preventScroll);
     window.removeEventListener("pointerup", onWindowUp);
     window.removeEventListener("pointercancel", onWindowUp);
-    if (next && next.some((it, i) => it.id !== itemsRef.current[i]?.id)) {
+    const cur = itemsRef.current;
+    if (next && (next.length !== cur.length || next.some((it, i) => it.id !== cur[i]?.id))) {
       // box ids are positions ("b0", "b1", …), so after a reorder the stored
       // selection / insertion point — and a box being typed in — would name a
       // different box: drop them
@@ -397,12 +408,16 @@ export default function SongFormBoxes({
       endTypingIfShifted(0);
       commit(next);
     }
+    // the carried blank goes straight back to being typed in
+    const at = next ? next.findIndex((it) => it.id === carried) : -1;
+    if (at >= 0 && !next![at].preset && !next![at].text.trim()) focusIdRef.current = `b${at}`;
   };
   endDragRef.current = () => {
     if (dragIdRef.current) endDrag();
   };
   const onBoxPointerDown = (e: React.PointerEvent, id: string) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
+    suppressClickRef.current = false;
     activate();
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     lpStart.current = { x: e.clientX, y: e.clientY, id };
@@ -443,6 +458,7 @@ export default function SongFormBoxes({
     const wasDragging = dragIdRef.current != null;
     cancelLP();
     if (wasDragging) {
+      suppressClickRef.current = true;
       endDrag();
       return;
     }
@@ -529,6 +545,16 @@ export default function SongFormBoxes({
             onPointerMove={onBoxPointerMove}
             onPointerUp={(e) => onBoxPointerUp(e, item)}
             onPointerCancel={(e) => onBoxPointerUp(e, item)}
+            onClick={(e) => {
+              // a text box opens for typing on a tap: until then its input lets
+              // presses through to the box (see AutoInput), so it can be dragged
+              if (item.preset || suppressClickRef.current || typingIdRef.current === item.id) return;
+              if ((e.target as HTMLElement).closest("[data-box-del]")) return; // its × (delete)
+              const el = (e.currentTarget as HTMLElement).querySelector<HTMLInputElement>("input[data-box]");
+              if (!el) return;
+              el.focus();
+              el.setSelectionRange(el.value.length, el.value.length);
+            }}
             style={{
               touchAction: "pan-y",
               ...(box
@@ -550,6 +576,7 @@ export default function SongFormBoxes({
                 id={item.id}
                 textSize={textSize}
                 value={item.text}
+                typing={typingId === item.id}
                 onChange={(v) => setText(item.id, v)}
                 onFocus={() => {
                   activate();
@@ -560,13 +587,19 @@ export default function SongFormBoxes({
                 }}
                 onBlur={() => {
                   setTypingId((id) => (id === item.id ? null : id));
-                  // an abandoned empty box removes itself
-                  if (!item.text.trim()) removeItem(item.id);
+                  // an abandoned empty box removes itself — not one let go of
+                  // for a drag (it's being carried; endDrag tidies up the rest)
+                  if (!item.text.trim() && !dragIdRef.current) removeItem(item.id);
                 }}
               />
             )}
             {selected && (
-              <button
+              // Not a <button>: on a touch screen the browser aims a tap that
+              // lands *near* a small button at the button, so tapping the box
+              // itself again (or the second tap of a double tap) deleted it
+              <span
+                role="button"
+                data-box-del
                 onPointerDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -578,7 +611,7 @@ export default function SongFormBoxes({
                 <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                 </svg>
-              </button>
+              </span>
             )}
           </span>
         );
@@ -612,6 +645,7 @@ function AutoInput({
   id,
   textSize,
   value,
+  typing,
   onChange,
   onFocus,
   onBlur,
@@ -619,6 +653,8 @@ function AutoInput({
   id: string;
   textSize: string;
   value: string;
+  /** this box is being typed in */
+  typing: boolean;
   onChange: (v: string) => void;
   onFocus: () => void;
   onBlur: () => void;
@@ -638,7 +674,15 @@ function AutoInput({
         onChange={(e) => onChange(e.target.value)}
         onFocus={onFocus}
         onBlur={onBlur}
-        onPointerDown={(e) => e.stopPropagation()}
+        // Not being typed in, the input lets taps and drags through to its box,
+        // so a text box is picked up and moved like any other (a tap then opens
+        // it for typing — the box's onClick). While typing, presses stay in the
+        // field for the caret — except in a still-blank box: the one ＋글자 just
+        // added can be dragged straight to where it belongs.
+        style={typing ? undefined : { pointerEvents: "none" }}
+        onPointerDown={(e) => {
+          if (value) e.stopPropagation();
+        }}
         placeholder="글자"
         // the same line box as a preset, so every box in a row is one height
         className={`absolute inset-0 w-full min-w-0 bg-transparent p-0 px-0.5 font-bold leading-6 outline-none placeholder:font-normal placeholder:opacity-60 ${textSize}`}
