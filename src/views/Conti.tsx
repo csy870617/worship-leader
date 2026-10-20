@@ -496,8 +496,8 @@ export default function Conti() {
     setParams(p, { replace: true });
   };
 
-  // Plain-text setlist shared alongside the PDF: the conti's name, the playlist
-  // and PDF links right under it, then every song's title with its YouTube link
+  // Plain-text setlist shared alongside the PDF: the conti's name, the PDF and
+  // playlist links right under it, then every song's title with its YouTube link
   // under it — each its own paragraph, a blank line apart. Works with Web Share
   // text/url, which installed PWAs allow. It's shared without a separate
   // `title`: chat apps put that in front of the text, so the name came out twice.
@@ -511,8 +511,8 @@ export default function Conti() {
       return link ? `${s.title}\n${link}` : s.title;
     });
     const parts = [`${active.name} (${present.length}곡)`];
-    if (playlistUrl) parts.push(`▶ 유튜브 재생목록\n${playlistUrl}`);
     if (pdfLink) parts.push(`📄 악보 PDF\n${pdfLink}`);
+    if (playlistUrl) parts.push(`▶ 유튜브 재생목록\n${playlistUrl}`);
     return [...parts, ...blocks].join("\n\n");
   };
   const shareText = async () => {
