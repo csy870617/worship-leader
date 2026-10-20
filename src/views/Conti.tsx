@@ -498,7 +498,9 @@ export default function Conti() {
 
   // Plain-text setlist shared alongside the PDF: the conti's name, the playlist
   // and PDF links right under it, then every song's title with its YouTube link
-  // under it. Works with Web Share text/url, which installed PWAs allow.
+  // under it — each its own paragraph, a blank line apart. Works with Web Share
+  // text/url, which installed PWAs allow. It's shared without a separate
+  // `title`: chat apps put that in front of the text, so the name came out twice.
   const buildShareText = (pdfLink?: string) => {
     // a song deleted from the catalog is still referenced by the conti but not
     // shown on it — leave it out here too (it used to go out as a bare "2.")
@@ -508,15 +510,15 @@ export default function Conti() {
       const link = attach[c.id]?.youtube;
       return link ? `${s.title}\n${link}` : s.title;
     });
-    const head = [`${active.name} (${present.length}곡)`];
-    if (playlistUrl) head.push(`▶ 유튜브 재생목록: ${playlistUrl}`);
-    if (pdfLink) head.push(`📄 악보 PDF: ${pdfLink}`);
-    return `${head.join("\n")}\n\n${blocks.join("\n\n")}`;
+    const parts = [`${active.name} (${present.length}곡)`];
+    if (playlistUrl) parts.push(`▶ 유튜브 재생목록\n${playlistUrl}`);
+    if (pdfLink) parts.push(`📄 악보 PDF\n${pdfLink}`);
+    return [...parts, ...blocks].join("\n\n");
   };
   const shareText = async () => {
     const text = buildShareText();
     try {
-      await navigator.share({ title: active.name, text });
+      await navigator.share({ text });
     } catch (e) {
       if ((e as { name?: string })?.name === "AbortError") return;
       const ok = await copyText(text);
@@ -525,7 +527,7 @@ export default function Conti() {
   };
   // the message that goes with the uploaded PDF, fixed when the upload starts:
   // switching to another conti meanwhile must not pair its list with this PDF
-  const driveShareRef = useRef<{ title: string; text: (pdfLink: string) => string } | null>(null);
+  const driveShareRef = useRef<((pdfLink: string) => string) | null>(null);
   // PDF-share fallback: upload the PDF to Drive, then offer its link for sharing.
   // Upload runs automatically; the actual share fires from a fresh button tap so
   // the native share sheet reliably opens (a tap after async upload would lose
@@ -533,7 +535,7 @@ export default function Conti() {
   const shareViaDrive = async (file: File) => {
     setShareReady(null);
     setShareErr(null);
-    driveShareRef.current = { title: active.name, text: buildShareText };
+    driveShareRef.current = buildShareText;
     // the in-progress indication is shown on the share button (shareStage),
     // which stays visible for the whole upload instead of a toast that fades
     try {
@@ -549,10 +551,9 @@ export default function Conti() {
   };
   const shareDriveLink = async () => {
     if (!driveLink) return;
-    const msg = driveShareRef.current ?? { title: active.name, text: buildShareText };
-    const text = msg.text(driveLink);
+    const text = (driveShareRef.current ?? buildShareText)(driveLink);
     try {
-      await navigator.share({ title: msg.title, text });
+      await navigator.share({ text });
       setDriveLink(null);
     } catch (e) {
       if ((e as { name?: string })?.name === "AbortError") return;
@@ -992,7 +993,7 @@ export default function Conti() {
                   // (on a PC this is skipped: the PDF goes out as a Drive link below)
                   if (!isDesktop()) try {
                     const text = buildShareText();
-                    const withText = { files: [built.file], text, title: active.name };
+                    const withText = { files: [built.file], text };
                     if (navigator.canShare?.(withText)) {
                       await navigator.share(withText);
                       setToast(null);
@@ -1138,7 +1139,7 @@ export default function Conti() {
                 onClick={async () => {
                   const text = listPrompt;
                   try {
-                    await navigator.share({ title: active.name, text });
+                    await navigator.share({ text });
                     setListPrompt(null);
                   } catch (e) {
                     if ((e as { name?: string })?.name === "AbortError") return;
