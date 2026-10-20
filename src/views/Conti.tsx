@@ -15,6 +15,11 @@ import PresetChips from "../components/PresetChips";
 import { presetInsertText } from "../lib/songForm";
 import ContiView from "../components/ContiView";
 
+// a computer (not a phone/tablet): there the share sends the setlist message,
+// not the PDF file. iPadOS reports itself as a Mac, so touch points tell it apart.
+const isDesktop = () =>
+  !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !(navigator.maxTouchPoints > 1);
+
 // block page scrolling while a row is being dragged (added/removed on demand)
 const preventScroll = (e: TouchEvent) => e.preventDefault();
 
@@ -491,10 +496,10 @@ export default function Conti() {
     setParams(p, { replace: true });
   };
 
-  // Plain-text setlist shared alongside the PDF: the conti's name, then every
-  // song's title with its YouTube link under it. Works with Web Share text/url,
-  // which installed PWAs allow.
-  const buildShareText = () => {
+  // Plain-text setlist shared alongside the PDF: the conti's name, the playlist
+  // and PDF links right under it, then every song's title with its YouTube link
+  // under it. Works with Web Share text/url, which installed PWAs allow.
+  const buildShareText = (pdfLink?: string) => {
     // a song deleted from the catalog is still referenced by the conti but not
     // shown on it — leave it out here too (it used to go out as a bare "2.")
     const present = conti.filter((c) => songById.has(c.id));
@@ -503,9 +508,10 @@ export default function Conti() {
       const link = attach[c.id]?.youtube;
       return link ? `${s.title}\n${link}` : s.title;
     });
-    let text = `${active.name} (${present.length}곡)\n\n${blocks.join("\n\n")}`;
-    if (playlistUrl) text += `\n\n▶ 유튜브 재생목록: ${playlistUrl}`;
-    return text;
+    const head = [`${active.name} (${present.length}곡)`];
+    if (playlistUrl) head.push(`▶ 유튜브 재생목록: ${playlistUrl}`);
+    if (pdfLink) head.push(`📄 악보 PDF: ${pdfLink}`);
+    return `${head.join("\n")}\n\n${blocks.join("\n\n")}`;
   };
   const shareText = async () => {
     const text = buildShareText();
@@ -519,7 +525,7 @@ export default function Conti() {
   };
   // the message that goes with the uploaded PDF, fixed when the upload starts:
   // switching to another conti meanwhile must not pair its list with this PDF
-  const driveShareRef = useRef<{ title: string; text: string } | null>(null);
+  const driveShareRef = useRef<{ title: string; text: (pdfLink: string) => string } | null>(null);
   // PDF-share fallback: upload the PDF to Drive, then offer its link for sharing.
   // Upload runs automatically; the actual share fires from a fresh button tap so
   // the native share sheet reliably opens (a tap after async upload would lose
@@ -527,7 +533,7 @@ export default function Conti() {
   const shareViaDrive = async (file: File) => {
     setShareReady(null);
     setShareErr(null);
-    driveShareRef.current = { title: active.name, text: buildShareText() };
+    driveShareRef.current = { title: active.name, text: buildShareText };
     // the in-progress indication is shown on the share button (shareStage),
     // which stays visible for the whole upload instead of a toast that fades
     try {
@@ -543,8 +549,8 @@ export default function Conti() {
   };
   const shareDriveLink = async () => {
     if (!driveLink) return;
-    const msg = driveShareRef.current ?? { title: active.name, text: buildShareText() };
-    const text = `${msg.text}\n\n📄 악보 PDF: ${driveLink}`;
+    const msg = driveShareRef.current ?? { title: active.name, text: buildShareText };
+    const text = msg.text(driveLink);
     try {
       await navigator.share({ title: msg.title, text });
       setDriveLink(null);
@@ -959,6 +965,13 @@ export default function Conti() {
               onClick={async () => {
                 setShareReady(null);
                 setShareErr(null);
+                // PC: share the setlist message (with the PDF as a Drive link)
+                // like a phone does, instead of handing over the PDF file.
+                // Without Drive there's no link to make — the text goes now.
+                if (isDesktop() && !driveEnabled()) {
+                  await shareText();
+                  return;
+                }
                 setPdfBusy(true);
                 setShareStage("pdf");
                 try {
@@ -976,7 +989,8 @@ export default function Conti() {
                   // platform takes both, so the text-with-file payload is only
                   // used when it says it can; otherwise the file goes alone and
                   // the text still reaches the drive-link / fallback screens.
-                  try {
+                  // (on a PC this is skipped: the PDF goes out as a Drive link below)
+                  if (!isDesktop()) try {
                     const text = buildShareText();
                     const withText = { files: [built.file], text, title: active.name };
                     if (navigator.canShare?.(withText)) {
