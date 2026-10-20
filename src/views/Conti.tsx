@@ -6,7 +6,7 @@ import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl, copyText, openYouTube } from "../lib/share";
 import { driveEnabled, uploadSharedFile } from "../lib/drive";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
-import { setSongMemo, setSongNote, sheetsForKey, useSongAttach } from "../lib/songAttach";
+import { chosenKeys, setSongMemo, setSongNote, sheetsForKey, useSongAttach } from "../lib/songAttach";
 import { useBackDismiss } from "../lib/backStack";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
@@ -804,15 +804,25 @@ export default function Conti() {
                     </button>
                     <span className="flex shrink-0 items-center gap-1">
                       {r.song.keys.length > 1
-                        ? r.song.keys.map((k) => (
+                        ? r.song.keys.map((k) => {
+                            // several keys can be on at once (a song sung in F,
+                            // then G): each tap toggles one, kept in the song's
+                            // own key order
+                            const chosen = chosenKeys(r.key);
+                            const on = chosen.includes(k);
+                            const toggle = () => {
+                              const next = r.song.keys.filter((x) => (x === k ? !on : chosen.includes(x)));
+                              setKey(r.id, next.length ? next.join(",") : null);
+                            };
+                            return (
                             <button
                               key={k}
-                              onClick={() => setKey(r.id, r.key === k ? null : k)}
-                              aria-pressed={r.key === k}
-                              title={r.key === k ? "선택 해제" : `${k} 키로 선택`}
+                              onClick={toggle}
+                              aria-pressed={on}
+                              title={on ? "선택 해제" : `${k} 키 선택`}
                               className={
                                 "min-w-[1.6rem] rounded-md px-1.5 py-0.5 text-xs font-bold " +
-                                (r.key === k
+                                (on
                                   ? "bg-indigo-600 text-white"
                                   : r.key
                                   ? "bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500"
@@ -821,7 +831,8 @@ export default function Conti() {
                             >
                               {k}
                             </button>
-                          ))
+                            );
+                          })
                         : r.song.keys.map((k) => <KeyBadge key={k} k={k} />)}
                     </span>
                   </div>

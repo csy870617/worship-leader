@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "../lib/useConti";
-import { getSongAttach, removeSongSheet, replaceSongSheet, restoreSongSheetOriginal, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetOrigin, setSongSheetTexts, sheetsForKey, useSongAttach } from "../lib/songAttach";
+import { chosenKeys, getSongAttach, removeSongSheet, replaceSongSheet, restoreSongSheetOriginal, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetOrigin, setSongSheetTexts, sheetsForKey, useSongAttach } from "../lib/songAttach";
 import { youtubePlaylistUrl, openYouTube } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
@@ -299,7 +299,7 @@ export default function ContiView({
                         <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">{cur.song.title}</h2>
                         {(cur.item.key || cur.song.keys.length > 0) && (
                           <span className="text-sm font-bold text-indigo-600 dark:text-indigo-300">
-                            {cur.item.key ? cur.item.key : cur.song.keys.join(" / ")}
+                            {cur.item.key ? chosenKeys(cur.item.key).join(" / ") : cur.song.keys.join(" / ")}
                           </span>
                         )}
                       </div>
@@ -473,7 +473,7 @@ function SongBlock({
   onMenu?: (aid: string) => void;
 }) {
   const a = attach[item.id];
-  const keys = item.key ? item.key : song.keys.join(" / ");
+  const keys = item.key ? chosenKeys(item.key).join(" / ") : song.keys.join(" / ");
   const sheets = sheetsForKey(a, item.key);
   const shown = firstSheetOnly ? sheets.slice(0, 1) : sheets;
   return (

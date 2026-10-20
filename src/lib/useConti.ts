@@ -19,7 +19,7 @@ export interface SheetStroke {
 export interface ContiItem {
   id: string;
   note?: string;
-  key?: string; // chosen key when the song has several
+  key?: string; // chosen key(s) when the song has several — "F" or "F,G" (see chosenKeys)
   youtube?: string; // custom YouTube URL
   sheets?: string[]; // sheet-music attachment ids (stored in IndexedDB)
   sheetTexts?: Record<string, SheetText[]>; // text annotations per sheet (by attachment id)

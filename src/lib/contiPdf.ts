@@ -1,7 +1,7 @@
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
-import { getSongAttach, sheetsForKey } from "./songAttach";
+import { chosenKeys, getSongAttach, sheetsForKey } from "./songAttach";
 import { NEUTRAL_BOX, formBoxColors, itemColor, parseForm } from "./songForm";
 import { youtubePlaylistUrl } from "./share";
 
@@ -155,7 +155,7 @@ function buildInfoEl(
   const el = document.createElement("div");
   el.style.cssText = BASE_STYLE;
 
-  const keys = item.key ? item.key : song.keys.join(" / ");
+  const keys = item.key ? chosenKeys(item.key).join(" / ") : song.keys.join(" / ");
   const att = getSongAttach(item.id);
   const note = att?.note;
   const memo = att?.memo;

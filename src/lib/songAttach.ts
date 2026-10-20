@@ -25,14 +25,22 @@ export interface SheetOrigin {
   crop?: { x: number; y: number; w: number; h: number };
 }
 
-/** Sheets to show for a chosen key: the ones tagged with that key plus every
- *  untagged (shared) sheet, in the song's own sheet order. With no key chosen
- *  — or no per-key tagging at all — every sheet is returned. */
+/** The keys chosen for a song in a conti — more than one when it modulates
+ *  (e.g. F then G). Kept comma-joined in the item's `key` ("F,G"), so sync,
+ *  share links and older data need no new field. */
+export function chosenKeys(key?: string | null): string[] {
+  return key ? key.split(",").filter(Boolean) : [];
+}
+
+/** Sheets to show for the chosen key(s): the ones tagged with any of them plus
+ *  every untagged (shared) sheet, in the song's own sheet order. With no key
+ *  chosen — or no per-key tagging at all — every sheet is returned. */
 export function sheetsForKey(a: SongAttach | undefined, key?: string | null): string[] {
   const sheets = a?.sheets ?? [];
   const tags = a?.sheetKeys;
-  if (!key || !tags) return sheets;
-  const matching = sheets.filter((aid) => !tags[aid] || tags[aid] === key);
+  const keys = chosenKeys(key);
+  if (!keys.length || !tags) return sheets;
+  const matching = sheets.filter((aid) => !tags[aid] || keys.includes(tags[aid]));
   // never hide everything: a key with no sheets of its own falls back to all
   return matching.length ? matching : sheets;
 }

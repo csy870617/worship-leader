@@ -1,5 +1,6 @@
 import type { ContiItem } from "./useConti";
 import { getSongById } from "./catalog";
+import { chosenKeys } from "./songAttach";
 import { isInAppBrowser } from "./inapp";
 
 // UTF-8 safe base64 (handles Korean notes)
@@ -56,7 +57,7 @@ export function contiToText(items: ContiItem[]): string {
   const lines = items.map((it, idx) => {
     const s = getSongById(it.id);
     if (!s) return `${idx + 1}.`;
-    const key = it.key ? ` (${it.key})` : s.keys.length ? ` (${s.keys.join("/")})` : "";
+    const key = it.key ? ` (${chosenKeys(it.key).join("/")})` : s.keys.length ? ` (${s.keys.join("/")})` : "";
     const note = it.note ? ` — ${it.note}` : "";
     return `${idx + 1}. ${s.title}${key}${note}`;
   });
