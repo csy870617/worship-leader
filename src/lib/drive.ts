@@ -191,9 +191,9 @@ export async function uploadSheet(dataUrl: string, name: string): Promise<string
   return (await r.json()).id as string;
 }
 
-async function uploadBlobToFolder(blob: Blob, name: string, folder: string): Promise<Response> {
+async function uploadBlobToFolder(blob: Blob, name: string, folder: string, id?: string): Promise<Response> {
   const t = await getToken(true);
-  const metadata = { name, parents: [folder] };
+  const metadata = id ? { id, name, parents: [folder] } : { name, parents: [folder] };
   const form = new FormData();
   form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
   form.append("file", blob);
@@ -205,12 +205,13 @@ async function uploadBlobToFolder(blob: Blob, name: string, folder: string): Pro
 
 /** Upload a file to Drive, make it readable by anyone with the link, and return
  *  that shareable link. Used as a PDF-share fallback for installed PWAs where
- *  file sharing is blocked. */
-export async function uploadSharedFile(blob: Blob, name: string): Promise<string> {
-  let r = await uploadBlobToFolder(blob, name, await ensureFolder());
+ *  file sharing is blocked. `reservedFileId` (see takeSharedFileId) makes it
+ *  the file whose link was already shared. */
+export async function uploadSharedFile(blob: Blob, name: string, reservedFileId?: string): Promise<string> {
+  let r = await uploadBlobToFolder(blob, name, await ensureFolder(), reservedFileId);
   if (!r.ok) {
     localStorage.removeItem(folderKey());
-    r = await uploadBlobToFolder(blob, name, await ensureFolder());
+    r = await uploadBlobToFolder(blob, name, await ensureFolder(), reservedFileId);
   }
   if (!r.ok) throw new Error("드라이브 업로드 실패");
   const created = await r.json();
@@ -253,6 +254,49 @@ export async function downloadSheet(fileId: string, interactive = false): Promis
   }
   return blobToDataUrl(await r.blob());
 }
+
+/**
+ * A Drive file id reserved ahead of time (files.generateIds), so the link to a
+ * PDF that hasn't been built or uploaded yet is known at the moment of a tap:
+ * the share sheet can then open straight away — it needs the tap's user
+ * activation, which a multi-second build + upload would outlast — while the
+ * file is uploaded under that id behind it. One id is kept ready; taking it
+ * starts fetching the next. Silent only: no consent popup outside a tap.
+ */
+let reservedId: string | null = null;
+let reserving: Promise<void> | null = null;
+let reservedFor: string | null = null;
+export function prepareSharedFileId(): void {
+  const uid = auth?.currentUser?.uid ?? null;
+  if (reservedFor !== uid) {
+    reservedId = null; // reserved by another account
+    reservedFor = uid;
+  }
+  if (!driveEnabled() || reservedId || reserving) return;
+  reserving = (async () => {
+    try {
+      const t = await getToken(false);
+      const r = await fetch(
+        "https://www.googleapis.com/drive/v3/files/generateIds?count=1&space=drive&type=files",
+        { headers: { Authorization: `Bearer ${t}` } }
+      );
+      if (r.ok && (auth?.currentUser?.uid ?? null) === uid) reservedId = ((await r.json()).ids?.[0] as string) ?? null;
+    } catch {
+      /* no silent token yet — the share falls back to upload-then-share */
+    } finally {
+      reserving = null;
+    }
+  })();
+}
+/** Take the reserved id (and start reserving the next one), or null. */
+export function takeSharedFileId(): string | null {
+  const id = reservedFor === (auth?.currentUser?.uid ?? null) ? reservedId : null;
+  reservedId = null;
+  prepareSharedFileId();
+  return id;
+}
+/** The link a shared file uploaded under `id` will have. */
+export const sharedFileLink = (id: string) => `https://drive.google.com/file/d/${id}/view?usp=sharing`;
 
 export async function deleteDriveFile(fileId: string): Promise<void> {
   try {

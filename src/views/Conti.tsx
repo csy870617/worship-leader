@@ -4,7 +4,8 @@ import { useSongs } from "../lib/catalog";
 import { useConti, type Conti as ContiList, type ContiItem } from "../lib/useConti";
 import { useHistory, daysSince } from "../lib/useHistory";
 import { decodeConti, youtubePlaylistUrl, copyText, openYouTube } from "../lib/share";
-import { driveEnabled, uploadSharedFile } from "../lib/drive";
+import { deleteDriveFile, driveEnabled, prepareSharedFileId, sharedFileLink, takeSharedFileId, uploadSharedFile } from "../lib/drive";
+import { onAuth } from "../lib/firebase";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
 import { chosenKeys, setSongMemo, setSongNote, sheetsForKey, useSongAttach } from "../lib/songAttach";
 import { useBackDismiss } from "../lib/backStack";
@@ -541,12 +542,60 @@ export default function Conti() {
     try {
       const link = await uploadSharedFile(file, file.name || `${active.name}.pdf`);
       setDriveLink(link);
+      // Drive is authorised now: reserve an id so the next share is one tap
+      prepareSharedFileId();
     } catch (e) {
       if ((e as Error)?.message === "link_sharing_blocked") {
         flash("드라이브 링크 공유가 제한돼 있어요");
       } else {
         flash("드라이브 업로드 실패 · 드라이브 연결을 확인하세요");
       }
+    }
+  };
+  // keep a Drive file id reserved, so a share can name the PDF's link at once
+  useEffect(() => onAuth((u) => { if (u) prepareSharedFileId(); }), []);
+  // One-tap Drive share: the message (with the link the PDF *will* have) goes
+  // to the share sheet right away, inside the tap — then the PDF is built and
+  // uploaded under that reserved id while the sheet is open. (Building and
+  // uploading first used up the tap's permission to open the sheet, hence the
+  // extra "드라이브 링크 공유" button.)
+  const shareNowViaDrive = async (id: string) => {
+    const name = active.name;
+    const items = conti;
+    const text = buildShareText(sharedFileLink(id));
+    setPdfBusy(true);
+    setShareStage("drive");
+    let cancelled = false;
+    const shared = (async () => {
+      try {
+        await navigator.share({ text });
+      } catch (e) {
+        if ((e as { name?: string })?.name === "AbortError") {
+          cancelled = true;
+          return;
+        }
+        // no share sheet (some PC browsers): hand the message over by clipboard
+        const ok = await copyText(text);
+        flash(ok ? "공유할 글을 복사했어요 · 붙여넣어 보내세요" : "공유에 실패했어요");
+      }
+    })();
+    try {
+      const built = await buildContiPdf(name, items, songById);
+      if (!built) throw new Error("pdf");
+      await uploadSharedFile(built.file, built.file.name || `${name}.pdf`, id);
+      await shared;
+      if (cancelled) deleteDriveFile(id); // nobody got the link
+    } catch (e) {
+      await shared;
+      if (!cancelled)
+        flash(
+          (e as Error)?.message === "link_sharing_blocked"
+            ? "드라이브 링크 공유가 제한돼 있어요"
+            : "PDF를 드라이브에 올리지 못했어요 · 보낸 링크가 열리지 않아요"
+        );
+    } finally {
+      setPdfBusy(false);
+      setShareStage(null);
     }
   };
   const shareDriveLink = async () => {
@@ -983,6 +1032,19 @@ export default function Conti() {
                 if (isDesktop() && !driveEnabled()) {
                   await shareText();
                   return;
+                }
+                // Where the PDF goes as a Drive link (PC, or a phone that can't
+                // share files), open the share sheet now — no second button
+                const filesOk =
+                  !isDesktop() &&
+                  !!navigator.canShare?.({ files: [new File([""], "c.pdf", { type: "application/pdf" })] });
+                if (driveEnabled() && !filesOk) {
+                  const id = takeSharedFileId();
+                  if (id) {
+                    await shareNowViaDrive(id);
+                    return;
+                  }
+                  // no id reserved (yet): the slower upload-then-button way below
                 }
                 setPdfBusy(true);
                 setShareStage("pdf");
