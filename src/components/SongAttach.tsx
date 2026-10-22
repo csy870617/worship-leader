@@ -27,7 +27,7 @@ import {
 import { driveEnabled } from "../lib/drive";
 import { getSongById } from "../lib/catalog";
 import { copyText, openExternal, openYouTube } from "../lib/share";
-import { sheetSearchUrl } from "../data";
+import { sheetSearchUrl, youtubeSearchUrl } from "../data";
 import { backStackDepth, registerBack, useBackDismiss } from "../lib/backStack";
 import { PRESET_ROWS } from "../lib/songForm";
 
@@ -338,6 +338,18 @@ export default function SongAttachEditor({
           유튜브 링크
         </label>
         <div className="flex items-center gap-1.5">
+          {/* find a video to link: YouTube search for the song's title */}
+          <button
+            onClick={() => openExternal(youtubeSearchUrl(songTitle))}
+            aria-label="유튜브 검색"
+            title="유튜브에서 검색"
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 active:bg-red-100 dark:bg-red-500/15 dark:text-red-400"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" />
+            </svg>
+            검색
+          </button>
           <input
             type="url"
             inputMode="url"
