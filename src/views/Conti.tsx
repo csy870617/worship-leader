@@ -563,8 +563,9 @@ export default function Conti() {
     const name = active.name;
     const items = conti;
     const text = buildShareText(sharedFileLink(id));
-    setPdfBusy(true);
-    setShareStage("drive");
+    // the upload runs quietly behind the share sheet: nobody waits on it, so
+    // the button shows no "uploading" state (a second share just takes the
+    // next reserved id)
     let cancelled = false;
     const shared = (async () => {
       try {
@@ -593,9 +594,6 @@ export default function Conti() {
             ? "드라이브 링크 공유가 제한돼 있어요"
             : "PDF를 드라이브에 올리지 못했어요 · 보낸 링크가 열리지 않아요"
         );
-    } finally {
-      setPdfBusy(false);
-      setShareStage(null);
     }
   };
   const shareDriveLink = async () => {
