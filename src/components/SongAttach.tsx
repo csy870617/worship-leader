@@ -83,7 +83,8 @@ export default function SongAttachEditor({
   // file (it latches "closed" once done), so the id drives its React key
   const [cropQueue, setCropQueue] = useState<{ id: string; file: File }[]>([]);
   const [sheetMenu, setSheetMenu] = useState<string | null>(null);
-  const [recrop, setRecrop] = useState<{ aid: string; file: File } | null>(null);
+  // `origin`: the crop opens on the sheet's kept original (see startRecrop)
+  const [recrop, setRecrop] = useState<{ aid: string; file: File; origin?: { aid: string; crop: Crop } } | null>(null);
   const cropSeq = useRef(0);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
 
@@ -155,11 +156,16 @@ export default function SongAttachEditor({
 
   const startRecrop = async (aid: string) => {
     setSheetMenu(null);
-    const dataUrl = (await loadSheet(aid)) ?? (await fetchSheetInteractive(aid));
+    // a sheet cut from a kept original is re-cropped on that original, with its
+    // frame in place: it can be widened again, or 전체 restores the original
+    const o = sheetOrigins[aid];
+    const origin = o?.crop ? { aid: o.aid, crop: o.crop } : undefined;
+    const src = origin?.aid ?? aid;
+    const dataUrl = (await loadSheet(src)) ?? (await fetchSheetInteractive(src));
     if (!dataUrl) return;
     try {
       const blob = await (await fetch(dataUrl)).blob();
-      setRecrop({ aid, file: new File([blob], "sheet.jpg", { type: blob.type || "image/jpeg" }) });
+      setRecrop({ aid, origin, file: new File([blob], "sheet.jpg", { type: blob.type || "image/jpeg" }) });
     } catch {
       /* ignore */
     }
@@ -167,6 +173,10 @@ export default function SongAttachEditor({
   const onRecropDone = async (newFile: File | null, crop?: Crop, wasCropped?: boolean) => {
     const t = recrop;
     setRecrop(null);
+    if (newFile && t?.origin) {
+      await recropFromOrigin(songId, songTitle, t.aid, t.origin.aid, newFile, crop, wasCropped, () => setErr("악보 저장에 실패했어요"));
+      return;
+    }
     if (newFile && t) {
       let newAid: string;
       try {
@@ -557,7 +567,7 @@ export default function SongAttachEditor({
       {cropQueue.length > 0 && (
         <CropModal key={cropQueue[0].id} file={cropQueue[0].file} onDone={onCropDone} />
       )}
-      {recrop && <CropModal file={recrop.file} onDone={onRecropDone} />}
+      {recrop && <CropModal file={recrop.file} initial={recrop.origin?.crop} onDone={onRecropDone} />}
 
       {sheetMenu && (
         <div
@@ -601,6 +611,50 @@ export default function SongAttachEditor({
   );
 }
 
+/**
+ * Finish a re-crop that was made on a sheet's kept original (`originAid`):
+ * - the whole original chosen (전체) → the original simply comes back
+ * - a new frame → the sheet becomes that cut of the original; text and strokes
+ *   are carried onto the original and then into the new frame, and the original
+ *   stays kept (for the next 되돌리기)
+ * The old cut (`aid`) is deleted; the original never is.
+ */
+export async function recropFromOrigin(
+  songId: string,
+  songTitle: string,
+  aid: string,
+  originAid: string,
+  newFile: File,
+  crop: Crop | undefined,
+  wasCropped: boolean | undefined,
+  onError: () => void
+) {
+  const still = () => {
+    const a = getSongAttach(songId);
+    return !!a?.sheets?.includes(aid) && a.sheetOrigins?.[aid]?.aid === originAid;
+  };
+  if (!still()) return; // changed meanwhile (sync, another crop)
+  if (!wasCropped || !crop) {
+    if (restoreSongSheetOriginal(songId, aid)) removeSheetEverywhere(aid);
+    return;
+  }
+  let newAid: string;
+  try {
+    newAid = await saveSheetFromFile(newFile, songTitle);
+  } catch {
+    onError();
+    return;
+  }
+  if (!still()) {
+    removeSheetEverywhere(newAid);
+    return;
+  }
+  restoreSongSheetOriginal(songId, aid);
+  replaceSongSheet(songId, originAid, newAid, crop);
+  setSongSheetOrigin(songId, newAid, { aid: originAid, crop });
+  removeSheetEverywhere(aid);
+}
+
 /** How many rows at the bottom of the canvas are blank, looking at most
  *  `limit` rows up. "Blank" is near-white: scanner grey and JPEG noise count. */
 function blankRowsAtBottom(ctx: CanvasRenderingContext2D, w: number, h: number, limit: number): number {
@@ -637,9 +691,13 @@ function sheetFrameWidth(natW: number, natH: number, maxVH: number) {
 
 export function CropModal({
   file,
+  initial,
   onDone,
 }: {
   file: File;
+  /** `file` is a cropped sheet's kept original, and this is the frame it was
+   *  cut with: the crop starts there, and 전체 takes it back to the original */
+  initial?: { x: number; y: number; w: number; h: number };
   /** `wasCropped`: the user's frame took a piece out of the image (the crop's
    *  `h` also counts the white strip added below, so it can't tell) */
   onDone: (cropped: File | null, crop?: { x: number; y: number; w: number; h: number }, wasCropped?: boolean) => void;
@@ -647,8 +705,16 @@ export function CropModal({
   const [src, setSrc] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
-  // start with the whole image selected — most sheets need no cropping at all
-  const [rect, setRect] = useState({ x: 0, y: 0, w: 1, h: 1 });
+  // start with the whole image selected — most sheets need no cropping at all —
+  // or, re-cropping from the original, with the frame the sheet was cut with
+  // (its height counts the white strip added below, so it's clamped to the image)
+  const startRect = () => {
+    if (!initial) return { x: 0, y: 0, w: 1, h: 1 };
+    const x = Math.min(1, Math.max(0, initial.x));
+    const y = Math.min(1, Math.max(0, initial.y));
+    return { x, y, w: Math.min(1 - x, initial.w), h: Math.min(1 - y, initial.h) };
+  };
+  const [rect, setRect] = useState(startRect);
   const dragRef = useRef<{ mode: string; sx: number; sy: number; sr: typeof rect } | null>(null);
   const [working, setWorking] = useState(false);
   const [frameW, setFrameW] = useState(0);
@@ -686,7 +752,7 @@ export function CropModal({
   // a spent back-registration) would leave its buttons dead.
   useEffect(() => {
     closedRef.current = false;
-    setRect({ x: 0, y: 0, w: 1, h: 1 });
+    setRect(startRect());
     setWorking(false);
     dismissRef.current = registerBack(() => {
       if (closedRef.current) return;
@@ -795,7 +861,11 @@ export function CropModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-black/90 p-4">
-      <p className="mb-2 text-center text-sm text-white/80">프레임을 옮기고 모서리로 크기를 맞추세요</p>
+      <p className="mb-2 text-center text-sm text-white/80">
+        {initial
+          ? "원본에서 다시 자릅니다 · '전체'를 누르면 원본으로 되돌아가요"
+          : "프레임을 옮기고 모서리로 크기를 맞추세요"}
+      </p>
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <div
           ref={boxRef}

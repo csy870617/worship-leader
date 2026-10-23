@@ -6,7 +6,7 @@ import { youtubePlaylistUrl, openYouTube } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
 import { registerBack, useBackDismiss } from "../lib/backStack";
-import { CropModal, SheetLightbox } from "./SongAttach";
+import { CropModal, SheetLightbox, recropFromOrigin } from "./SongAttach";
 import SongFormBoxes, { insertFormBox } from "./SongFormBoxes";
 import PresetChips from "./PresetChips";
 import { presetInsertText } from "../lib/songForm";
@@ -40,7 +40,12 @@ export default function ContiView({
   const swipeRef = useRef<{ x: number; y: number } | null>(null);
   const [sheetMenu, setSheetMenu] = useState<{ songId: string; aid: string } | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
-  const cropTarget = useRef<{ songId: string; aid: string } | null>(null);
+  // `origin`: the crop opens on the sheet's kept original (see startCrop)
+  const cropTarget = useRef<{
+    songId: string;
+    aid: string;
+    origin?: { aid: string; crop: { x: number; y: number; w: number; h: number } };
+  } | null>(null);
   const [textTarget, setTextTarget] = useState<{ songId: string; aid: string } | null>(null);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
   // what's open on top of the viewer, for the Esc key (read from a ref: the
@@ -55,11 +60,16 @@ export default function ContiView({
 
   const startCrop = async (songId: string, aid: string) => {
     setSheetMenu(null);
-    const dataUrl = (await loadSheet(aid)) ?? (await fetchSheetInteractive(aid));
+    // a sheet cut from a kept original is re-cropped on that original, with its
+    // frame in place: it can be widened again, or 전체 restores the original
+    const o = attach[songId]?.sheetOrigins?.[aid];
+    const origin = o?.crop ? { aid: o.aid, crop: o.crop } : undefined;
+    const src = origin?.aid ?? aid;
+    const dataUrl = (await loadSheet(src)) ?? (await fetchSheetInteractive(src));
     if (!dataUrl) return;
     try {
       const blob = await (await fetch(dataUrl)).blob();
-      cropTarget.current = { songId, aid };
+      cropTarget.current = { songId, aid, origin };
       setCropFile(new File([blob], "sheet.jpg", { type: blob.type || "image/jpeg" }));
     } catch {
       /* ignore */
@@ -73,6 +83,13 @@ export default function ContiView({
     const t = cropTarget.current;
     cropTarget.current = null;
     setCropFile(null);
+    if (newFile && t?.origin) {
+      const title = songById.get(t.songId)?.title ?? "";
+      await recropFromOrigin(t.songId, title, t.aid, t.origin.aid, newFile, crop, wasCropped, () =>
+        console.warn("[conti view] crop save failed")
+      );
+      return;
+    }
     if (newFile && t) {
       const title = songById.get(t.songId)?.title ?? "";
       let newAid: string;
@@ -440,7 +457,7 @@ export default function ContiView({
         </div>
       )}
 
-      {cropFile && <CropModal file={cropFile} onDone={onCropDone} />}
+      {cropFile && <CropModal file={cropFile} initial={cropTarget.current?.origin?.crop} onDone={onCropDone} />}
 
       {textTarget && (
         <SheetLightbox
