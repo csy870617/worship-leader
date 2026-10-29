@@ -12,7 +12,7 @@ type Store = Record<string, SongAttach>;
  * received a memo another device added — would therefore ERASE that memo when
  * its conflicting copy won. This merges FIELD BY FIELD instead, so a value that
  * exists on only one side is always kept:
- *   • text fields (note / memo / youtube): keep the populated side; local wins
+ *   • text fields (note / memo / youtube links): keep the populated side; local wins
  *     only when both sides actually have a value (a real edit conflict).
  *   • sheets + their annotations: union, so a sheet added on either device
  *     survives.
@@ -43,6 +43,7 @@ export function mergeAttach(local: Store, remote: Store): Store {
       note: la.note ?? ra.note,
       memo: la.memo ?? ra.memo,
       youtube: la.youtube ?? ra.youtube,
+      youtubeMore: la.youtubeMore ?? ra.youtubeMore,
       sheetTexts: { ...(ra.sheetTexts ?? {}), ...(la.sheetTexts ?? {}) },
       sheetDraws: { ...(ra.sheetDraws ?? {}), ...(la.sheetDraws ?? {}) },
       sheetKeys: { ...(ra.sheetKeys ?? {}), ...(la.sheetKeys ?? {}) },

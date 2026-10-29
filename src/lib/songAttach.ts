@@ -10,6 +10,9 @@ export interface SongAttach {
   note?: string; // 송폼 — song form / arrangement notes (e.g. V1, C, Tag)
   memo?: string; // 메모 — free-form memo
   youtube?: string;
+  /** More YouTube links after the first (other versions, live takes…). The
+   *  first stays in `youtube`, which the playlist and conti list use. */
+  youtubeMore?: string[];
   sheets?: string[]; // attachment ids (Drive fileId or local id)
   sheetTexts?: Record<string, SheetText[]>; // text annotations per sheet
   sheetDraws?: Record<string, SheetStroke[]>; // pen / highlighter strokes per sheet
@@ -61,6 +64,10 @@ function sanitizeAttach(a: any): SongAttach | null {
   if (typeof a.note === "string" && a.note.trim()) out.note = a.note;
   if (typeof a.memo === "string" && a.memo.trim()) out.memo = a.memo;
   if (typeof a.youtube === "string" && a.youtube) out.youtube = a.youtube;
+  if (Array.isArray(a.youtubeMore)) {
+    const more = a.youtubeMore.filter((x: any) => typeof x === "string" && x.trim());
+    if (more.length) out.youtubeMore = more;
+  }
   if (Array.isArray(a.sheets)) {
     const s = a.sheets.filter((x: any) => typeof x === "string" && x);
     if (s.length) out.sheets = s;
@@ -204,7 +211,26 @@ export function setSongMemo(id: string, memo: string) {
   update(id, (a) => ({ ...a, memo: memo.trim() ? memo : undefined }));
 }
 export function setSongYoutube(id: string, url: string | null) {
-  update(id, (a) => ({ ...a, youtube: url?.trim() || undefined }));
+  update(id, (a) => {
+    const v = url?.trim();
+    if (v) return { ...a, youtube: v };
+    // the first link cleared: the next one moves up rather than leaving a gap
+    const [next, ...rest] = a.youtubeMore ?? [];
+    return { ...a, youtube: next, youtubeMore: rest.length ? rest : undefined };
+  });
+}
+/** Replace the links after the first; blanks are dropped. */
+export function setSongYoutubeMore(id: string, urls: string[]) {
+  update(id, (a) => {
+    const more = urls.map((u) => u.trim()).filter(Boolean);
+    // with no first link, the first of these takes its place
+    if (!a.youtube && more.length) return { ...a, youtube: more[0], youtubeMore: more.length > 1 ? more.slice(1) : undefined };
+    return { ...a, youtubeMore: more.length ? more : undefined };
+  });
+}
+/** Every YouTube link of a song, the first one first. */
+export function youtubeLinks(a?: SongAttach | null): string[] {
+  return a ? [a.youtube, ...(a.youtubeMore ?? [])].filter((u): u is string => !!u) : [];
 }
 export function addSongSheet(id: string, aid: string, key?: string | null) {
   update(id, (a) => {
