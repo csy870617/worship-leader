@@ -23,6 +23,9 @@ export interface SongAttach {
 export interface SheetOrigin {
   aid: string;
   crop?: { x: number; y: number; w: number; h: number };
+  /** The frame that was drawn. `crop` also takes in the white strips added
+   *  above and below it; a re-crop opens on exactly this frame. */
+  frame?: { x: number; y: number; w: number; h: number };
 }
 
 /** The keys chosen for a song in a conti — more than one when it modulates
@@ -46,6 +49,11 @@ export function sheetsForKey(a: SongAttach | undefined, key?: string | null): st
 }
 type Store = Record<string, SongAttach>;
 const LS = "wl.songAttach";
+
+const rectOf = (c: any) =>
+  c && ["x", "y", "w", "h"].every((f) => typeof c[f] === "number")
+    ? { x: c.x as number, y: c.y as number, w: c.w as number, h: c.h as number }
+    : undefined;
 
 function sanitizeAttach(a: any): SongAttach | null {
   if (!a || typeof a !== "object") return null;
@@ -120,10 +128,10 @@ function sanitizeAttach(a: any): SongAttach | null {
     for (const [k, v] of Object.entries(a.sheetOrigins as Record<string, any>)) {
       if (!liveSheets.has(k) || !v || typeof v.aid !== "string" || !v.aid) continue;
       const o: SheetOrigin = { aid: v.aid };
-      const c = v.crop;
-      if (c && ["x", "y", "w", "h"].every((f) => typeof c[f] === "number")) {
-        o.crop = { x: c.x, y: c.y, w: c.w, h: c.h };
-      }
+      const crop = rectOf(v.crop);
+      if (crop) o.crop = crop;
+      const frame = rectOf(v.frame);
+      if (frame) o.frame = frame;
       so[k] = o;
     }
     if (Object.keys(so).length) out.sheetOrigins = so;
@@ -265,8 +273,8 @@ export function restoreSongSheetOriginal(id: string, aid: string): string | null
   const origin = store[id]?.sheetOrigins?.[aid];
   if (!origin) return null;
   const crop = origin.crop;
-  // what was written in the white strip a crop adds below the sheet has no
-  // spot on the original (it maps past its bottom edge): keep it on the image
+  // what was written in the white strips a crop adds above and below the sheet
+  // has no spot on the original (it maps past its edge): keep it on the image
   const c01 = (v: number) => Math.min(1, Math.max(0, v));
   update(id, (a) => {
     const sheets = (a.sheets ?? []).map((x) => (x === aid ? origin.aid : x));

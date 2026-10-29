@@ -84,7 +84,7 @@ export default function SongAttachEditor({
   const [cropQueue, setCropQueue] = useState<{ id: string; file: File }[]>([]);
   const [sheetMenu, setSheetMenu] = useState<string | null>(null);
   // `origin`: the crop opens on the sheet's kept original (see startRecrop)
-  const [recrop, setRecrop] = useState<{ aid: string; file: File; origin?: { aid: string; crop: Crop } } | null>(null);
+  const [recrop, setRecrop] = useState<{ aid: string; file: File; origin?: { aid: string; crop: Crop; frame?: Crop } } | null>(null);
   const cropSeq = useRef(0);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
 
@@ -159,7 +159,7 @@ export default function SongAttachEditor({
     // a sheet cut from a kept original is re-cropped on that original, with its
     // frame in place: it can be widened again, or 전체 restores the original
     const o = sheetOrigins[aid];
-    const origin = o?.crop ? { aid: o.aid, crop: o.crop } : undefined;
+    const origin = o?.crop ? { aid: o.aid, crop: o.crop, frame: o.frame } : undefined;
     const src = origin?.aid ?? aid;
     const dataUrl = (await loadSheet(src)) ?? (await fetchSheetInteractive(src));
     if (!dataUrl) return;
@@ -170,11 +170,13 @@ export default function SongAttachEditor({
       /* ignore */
     }
   };
-  const onRecropDone = async (newFile: File | null, crop?: Crop, wasCropped?: boolean) => {
+  const onRecropDone = async (newFile: File | null, crop?: Crop, wasCropped?: boolean, frame?: Crop) => {
     const t = recrop;
     setRecrop(null);
     if (newFile && t?.origin) {
-      await recropFromOrigin(songId, songTitle, t.aid, t.origin.aid, newFile, crop, wasCropped, () => setErr("악보 저장에 실패했어요"));
+      await recropFromOrigin(songId, songTitle, t.aid, t.origin.aid, newFile, crop, wasCropped, frame, () =>
+        setErr("악보 저장에 실패했어요")
+      );
       return;
     }
     if (newFile && t) {
@@ -200,7 +202,7 @@ export default function SongAttachEditor({
         // the image being cropped right now becomes the original. It is
         // already stored as t.aid, so keep that file rather than uploading a
         // second copy and orphaning the first.
-        setSongSheetOrigin(songId, newAid, { aid: t.aid, crop });
+        setSongSheetOrigin(songId, newAid, { aid: t.aid, crop, frame });
       } else {
         removeSheetEverywhere(t.aid);
       }
@@ -272,7 +274,7 @@ export default function SongAttachEditor({
     return () => window.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const onCropDone = async (cropped: File | null, crop?: Crop, wasCropped?: boolean) => {
+  const onCropDone = async (cropped: File | null, crop?: Crop, wasCropped?: boolean, frame?: Crop) => {
     const source = cropQueue[0]?.file;
     // close the crop view right away (or move on to the next photo) — saving
     // (and a Drive upload) carries on behind it with a "저장 중" tile in the list,
@@ -302,7 +304,7 @@ export default function SongAttachEditor({
         }
         addSongSheet(songId, sheet.value);
         if (origin.status === "fulfilled" && origin.value)
-          setSongSheetOrigin(songId, sheet.value, { aid: origin.value, crop: crop! });
+          setSongSheetOrigin(songId, sheet.value, { aid: origin.value, crop: crop!, frame });
       })();
       addChain.current = done.catch(() => {});
       await done;
@@ -567,7 +569,13 @@ export default function SongAttachEditor({
       {cropQueue.length > 0 && (
         <CropModal key={cropQueue[0].id} file={cropQueue[0].file} onDone={onCropDone} />
       )}
-      {recrop && <CropModal file={recrop.file} initial={recrop.origin?.crop} onDone={onRecropDone} />}
+      {recrop && (
+        <CropModal
+          file={recrop.file}
+          initial={recrop.origin?.frame ?? recrop.origin?.crop}
+          onDone={onRecropDone}
+        />
+      )}
 
       {sheetMenu && (
         <div
@@ -627,6 +635,7 @@ export async function recropFromOrigin(
   newFile: File,
   crop: Crop | undefined,
   wasCropped: boolean | undefined,
+  frame: Crop | undefined,
   onError: () => void
 ) {
   const still = () => {
@@ -651,27 +660,34 @@ export async function recropFromOrigin(
   }
   restoreSongSheetOriginal(songId, aid);
   replaceSongSheet(songId, originAid, newAid, crop);
-  setSongSheetOrigin(songId, newAid, { aid: originAid, crop });
+  setSongSheetOrigin(songId, newAid, { aid: originAid, crop, frame });
   removeSheetEverywhere(aid);
 }
 
-/** How many rows at the bottom of the canvas are blank, looking at most
- *  `limit` rows up. "Blank" is near-white: scanner grey and JPEG noise count. */
-function blankRowsAtBottom(ctx: CanvasRenderingContext2D, w: number, h: number, limit: number): number {
+/** How many rows at the top or bottom edge of the canvas are blank, looking at
+ *  most `limit` rows in. "Blank" is near-white: scanner grey and JPEG noise count. */
+function blankRows(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  limit: number,
+  edge: "top" | "bottom"
+): number {
   const rows = Math.min(h, limit);
   if (rows <= 0) return 0;
   let data: Uint8ClampedArray;
   try {
-    data = ctx.getImageData(0, h - rows, w, rows).data;
+    data = ctx.getImageData(0, edge === "top" ? 0 : h - rows, w, rows).data;
   } catch {
     return 0; // tainted canvas — just add the full strip
   }
   const step = Math.max(1, Math.floor(w / 200)); // sampling is plenty for "is it white?"
-  for (let r = rows - 1; r >= 0; r--) {
+  for (let n = 0; n < rows; n++) {
+    const r = edge === "top" ? n : rows - 1 - n; // walk in from the edge
     for (let c = 0; c < w; c += step) {
       const i = (r * w + c) * 4;
       const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      if (lum < 225) return rows - 1 - r; // ink: the blank run ends here
+      if (lum < 225) return n; // ink: the blank run ends here
     }
   }
   return rows;
@@ -697,17 +713,19 @@ export function CropModal({
   file: File;
   /** `file` is a cropped sheet's kept original, and this is the frame it was
    *  cut with: the crop starts there, and 전체 takes it back to the original */
-  initial?: { x: number; y: number; w: number; h: number };
-  /** `wasCropped`: the user's frame took a piece out of the image (the crop's
-   *  `h` also counts the white strip added below, so it can't tell) */
-  onDone: (cropped: File | null, crop?: { x: number; y: number; w: number; h: number }, wasCropped?: boolean) => void;
+  initial?: Crop;
+  /** `crop`: the part of the image the saved sheet shows, white strips above
+   *  and below included (annotations are mapped through it). `frame`: the frame
+   *  that was drawn; `wasCropped`: it took a piece out of the image */
+  onDone: (cropped: File | null, crop?: Crop, wasCropped?: boolean, frame?: Crop) => void;
 }) {
   const [src, setSrc] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   // start with the whole image selected — most sheets need no cropping at all —
   // or, re-cropping from the original, with the frame the sheet was cut with
-  // (its height counts the white strip added below, so it's clamped to the image)
+  // (for a sheet cut before frames were kept, the crop with its white strip:
+  // clamped to the image)
   const startRect = () => {
     if (!initial) return { x: 0, y: 0, w: 1, h: 1 };
     const x = Math.min(1, Math.max(0, initial.x));
@@ -741,10 +759,10 @@ export function CropModal({
   onDoneRef.current = onDone;
   const closedRef = useRef(false);
   const dismissRef = useRef<((popHistory: boolean) => void) | null>(null);
-  const finish = (result: File | null, crop?: { x: number; y: number; w: number; h: number }, wasCropped?: boolean) => {
+  const finish = (result: File | null, crop?: Crop, wasCropped?: boolean, frame?: Crop) => {
     if (closedRef.current) return;
     closedRef.current = true;
-    onDoneRef.current(result, crop, wasCropped);
+    onDoneRef.current(result, crop, wasCropped, frame);
     dismissRef.current?.(true);
   };
   // Re-arm for every file: when several photos are cropped in a row the dialog
@@ -826,30 +844,30 @@ export function CropModal({
     ctx.fillRect(0, 0, cw, ch);
     ctx.drawImage(img, Math.round(x * nw), Math.round(y * nh), sw, sh, 0, 0, cw, ch);
 
-    // A tight crop leaves nowhere to write under the last staff, so the sheet
-    // keeps a strip of white at the bottom. Only what's missing is added: the
-    // blank rows the image already ends with count toward it, so cropping the
-    // same sheet twice doesn't stack strip on strip.
+    // A tight crop leaves nowhere to write above the first staff or under the
+    // last, so the sheet keeps a strip of white at the top and the bottom. Only
+    // what's missing is added: blank rows the image already starts or ends with
+    // count toward it, so cropping the same sheet twice doesn't stack strips.
     const want = Math.round(Math.max(48, ch * 0.08));
-    const have = blankRowsAtBottom(ctx, cw, ch, want);
-    const extra = Math.max(0, want - have);
+    const top = Math.max(0, want - blankRows(ctx, cw, ch, want, "top"));
+    const bottom = Math.max(0, want - blankRows(ctx, cw, ch, want, "bottom"));
     let out = canvas;
-    if (extra > 0) {
+    if (top || bottom) {
       const padded = document.createElement("canvas");
       padded.width = cw;
-      padded.height = ch + extra;
+      padded.height = ch + top + bottom;
       const pctx = padded.getContext("2d")!;
       pctx.fillStyle = "#fff";
-      pctx.fillRect(0, 0, cw, ch + extra);
-      pctx.drawImage(canvas, 0, 0);
+      pctx.fillRect(0, 0, cw, padded.height);
+      pctx.drawImage(canvas, 0, top);
       out = padded;
     }
     const blob: Blob | null = await new Promise((res) => out.toBlob(res, "image/jpeg", 0.92));
     setWorking(false);
-    // annotations are mapped through this rect; the strip makes the saved image
-    // taller than the crop, so the height it reports has to grow with it
-    const hOut = extra > 0 ? (h * (ch + extra)) / ch : h;
-    finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null, { x, y, w, h: hOut }, isCropped(rect));
+    // annotations are mapped through this rect; the strips make the saved image
+    // taller than the frame, so it reaches past the frame above and below
+    const crop = { x, y: y - (h * top) / ch, w, h: (h * (ch + top + bottom)) / ch };
+    finish(blob ? new File([blob], "sheet.jpg", { type: "image/jpeg" }) : null, crop, isCropped(rect), rect);
   };
 
   const corner = (c: string): React.CSSProperties => ({

@@ -15,6 +15,7 @@ import { presetInsertText } from "../lib/songForm";
  *  window: a whole staff stretched across a desktop screen reads worse than a
  *  page-shaped one, and the proportions stay those of the sheet itself. */
 const MAX_SHEET_W = 720;
+type SheetRect = { x: number; y: number; w: number; h: number };
 
 type Page =
   | { kind: "info"; item: ContiItem; song: Song; aid?: string; n: number }
@@ -44,7 +45,7 @@ export default function ContiView({
   const cropTarget = useRef<{
     songId: string;
     aid: string;
-    origin?: { aid: string; crop: { x: number; y: number; w: number; h: number } };
+    origin?: { aid: string; crop: SheetRect; frame?: SheetRect };
   } | null>(null);
   const [textTarget, setTextTarget] = useState<{ songId: string; aid: string } | null>(null);
   useBackDismiss(sheetMenu != null, () => setSheetMenu(null));
@@ -63,7 +64,7 @@ export default function ContiView({
     // a sheet cut from a kept original is re-cropped on that original, with its
     // frame in place: it can be widened again, or 전체 restores the original
     const o = attach[songId]?.sheetOrigins?.[aid];
-    const origin = o?.crop ? { aid: o.aid, crop: o.crop } : undefined;
+    const origin = o?.crop ? { aid: o.aid, crop: o.crop, frame: o.frame } : undefined;
     const src = origin?.aid ?? aid;
     const dataUrl = (await loadSheet(src)) ?? (await fetchSheetInteractive(src));
     if (!dataUrl) return;
@@ -77,15 +78,16 @@ export default function ContiView({
   };
   const onCropDone = async (
     newFile: File | null,
-    crop?: { x: number; y: number; w: number; h: number },
-    wasCropped?: boolean
+    crop?: SheetRect,
+    wasCropped?: boolean,
+    frame?: SheetRect
   ) => {
     const t = cropTarget.current;
     cropTarget.current = null;
     setCropFile(null);
     if (newFile && t?.origin) {
       const title = songById.get(t.songId)?.title ?? "";
-      await recropFromOrigin(t.songId, title, t.aid, t.origin.aid, newFile, crop, wasCropped, () =>
+      await recropFromOrigin(t.songId, title, t.aid, t.origin.aid, newFile, crop, wasCropped, frame, () =>
         console.warn("[conti view] crop save failed")
       );
       return;
@@ -110,7 +112,7 @@ export default function ContiView({
       // stored as t.aid, so keep that file instead of uploading a second copy
       // (which orphaned the first).
       if (!hadOrigin && wasCropped) {
-        setSongSheetOrigin(t.songId, newAid, { aid: t.aid, crop });
+        setSongSheetOrigin(t.songId, newAid, { aid: t.aid, crop, frame });
       } else {
         removeSheetEverywhere(t.aid);
       }
@@ -457,7 +459,13 @@ export default function ContiView({
         </div>
       )}
 
-      {cropFile && <CropModal file={cropFile} initial={cropTarget.current?.origin?.crop} onDone={onCropDone} />}
+      {cropFile && (
+        <CropModal
+          file={cropFile}
+          initial={cropTarget.current?.origin?.frame ?? cropTarget.current?.origin?.crop}
+          onDone={onCropDone}
+        />
+      )}
 
       {textTarget && (
         <SheetLightbox
