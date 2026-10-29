@@ -7,7 +7,7 @@ import { decodeConti, youtubePlaylistUrl, copyText, openYouTube } from "../lib/s
 import { deleteDriveFile, driveEnabled, prepareSharedFileId, sharedFileLink, takeSharedFileId, uploadSharedFile } from "../lib/drive";
 import { onAuth } from "../lib/firebase";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
-import { chosenKeys, setSongMemo, setSongNote, sheetsForKey, playlistLinks, useSongAttach, youtubeLinks } from "../lib/songAttach";
+import { chosenKeys, setSongMemo, setSongNote, sheetsForKey, playlistLinks, useSongAttach } from "../lib/songAttach";
 import { useBackDismiss } from "../lib/backStack";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
@@ -498,8 +498,8 @@ export default function Conti() {
   };
 
   // Plain-text setlist shared alongside the PDF: the conti's name, the PDF and
-  // playlist links right under it, then every song's title with its YouTube
-  // links under it — each its own paragraph, a blank line apart. Works with Web Share
+  // playlist links right under it, then every song's title with the YouTube
+  // links picked for this conti under it — each its own paragraph, a blank line apart. Works with Web Share
   // text/url, which installed PWAs allow. It's shared without a separate
   // `title`: chat apps put that in front of the text, so the name came out twice.
   const buildShareText = (pdfLink?: string) => {
@@ -508,7 +508,8 @@ export default function Conti() {
     const present = conti.filter((c) => songById.has(c.id));
     const blocks = present.map((c) => {
       const s = songById.get(c.id)!;
-      return [s.title, ...youtubeLinks(attach[c.id])].join("\n");
+      // the links chosen for this conti's playlist, so what's shared matches it
+      return [s.title, ...playlistLinks(attach[c.id], c.play)].join("\n");
     });
     const parts = [`${active.name} (${present.length}곡)`];
     if (pdfLink) parts.push(`📄 악보 PDF\n${pdfLink}`);
