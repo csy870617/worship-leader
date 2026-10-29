@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "../lib/useConti";
-import { chosenKeys, getSongAttach, removeSongSheet, replaceSongSheet, restoreSongSheetOriginal, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetOrigin, setSongSheetTexts, sheetsForKey, useSongAttach } from "../lib/songAttach";
+import { chosenKeys, getSongAttach, removeSongSheet, replaceSongSheet, restoreSongSheetOriginal, setSongMemo, setSongNote, setSongSheetDraws, setSongSheetOrigin, setSongSheetTexts, playlistLinks, sheetsForKey, useSongAttach } from "../lib/songAttach";
 import { youtubePlaylistUrl, openYouTube } from "../lib/share";
 import { fetchSheetInteractive, loadSheet, removeSheetEverywhere, saveSheetFromFile } from "../lib/attachments";
 import { driveEnabled } from "../lib/drive";
@@ -35,7 +35,7 @@ export default function ContiView({
 }) {
   const attach = useSongAttach();
   // songs deleted from the catalog stay in the conti but aren't shown — or played
-  const playlistUrl = youtubePlaylistUrl(items.filter((c) => songById.has(c.id)).map((c) => attach[c.id]?.youtube));
+  const playlistUrl = youtubePlaylistUrl(items.filter((c) => songById.has(c.id)).flatMap((c) => playlistLinks(attach[c.id])));
   const [mode, setMode] = useState<"scroll" | "page">("page");
   const [page, setPage] = useState(0);
   const swipeRef = useRef<{ x: number; y: number } | null>(null);

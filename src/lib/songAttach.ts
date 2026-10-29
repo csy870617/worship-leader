@@ -11,8 +11,11 @@ export interface SongAttach {
   memo?: string; // 메모 — free-form memo
   youtube?: string;
   /** More YouTube links after the first (other versions, live takes…). The
-   *  first stays in `youtube`, which the playlist and conti list use. */
+   *  first stays in `youtube`, which the conti list and older versions use. */
   youtubeMore?: string[];
+  /** The links checked to go into the conti's YouTube playlist. Unset: just
+   *  the first link (see playlistLinks). */
+  youtubePlay?: string[];
   sheets?: string[]; // attachment ids (Drive fileId or local id)
   sheetTexts?: Record<string, SheetText[]>; // text annotations per sheet
   sheetDraws?: Record<string, SheetStroke[]>; // pen / highlighter strokes per sheet
@@ -67,6 +70,10 @@ function sanitizeAttach(a: any): SongAttach | null {
   if (Array.isArray(a.youtubeMore)) {
     const more = a.youtubeMore.filter((x: any) => typeof x === "string" && x.trim());
     if (more.length) out.youtubeMore = more;
+  }
+  // kept even when empty (nothing checked), but only while there are links
+  if (out.youtube && Array.isArray(a.youtubePlay)) {
+    out.youtubePlay = a.youtubePlay.filter((x: any) => typeof x === "string" && x);
   }
   if (Array.isArray(a.sheets)) {
     const s = a.sheets.filter((x: any) => typeof x === "string" && x);
@@ -210,27 +217,43 @@ export function setSongNote(id: string, note: string) {
 export function setSongMemo(id: string, memo: string) {
   update(id, (a) => ({ ...a, memo: memo.trim() ? memo : undefined }));
 }
-export function setSongYoutube(id: string, url: string | null) {
-  update(id, (a) => {
-    const v = url?.trim();
-    if (v) return { ...a, youtube: v };
-    // the first link cleared: the next one moves up rather than leaving a gap
-    const [next, ...rest] = a.youtubeMore ?? [];
-    return { ...a, youtube: next, youtubeMore: rest.length ? rest : undefined };
-  });
-}
-/** Replace the links after the first; blanks are dropped. */
-export function setSongYoutubeMore(id: string, urls: string[]) {
-  update(id, (a) => {
-    const more = urls.map((u) => u.trim()).filter(Boolean);
-    // with no first link, the first of these takes its place
-    if (!a.youtube && more.length) return { ...a, youtube: more[0], youtubeMore: more.length > 1 ? more.slice(1) : undefined };
-    return { ...a, youtubeMore: more.length ? more : undefined };
-  });
-}
 /** Every YouTube link of a song, the first one first. */
 export function youtubeLinks(a?: SongAttach | null): string[] {
   return a ? [a.youtube, ...(a.youtubeMore ?? [])].filter((u): u is string => !!u) : [];
+}
+/** The links that go into the conti's YouTube playlist: the checked ones, in
+ *  link order; the first link while nothing was ever checked; a lone link always. */
+export function playlistLinks(a?: SongAttach | null): string[] {
+  const links = youtubeLinks(a);
+  if (links.length <= 1 || !a?.youtubePlay) return links.slice(0, 1);
+  return links.filter((u) => a.youtubePlay!.includes(u));
+}
+/** Set, change or (empty `url`) remove the link at `index` (0 = the first; an
+ *  index past the end adds one). Removing the first moves the next one up. */
+export function setSongYoutubeAt(id: string, index: number, url: string | null) {
+  update(id, (a) => {
+    const links = youtubeLinks(a);
+    const old = links[index];
+    const v = url?.trim();
+    if (v) {
+      if (index < links.length) links[index] = v;
+      else links.push(v);
+    } else if (index < links.length) links.splice(index, 1);
+    // an edited link stays checked for the playlist; a removed one drops out.
+    // Down to one link there's nothing to choose: start over from "the first"
+    const play =
+      links.length > 1 ? a.youtubePlay?.flatMap((u) => (u === old ? (v ? [v] : []) : [u])) : undefined;
+    const [first, ...more] = links;
+    return { ...a, youtube: first, youtubeMore: more.length ? more : undefined, youtubePlay: play };
+  });
+}
+/** Check / uncheck a link for the conti's YouTube playlist. */
+export function toggleSongYoutubePlay(id: string, url: string) {
+  update(id, (a) => {
+    const cur = playlistLinks(a);
+    const next = cur.includes(url) ? cur.filter((u) => u !== url) : [...cur, url];
+    return { ...a, youtubePlay: youtubeLinks(a).filter((u) => next.includes(u)) };
+  });
 }
 export function addSongSheet(id: string, aid: string, key?: string | null) {
   update(id, (a) => {

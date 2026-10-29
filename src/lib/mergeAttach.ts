@@ -44,6 +44,7 @@ export function mergeAttach(local: Store, remote: Store): Store {
       memo: la.memo ?? ra.memo,
       youtube: la.youtube ?? ra.youtube,
       youtubeMore: la.youtubeMore ?? ra.youtubeMore,
+      youtubePlay: la.youtubePlay ?? ra.youtubePlay,
       sheetTexts: { ...(ra.sheetTexts ?? {}), ...(la.sheetTexts ?? {}) },
       sheetDraws: { ...(ra.sheetDraws ?? {}), ...(la.sheetDraws ?? {}) },
       sheetKeys: { ...(ra.sheetKeys ?? {}), ...(la.sheetKeys ?? {}) },

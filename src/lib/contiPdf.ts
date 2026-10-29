@@ -1,7 +1,7 @@
 import type { Song } from "../types";
 import type { ContiItem, SheetStroke, SheetText } from "./useConti";
 import { loadSheet } from "./attachments";
-import { chosenKeys, getSongAttach, sheetsForKey } from "./songAttach";
+import { chosenKeys, getSongAttach, playlistLinks, sheetsForKey } from "./songAttach";
 import { NEUTRAL_BOX, formBoxColors, itemColor, parseForm } from "./songForm";
 import { youtubePlaylistUrl } from "./share";
 
@@ -272,7 +272,7 @@ export async function buildContiPdf(
 
   // from the songs actually printed: one deleted from the catalog is skipped
   const playlistUrl =
-    youtubePlaylistUrl(entries.map((e) => getSongAttach(e.item.id)?.youtube)) ?? undefined;
+    youtubePlaylistUrl(entries.flatMap((e) => playlistLinks(getSongAttach(e.item.id)))) ?? undefined;
 
   const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
   let pageAdded = false;

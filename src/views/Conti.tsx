@@ -7,7 +7,7 @@ import { decodeConti, youtubePlaylistUrl, copyText, openYouTube } from "../lib/s
 import { deleteDriveFile, driveEnabled, prepareSharedFileId, sharedFileLink, takeSharedFileId, uploadSharedFile } from "../lib/drive";
 import { onAuth } from "../lib/firebase";
 import { buildContiPdf, downloadContiFile } from "../lib/contiPdf";
-import { chosenKeys, setSongMemo, setSongNote, sheetsForKey, useSongAttach, youtubeLinks } from "../lib/songAttach";
+import { chosenKeys, setSongMemo, setSongNote, sheetsForKey, playlistLinks, useSongAttach, youtubeLinks } from "../lib/songAttach";
 import { useBackDismiss } from "../lib/backStack";
 import { KeyBadge } from "../components/Badges";
 import SongAttachEditor from "../components/SongAttach";
@@ -477,7 +477,7 @@ export default function Conti() {
 
   const playlistUrl = useMemo(
     // a song deleted from the catalog stays in the conti but isn't shown — or played
-    () => youtubePlaylistUrl(conti.filter((c) => songById.has(c.id)).map((c) => attach[c.id]?.youtube)),
+    () => youtubePlaylistUrl(conti.filter((c) => songById.has(c.id)).flatMap((c) => playlistLinks(attach[c.id]))),
     [conti, attach, songById]
   );
 
