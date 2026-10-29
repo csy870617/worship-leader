@@ -5210,6 +5210,7 @@
       "id": "b_skoeld",
       "title": "주님 말씀하시면",
       "keys": [
+        "C",
         "D"
       ],
       "tempos": [
@@ -7098,7 +7099,7 @@
       "themes": [
         "은혜와 사랑"
       ],
-      "hymnNo": null,
+      "hymnNo": 552,
       "isHymn": true
     },
     {

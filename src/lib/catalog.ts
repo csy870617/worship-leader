@@ -155,6 +155,15 @@ export function unhideSong(id: string) {
 export function getHiddenSongs(): Song[] {
   return [...hidden].map((id) => byId.get(id)).filter((s): s is Song => Boolean(s));
 }
+/** Hide `ids` once for this user, as if 숨기기 were tapped on each. `marker`
+ *  stays in the (synced) hidden list so this never runs again on any device —
+ *  a song restored from 숨긴 곡 stays restored. It isn't a song id, so lists and
+ *  counts never see it (they only show hidden songs that exist). */
+export function hideOnce(marker: string, ids: string[]) {
+  if (hidden.has(marker)) return;
+  hidden = new Set([...hidden, ...ids, marker]);
+  emit();
+}
 
 export interface SongInput {
   title: string;

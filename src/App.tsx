@@ -5,7 +5,8 @@ import { useConti } from "./lib/useConti";
 import { useSongs } from "./lib/catalog";
 import { getLastBrowse } from "./lib/browseState";
 import { migrateFromContis } from "./lib/songAttach";
-import { initSync } from "./lib/sync";
+import { initSync, whenSynced } from "./lib/sync";
+import { hideDuplicateSongs } from "./lib/duplicates";
 import { openExternal } from "./lib/share";
 import AuthButton from "./components/AuthButton";
 import Browse from "./views/Browse";
@@ -32,10 +33,12 @@ export default function App() {
   const { songs } = useSongs();
 
   // start cloud sync, then migrate any legacy per-conti attachments onto songs
-  // (after sync is listening so the migration is marked for upload)
+  // (after sync is listening so the migration is marked for upload), and once
+  // the account's data is in, hide the catalog's duplicate songs (one time)
   useEffect(() => {
     const cleanup = initSync();
     migrateFromContis();
+    whenSynced(hideDuplicateSongs);
     return cleanup;
   }, []);
 

@@ -172,6 +172,22 @@ let ready = false;
 // while it was in flight (and must not mark them as already pushed)
 let localSeq = 0;
 
+// one-time data changes wait until this session's starting data is in place;
+// run on stale local data they'd be merged over what another device already did
+let settled = false;
+const onSettled: (() => void)[] = [];
+function settle() {
+  if (settled) return;
+  settled = true;
+  onSettled.splice(0).forEach((cb) => cb());
+}
+/** Run `cb` once the starting data is in place: after the first cloud
+ *  reconcile when signed in, right away when signed out or sync is off. */
+export function whenSynced(cb: () => void) {
+  if (settled) cb();
+  else onSettled.push(cb);
+}
+
 const userRef = (uid: string) => doc(db!, "users", uid);
 
 // strip undefined / non-plain values so Firestore never rejects the whole write
@@ -327,6 +343,7 @@ async function onLogin(user: User) {
       ready = true;
       // edits made while reconciling were held back — send them now
       if (getMeta()?.dirty) schedulePush();
+      settle();
     }
   } catch (e) {
     // stays not-ready (no pushes) — retried when back online / visible
@@ -347,6 +364,7 @@ function retryLogin() {
 function onLogout() {
   currentUser = null;
   ready = false;
+  settle(); // signed out: the local data is the starting data
   unsubscribeDoc?.();
   unsubscribeDoc = null;
   if (pushTimer) {
@@ -358,7 +376,11 @@ function onLogout() {
 let started = false;
 /** Call once at app startup. No-op when Firebase isn't configured. */
 export function initSync() {
-  if (started || !db) return;
+  if (!db) {
+    settle(); // no cloud: the local data is all there is
+    return;
+  }
+  if (started) return;
   started = true;
   // a single always-on watcher: record local edits (dirty) and push when logged in
   subscribeCatalog(onLocalChange);
