@@ -35,7 +35,7 @@ export default function ContiView({
 }) {
   const attach = useSongAttach();
   // songs deleted from the catalog stay in the conti but aren't shown — or played
-  const playlistUrl = youtubePlaylistUrl(items.filter((c) => songById.has(c.id)).flatMap((c) => playlistLinks(attach[c.id])));
+  const playlistUrl = youtubePlaylistUrl(items.filter((c) => songById.has(c.id)).flatMap((c) => playlistLinks(attach[c.id], c.play)));
   const [mode, setMode] = useState<"scroll" | "page">("page");
   const [page, setPage] = useState(0);
   const swipeRef = useRef<{ x: number; y: number } | null>(null);

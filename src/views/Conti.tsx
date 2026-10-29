@@ -36,7 +36,7 @@ const CONTI_ROWS_MAX = CONTI_ROW_H * 10 + 14;
 
 export default function Conti() {
   const {
-    conti, remove, setKey, clear, replace,
+    conti, remove, setKey, setPlay, clear, replace,
     contis, activeId, active, createConti, renameConti, setContiOrder, deleteConti, setActive,
     contiNote, setContiNote,
   } = useConti();
@@ -477,7 +477,7 @@ export default function Conti() {
 
   const playlistUrl = useMemo(
     // a song deleted from the catalog stays in the conti but isn't shown — or played
-    () => youtubePlaylistUrl(conti.filter((c) => songById.has(c.id)).flatMap((c) => playlistLinks(attach[c.id]))),
+    () => youtubePlaylistUrl(conti.filter((c) => songById.has(c.id)).flatMap((c) => playlistLinks(attach[c.id], c.play))),
     [conti, attach, songById]
   );
 
@@ -919,7 +919,12 @@ export default function Conti() {
               </div>
 
               {open.has(r.id) && (
-                <SongAttachEditor songId={r.id} songTitle={r.song.title} />
+                <SongAttachEditor
+                  songId={r.id}
+                  songTitle={r.song.title}
+                  play={r.play}
+                  onPlayChange={(urls) => setPlay(r.id, urls)}
+                />
               )}
             </li>
           );

@@ -94,18 +94,30 @@ export default function SongAttachEditor({
   songTitle,
   withMemo = false,
   className = "mt-1 ml-7 space-y-3 rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900",
+  play,
+  onPlayChange,
 }: {
   songId: string;
   songTitle: string;
   withMemo?: boolean;
   className?: string;
+  /** shown inside a conti: the links checked for that conti's playlist, and
+   *  how to change them. Without it the boxes set the song's own choice. */
+  play?: string[];
+  onPlayChange?: (urls: string[]) => void;
 }) {
   const attach = useSongAttach();
   const a = attach[songId];
   const youtubeUrl = a?.youtube;
   const ytLinks = youtubeLinks(a);
   // with two or more links each gets a box: checked ones go into the playlist
-  const ytPlay = ytLinks.length > 1 ? playlistLinks(a) : null;
+  const ytPlay = ytLinks.length > 1 ? playlistLinks(a, onPlayChange ? play : undefined) : null;
+  const togglePlay = (url: string) => {
+    if (!onPlayChange) return toggleSongYoutubePlay(songId, url);
+    const cur = ytPlay ?? [];
+    const next = cur.includes(url) ? cur.filter((u) => u !== url) : [...cur, url];
+    onPlayChange(ytLinks.filter((u) => next.includes(u)));
+  };
   // link fields opened with + and not filled in yet (an empty one goes away)
   const [ytDrafts, setYtDrafts] = useState(0);
   const firstYtRef = useRef<HTMLInputElement>(null);
@@ -436,7 +448,7 @@ export default function SongAttachEditor({
                   <input
                     type="checkbox"
                     checked={ytPlay.includes(url)}
-                    onChange={() => toggleSongYoutubePlay(songId, url)}
+                    onChange={() => togglePlay(url)}
                     aria-label="재생목록에 넣기"
                     title="재생목록에 넣기"
                     className="h-4 w-4 shrink-0 accent-red-600"
@@ -488,7 +500,11 @@ export default function SongAttachEditor({
             </div>
           ))}
           {ytPlay && (
-            <p className="text-[11px] text-slate-400 dark:text-slate-500">체크한 링크가 콘티 유튜브 재생목록에 들어가요</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+              {onPlayChange
+                ? "체크한 링크가 이 콘티의 유튜브 재생목록에 들어가요"
+                : "체크한 링크가 콘티 유튜브 재생목록에 들어가요 (콘티마다 따로 고를 수 있어요)"}
+            </p>
           )}
         </div>
       </div>

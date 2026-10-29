@@ -21,6 +21,9 @@ export interface ContiItem {
   note?: string;
   key?: string; // chosen key(s) when the song has several — "F" or "F,G" (see chosenKeys)
   youtube?: string; // custom YouTube URL
+  /** the song's YouTube links checked for THIS conti's playlist; unset: the
+   *  ones checked on the song (see playlistLinks) */
+  play?: string[];
   sheets?: string[]; // sheet-music attachment ids (stored in IndexedDB)
   sheetTexts?: Record<string, SheetText[]>; // text annotations per sheet (by attachment id)
 }
@@ -46,6 +49,7 @@ function sanitizeItems(arr: unknown): ContiItem[] {
           if (x.note) it.note = String(x.note);
           if (typeof x.key === "string" && x.key) it.key = x.key;
           if (typeof x.youtube === "string" && x.youtube) it.youtube = x.youtube;
+          if (Array.isArray(x.play)) it.play = x.play.filter((u: any) => typeof u === "string" && u);
           if (Array.isArray(x.sheets)) {
             const s = x.sheets.filter((v: any) => typeof v === "string" && v);
             if (s.length) it.sheets = s;
@@ -133,6 +137,21 @@ function mutateActive(fn: (items: ContiItem[]) => ContiItem[]) {
   commit({ ...state, contis: state.contis.map((c) => (c.id === a.id ? { ...c, items: fn(c.items) } : c)) });
 }
 
+/** A song's link was edited (`next`) or removed (null): keep every conti's
+ *  playlist choice pointing at it. */
+export function renamePlayLink(songId: string, old: string, next: string | null) {
+  let changed = false;
+  const contis = state.contis.map((c) => ({
+    ...c,
+    items: c.items.map((i) => {
+      if (i.id !== songId || !i.play?.includes(old)) return i;
+      changed = true;
+      return { ...i, play: i.play.flatMap((u) => (u === old ? (next ? [next] : []) : [u])) };
+    }),
+  }));
+  if (changed) commit({ ...state, contis });
+}
+
 // ---- module-level accessors (cloud sync engine) ----
 export function getContiState(): State {
   return state;
@@ -216,6 +235,18 @@ export function useConti() {
           const { youtube: _omit, ...rest } = i;
           const u = url?.trim();
           return u ? { ...rest, youtube: u } : rest;
+        })
+      ),
+    []
+  );
+  /** this conti's playlist choice for a song (null: back to the song's own) */
+  const setPlay = useCallback(
+    (id: string, urls: string[] | null) =>
+      mutateActive((items) =>
+        items.map((i) => {
+          if (i.id !== id) return i;
+          const { play: _omit, ...rest } = i;
+          return urls ? { ...rest, play: urls } : rest;
         })
       ),
     []
@@ -327,6 +358,7 @@ export function useConti() {
     setNote,
     setKey,
     setYoutube,
+    setPlay,
     addSheet,
     removeSheet,
     setSheetTexts,

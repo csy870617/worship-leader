@@ -272,7 +272,7 @@ export async function buildContiPdf(
 
   // from the songs actually printed: one deleted from the catalog is skipped
   const playlistUrl =
-    youtubePlaylistUrl(entries.flatMap((e) => playlistLinks(getSongAttach(e.item.id)))) ?? undefined;
+    youtubePlaylistUrl(entries.flatMap((e) => playlistLinks(getSongAttach(e.item.id), e.item.play))) ?? undefined;
 
   const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "letter" });
   let pageAdded = false;

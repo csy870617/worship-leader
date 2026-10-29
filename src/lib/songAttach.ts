@@ -4,7 +4,7 @@
 // synced to the cloud like the rest of the user's data.
 import { useSyncExternalStore } from "react";
 import type { SheetStroke, SheetText } from "./useConti";
-import { getContiState, setContiState } from "./useConti";
+import { getContiState, renamePlayLink, setContiState } from "./useConti";
 
 export interface SongAttach {
   note?: string; // 송폼 — song form / arrangement notes (e.g. V1, C, Tag)
@@ -221,20 +221,21 @@ export function setSongMemo(id: string, memo: string) {
 export function youtubeLinks(a?: SongAttach | null): string[] {
   return a ? [a.youtube, ...(a.youtubeMore ?? [])].filter((u): u is string => !!u) : [];
 }
-/** The links that go into the conti's YouTube playlist: the checked ones, in
- *  link order; the first link while nothing was ever checked; a lone link always. */
-export function playlistLinks(a?: SongAttach | null): string[] {
+/** The links that go into a conti's YouTube playlist, in link order: the ones
+ *  checked for that conti (`pick`), else the ones checked on the song, else
+ *  the first link. A lone link always goes in. */
+export function playlistLinks(a?: SongAttach | null, pick?: string[]): string[] {
   const links = youtubeLinks(a);
-  if (links.length <= 1 || !a?.youtubePlay) return links.slice(0, 1);
-  return links.filter((u) => a.youtubePlay!.includes(u));
+  const chosen = links.length > 1 ? pick ?? a?.youtubePlay : undefined;
+  return chosen ? links.filter((u) => chosen.includes(u)) : links.slice(0, 1);
 }
 /** Set, change or (empty `url`) remove the link at `index` (0 = the first; an
  *  index past the end adds one). Removing the first moves the next one up. */
 export function setSongYoutubeAt(id: string, index: number, url: string | null) {
+  const old: string | undefined = youtubeLinks(store[id])[index];
+  const v = url?.trim();
   update(id, (a) => {
     const links = youtubeLinks(a);
-    const old = links[index];
-    const v = url?.trim();
     if (v) {
       if (index < links.length) links[index] = v;
       else links.push(v);
@@ -246,8 +247,10 @@ export function setSongYoutubeAt(id: string, index: number, url: string | null) 
     const [first, ...more] = links;
     return { ...a, youtube: first, youtubeMore: more.length ? more : undefined, youtubePlay: play };
   });
+  // and every conti that checked it for its own playlist follows along
+  if (old && old !== v) renamePlayLink(id, old, v || null);
 }
-/** Check / uncheck a link for the conti's YouTube playlist. */
+/** Check / uncheck a link on the song: the choice contis use unless they made their own. */
 export function toggleSongYoutubePlay(id: string, url: string) {
   update(id, (a) => {
     const cur = playlistLinks(a);
