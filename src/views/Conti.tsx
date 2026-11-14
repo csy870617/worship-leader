@@ -1036,12 +1036,12 @@ export default function Conti() {
                   await shareText();
                   return;
                 }
-                // Where the PDF goes as a Drive link (PC, or a phone that can't
-                // share files), open the share sheet now — no second button
-                const filesOk =
-                  !isDesktop() &&
-                  !!navigator.canShare?.({ files: [new File([""], "c.pdf", { type: "application/pdf" })] });
-                if (driveEnabled() && !filesOk) {
+                // With Drive, the PDF goes as a link and the share sheet opens now,
+                // inside this tap. On a phone too: sharing the PDF file means
+                // building it first, which takes long enough that the tap's
+                // permission to open the sheet runs out — it then fell back to a
+                // "드라이브 링크 공유" popup that needed a second tap
+                if (driveEnabled()) {
                   const id = takeSharedFileId();
                   if (id) {
                     await shareNowViaDrive(id);
