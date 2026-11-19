@@ -13,6 +13,12 @@ export function normalize(text: string): string {
     .toLowerCase();
 }
 
+/** Search hit: the title holds the (normalized) query. An all-digit query also
+ *  finds a hymn by its number (e.g. "305" → 새찬송가 305장). */
+export function matchesTitle(s: { title: string; hymnNo?: number | null }, nq: string): boolean {
+  return normalize(s.title).includes(nq) || (/^\d+$/.test(nq) && String(s.hymnNo ?? "") === nq);
+}
+
 export const sortKo = (a: { title: string }, b: { title: string }) =>
   a.title.localeCompare(b.title, "ko");
 

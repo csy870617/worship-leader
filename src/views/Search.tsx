@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { data, normalize, sortKo } from "../data";
+import { data, matchesTitle, normalize, sortKo } from "../data";
 import { useSongs } from "../lib/catalog";
 import { TEMPO_LABEL, type Song } from "../types";
 import SongList from "../components/SongList";
@@ -32,14 +32,7 @@ export default function Search() {
         if (key && !s.keys.includes(key)) return false;
         if (tempo && !s.tempos.includes(tempo as Song["tempos"][number])) return false;
         if (theme && !s.themes.includes(theme)) return false;
-        if (nq) {
-          const hit =
-            normalize(s.title).includes(nq) ||
-            s.themes.some((t) => normalize(t).includes(nq)) ||
-            s.keys.some((k) => k.toLowerCase() === nq) ||
-            String(s.hymnNo ?? "").includes(nq);
-          if (!hit) return false;
-        }
+        if (nq && !matchesTitle(s, nq)) return false;
         return true;
       })
       .sort(sortKo);

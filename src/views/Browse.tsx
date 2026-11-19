@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { data, normalize, sortKo } from "../data";
+import { data, matchesTitle, normalize, sortKo } from "../data";
 import { useSongs } from "../lib/catalog";
 import { TEMPO_LABEL, type Song } from "../types";
 import { useHistory } from "../lib/useHistory";
@@ -82,12 +82,7 @@ export default function Browse() {
     if (wantHymn !== wantCcm) arr = arr.filter((s) => (wantHymn ? s.isHymn : !s.isHymn));
     const nq = normalize(q);
     if (nq) {
-      arr = arr.filter(
-        (s) =>
-          normalize(s.title).includes(nq) ||
-          s.themes.some((t) => normalize(t).includes(nq)) ||
-          String(s.hymnNo ?? "").includes(nq)
-      );
+      arr = arr.filter((s) => matchesTitle(s, nq));
     }
     if (selKeys.length) {
       const wanted = new Set(selKeys.flatMap(keyMembers));

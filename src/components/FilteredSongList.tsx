@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { data, normalize, sortKo } from "../data";
+import { data, matchesTitle, normalize, sortKo } from "../data";
 import { TEMPO_LABEL, type Song } from "../types";
 import { useHistory } from "../lib/useHistory";
 import ChipRow from "./ChipRow";
@@ -73,12 +73,7 @@ export default function FilteredSongList({
     if (wantHymn !== wantCcm) arr = arr.filter((s) => (wantHymn ? s.isHymn : !s.isHymn));
     const nq = normalize(q);
     if (nq) {
-      arr = arr.filter(
-        (s) =>
-          normalize(s.title).includes(nq) ||
-          s.themes.some((t) => normalize(t).includes(nq)) ||
-          String(s.hymnNo ?? "").includes(nq)
-      );
+      arr = arr.filter((s) => matchesTitle(s, nq));
     }
     if (sel.key.length) {
       const wanted = new Set(sel.key.flatMap(keyMembers));
